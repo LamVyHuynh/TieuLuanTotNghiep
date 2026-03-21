@@ -6,6 +6,7 @@ import CheckOut from "../pages/CheckOut";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Order from "../pages/Order";
+import Dashboard from "../pages/admin/Dashboard";
 const publicRoutes = [
   { path: "/", element: Home },
   { path: "/cart", element: Cart },
@@ -15,6 +16,7 @@ const publicRoutes = [
   { path: "/login", element: Login },
   { path: "/register", element: Register },
   { path: "/order", element: Order },
+  { path: "/admin/dashboard", element: Dashboard },
 ];
 
 export { publicRoutes };
