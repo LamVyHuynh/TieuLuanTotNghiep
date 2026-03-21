@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HealthyGO Admin - User Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-container": "#ff9800",
+              "secondary": "#8b5000",
+              "primary-fixed": "#94f990",
+              "outline-variant": "#becab9",
+              "tertiary-container": "#74aa34",
+              "on-error-container": "#93000a",
+              "inverse-on-surface": "#f1f1f1",
+              "inverse-primary": "#78dc77",
+              "primary-fixed-dim": "#78dc77",
+              "on-primary-fixed-variant": "#005313",
+              "surface": "#f9f9f9",
+              "inverse-surface": "#2f3131",
+              "surface-variant": "#e2e2e2",
+              "secondary-fixed": "#ffdcbe",
+              "on-secondary-container": "#653900",
+              "on-tertiary-fixed": "#0f2000",
+              "surface-tint": "#006e1c",
+              "primary-container": "#4caf50",
+              "on-primary-fixed": "#002204",
+              "tertiary-fixed": "#b9f474",
+              "surface-container-lowest": "#ffffff",
+              "on-error": "#ffffff",
+              "surface-container-low": "#f3f3f3",
+              "background": "#f9f9f9",
+              "on-primary": "#ffffff",
+              "primary": "#006e1c",
+              "tertiary-fixed-dim": "#9ed75b",
+              "surface-bright": "#f9f9f9",
+              "on-secondary-fixed": "#2c1600",
+              "on-primary-container": "#003c0b",
+              "secondary-fixed-dim": "#ffb870",
+              "on-secondary": "#ffffff",
+              "surface-container": "#eeeeee",
+              "on-tertiary-fixed-variant": "#2e4f00",
+              "on-background": "#1a1c1c",
+              "surface-container-high": "#e8e8e8",
+              "on-surface": "#1a1c1c",
+              "tertiary": "#3e6a00",
+              "outline": "#6f7a6b",
+              "error-container": "#ffdad6",
+              "error": "#ba1a1a",
+              "surface-dim": "#dadada",
+              "on-secondary-fixed-variant": "#693c00",
+              "surface-container-highest": "#e2e2e2",
+              "on-tertiary-container": "#203900",
+              "on-tertiary": "#ffffff",
+              "on-surface-variant": "#3f4a3c"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9f9f9;
+            color: #1a1c1c;
+        }
+        h1, h2, h3 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- SideNavBar Component -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-zinc-100 dark:bg-zinc-950 border-r border-zinc-200/50 dark:border-zinc-800/50 flex flex-col p-4 space-y-2 font-plus-jakarta text-sm font-semibold">
+<div class="mb-8 px-2">
+<h1 class="text-xl font-black text-green-800 dark:text-green-500">HealthyGO Admin</h1>
+<p class="text-xs text-zinc-500 font-medium">Management Portal</p>
+</div>
+<nav class="flex-grow space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-white dark:bg-zinc-900 text-green-700 dark:text-green-400 rounded-lg shadow-sm transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">group</span>
+<span>Users</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Products</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">store</span>
+<span>Stores</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span>Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span>Reports</span>
+</a>
+</nav>
+<div class="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen p-8">
+<!-- Header Section -->
+<header class="flex justify-between items-end mb-10">
+<div>
+<h2 class="text-3xl font-extrabold tracking-tight text-on-surface mb-2">User Management</h2>
+<p class="text-on-surface-variant max-w-lg">Review and manage your store's user base. Oversee permissions, account statuses, and login activity from this central hub.</p>
+</div>
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-sm active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined">person_add</span>
+                Add New User
+            </button>
+</header>
+<!-- Search and Filter Bar -->
+<div class="bg-surface-container-low rounded-xl p-4 mb-6 flex flex-wrap items-center gap-4">
+<div class="relative flex-grow max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border-none rounded-lg focus:ring-2 focus:ring-primary/20 text-sm text-on-surface" placeholder="Search by name, email or role..." type="text"/>
+</div>
+<div class="flex items-center gap-2 ml-auto">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-highest rounded-lg text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                    Filters
+                </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-highest rounded-lg text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-sm">download</span>
+                    Export CSV
+                </button>
+</div>
+</div>
+<!-- Table Container -->
+<div class="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)]">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant text-xs font-bold uppercase tracking-widest">
+<th class="px-6 py-4">Name</th>
+<th class="px-6 py-4">Email Address</th>
+<th class="px-6 py-4">Role</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4">Last Login</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Profile picture of Marcus Thorne" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPTB2bp36aDsiVlc-W2PcLHWRsYQf_AuEKreSeUN9i-12kXB4uNgOFt-y8sc6jFCYqzPG7Lc4fyFnY7vK52Ctdpg2l_nId24LpWxwDw043jQjj2TGSm0jYjYHJEiIXr5eMDA2THN4Rlp3zlVaUPJmHt7xbqwKeHo5RB5EmjVijKuQrwD-h0eIuR_tX6gT8tVOU4xF8J2URo_zeC_P9S93vbGqL2GnQms1pWVWB1eP-phJQ6k_0SY_jtlky4rFe4stDMUWBylGrGiDP"/>
+<div>
+<p class="font-semibold text-on-surface">Marcus Thorne</p>
+<p class="text-xs text-on-surface-variant">Joined 12 Oct 2023</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant">marcus.thorne@example.com</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant text-[10px] font-bold uppercase rounded-full tracking-wide">Admin</span>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-1.5 text-primary font-medium text-sm">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                                Active
+                            </div>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant italic">2 mins ago</td>
+<td class="px-6 py-5 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 hover:bg-error/10 rounded-lg text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="bg-surface-container-low/50 hover:bg-surface-container transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Profile picture of Sarah Jenkins" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD12vgW0Xp3K8RsMFnRDV2QeCPKlfx9iTk360xGzQfxOvNgbjkUkVmuE3Eqnc3jotqpfHQ2qkglaFgqn1IvpXGbv-6p_PmU2Y8G_A_U96HbN0cGElfXAl_yjgP55AQp5yC2BSJtNWlrnHN3WFW-Hg-x0N2r5RAFZ9mqtTme1itT4Yrwy-yY12hJ4nEq_3APrp0mK5PjQkce2dCHMH0hBcbH32WTl_D5fc49HieJuANLtZXuwH-BgqXQ1PZJB9TVWrdocZx8g5i_Qv4b"/>
+<div>
+<p class="font-semibold text-on-surface">Sarah Jenkins</p>
+<p class="text-xs text-on-surface-variant">Joined 05 Nov 2023</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant">s.jenkins@provider.net</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-bold uppercase rounded-full tracking-wide">Customer</span>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-1.5 text-primary font-medium text-sm">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                                Active
+                            </div>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant italic">14 hours ago</td>
+<td class="px-6 py-5 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 hover:bg-error/10 rounded-lg text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Profile picture of Elias Vance" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcQDBw7ECEUwecPV4Bty98B_1dfymGFBcSndEKH7-QMLOA3eemw1xjCs1G8hl2o_GU9O-Jb3u5vxSfCkVc7k6-FYKZSoA49ELHfhx5KN1uGtqNfm8hnGQ0VFUvWR0SLpL7gPIkn1RLyHELVvC6Cww9T2vltJuU-oPSvZB2DUgv7SaS9ibWS1aUyGW51mK9boOU4x9BogTai-CbsNaXZS80jwhLHNUy7agCuWZd4jUuXxg4u1ODIOx1fHT9k_aQ5q2C9-28xgUs-OWm"/>
+<div>
+<p class="font-semibold text-on-surface">Elias Vance</p>
+<p class="text-xs text-on-surface-variant">Joined 18 Nov 2023</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant">vance.elias@corp.com</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-bold uppercase rounded-full tracking-wide">Customer</span>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-1.5 text-error font-medium text-sm">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+                                Suspended
+                            </div>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant italic">28 days ago</td>
+<td class="px-6 py-5 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 hover:bg-error/10 rounded-lg text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="bg-surface-container-low/50 hover:bg-surface-container transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Profile picture of Julian Smith" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtE85kEzeTOxs74o8jGmQw52FZDD4NIYST_tk9jNNlEuWejoKHtsBHRyy2n_LUD2ByJLh0RGod1Hb0LE8oTxs1ThC1vZ7M1_oBDXOI7PWozGgi12Q43EkuRwvfh1JAGDTZoLbPIFjWGJsVanJk7zVnjsNFcFYiXjTbHiJXvvq3jhwf-o7YjCFRUAl7vAKKSJDXGa22MbFAPmeMjln-SLyGujS1yeBFIBlT_fH7iQVLM76qP4BGekF2rxcUDkcCTyf4EY-cMrDxQzgi"/>
+<div>
+<p class="font-semibold text-on-surface">Julian Smith</p>
+<p class="text-xs text-on-surface-variant">Joined 21 Nov 2023</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant">j.smith@webmail.com</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-bold uppercase rounded-full tracking-wide">Customer</span>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-1.5 text-primary font-medium text-sm">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                                Active
+                            </div>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant italic">Yesterday</td>
+<td class="px-6 py-5 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 hover:bg-error/10 rounded-lg text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Pagination Footer -->
+<div class="px-6 py-4 flex items-center justify-between border-t border-surface-container bg-surface-container-low/30">
+<span class="text-xs font-medium text-on-surface-variant">Showing 1 to 4 of 288 users</span>
+<div class="flex gap-2">
+<button class="p-2 bg-surface-container-highest rounded-lg text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="px-3 py-1 bg-primary text-on-primary rounded-lg text-sm font-bold">1</button>
+<button class="px-3 py-1 bg-surface-container-highest rounded-lg text-sm font-medium hover:bg-surface-container-high transition-colors">2</button>
+<button class="px-3 py-1 bg-surface-container-highest rounded-lg text-sm font-medium hover:bg-surface-container-high transition-colors">3</button>
+<button class="p-2 bg-surface-container-highest rounded-lg text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- System Stats Bar -->
+<div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-6 bg-surface-container-low rounded-2xl flex items-center gap-4">
+<div class="p-3 bg-primary-container/20 rounded-xl">
+<span class="material-symbols-outlined text-primary text-3xl">group</span>
+</div>
+<div>
+<p class="text-xs uppercase tracking-widest font-bold text-on-surface-variant mb-1">Total Users</p>
+<h4 class="text-2xl font-black text-on-surface">12,490</h4>
+</div>
+</div>
+<div class="p-6 bg-surface-container-low rounded-2xl flex items-center gap-4">
+<div class="p-3 bg-secondary-container/20 rounded-xl">
+<span class="material-symbols-outlined text-secondary text-3xl">verified_user</span>
+</div>
+<div>
+<p class="text-xs uppercase tracking-widest font-bold text-on-surface-variant mb-1">Administrators</p>
+<h4 class="text-2xl font-black text-on-surface">14</h4>
+</div>
+</div>
+<div class="p-6 bg-surface-container-low rounded-2xl flex items-center gap-4">
+<div class="p-3 bg-tertiary-container/20 rounded-xl">
+<span class="material-symbols-outlined text-tertiary text-3xl">person_remove</span>
+</div>
+<div>
+<p class="text-xs uppercase tracking-widest font-bold text-on-surface-variant mb-1">Pending Suspension</p>
+<h4 class="text-2xl font-black text-on-surface">3</h4>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer Component -->
+<footer class="ml-64 w-[calc(100%-16rem)] py-12 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
+<div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+<div class="font-inter text-xs text-zinc-500 uppercase tracking-widest">
+                © 2024 HealthyGO Organic. All rights reserved.
+            </div>
+<div class="flex flex-wrap gap-6 justify-start md:justify-end">
+<a class="font-inter text-xs text-zinc-400 hover:text-green-500 uppercase tracking-widest hover:underline decoration-green-500 underline-offset-4 transition-opacity" href="#">Contact</a>
+<a class="font-inter text-xs text-zinc-400 hover:text-green-500 uppercase tracking-widest hover:underline decoration-green-500 underline-offset-4 transition-opacity" href="#">Shipping</a>
+<a class="font-inter text-xs text-zinc-400 hover:text-green-500 uppercase tracking-widest hover:underline decoration-green-500 underline-offset-4 transition-opacity" href="#">Returns</a>
+<a class="font-inter text-xs text-zinc-400 hover:text-green-500 uppercase tracking-widest hover:underline decoration-green-500 underline-offset-4 transition-opacity" href="#">Privacy Policy</a>
+<a class="font-inter text-xs text-zinc-400 hover:text-green-500 uppercase tracking-widest hover:underline decoration-green-500 underline-offset-4 transition-opacity" href="#">Terms of Service</a>
+</div>
+</div>
+</footer>
+</body></html>

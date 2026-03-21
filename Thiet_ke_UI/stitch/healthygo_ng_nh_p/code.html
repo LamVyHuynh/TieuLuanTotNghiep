@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Đăng nhập | HealthyGO</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-container": "#74aa34",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed-dim": "#9ed75b",
+              "outline": "#6f7a6b",
+              "on-secondary-fixed": "#2c1600",
+              "on-tertiary-fixed": "#0f2000",
+              "secondary-fixed": "#ffdcbe",
+              "inverse-surface": "#2f3131",
+              "secondary": "#8b5000",
+              "outline-variant": "#becab9",
+              "on-primary-fixed": "#002204",
+              "tertiary": "#3e6a00",
+              "surface-container": "#eeeeee",
+              "background": "#f9f9f9",
+              "on-tertiary-fixed-variant": "#2e4f00",
+              "surface-variant": "#e2e2e2",
+              "secondary-fixed-dim": "#ffb870",
+              "primary-fixed": "#94f990",
+              "surface-container-lowest": "#ffffff",
+              "on-surface": "#1a1c1c",
+              "inverse-primary": "#78dc77",
+              "surface-dim": "#dadada",
+              "surface-tint": "#006e1c",
+              "primary-fixed-dim": "#78dc77",
+              "primary-container": "#4caf50",
+              "secondary-container": "#ff9800",
+              "on-secondary-container": "#653900",
+              "on-primary-container": "#003c0b",
+              "on-primary": "#ffffff",
+              "on-primary-fixed-variant": "#005313",
+              "error": "#ba1a1a",
+              "inverse-on-surface": "#f1f1f1",
+              "on-surface-variant": "#3f4a3c",
+              "surface": "#f9f9f9",
+              "on-tertiary-container": "#203900",
+              "on-background": "#1a1c1c",
+              "surface-container-high": "#e8e8e8",
+              "surface-bright": "#f9f9f9",
+              "primary": "#006e1c",
+              "on-error": "#ffffff",
+              "on-secondary-fixed-variant": "#693c00",
+              "surface-container-highest": "#e2e2e2",
+              "surface-container-low": "#f3f3f3",
+              "on-error-container": "#93000a",
+              "on-secondary": "#ffffff",
+              "error-container": "#ffdad6",
+              "tertiary-fixed": "#b9f474"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans", "sans-serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .editorial-shadow {
+        box-shadow: 0 24px 48px -12px rgba(26, 28, 28, 0.04);
+      }
+      .bg-gradient-primary {
+        background: linear-gradient(135deg, #006e1c 0%, #4caf50 100%);
+      }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- Auth Container -->
+<main class="min-h-screen flex items-center justify-center p-4 md:p-8">
+<div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-surface-container-lowest rounded-xl editorial-shadow">
+<!-- Left Side: Login Form (Canvas) -->
+<div class="lg:col-span-5 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+<!-- Brand Anchor (Simplified from TopNavBar rules) -->
+<div class="mb-12">
+<span class="font-headline text-3xl font-extrabold tracking-tighter text-primary">HealthyGO</span>
+<p class="text-on-surface-variant mt-2 font-medium">Chào mừng bạn quay trở lại với lối sống lành mạnh.</p>
+</div>
+<form action="#" class="space-y-6" method="POST">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="font-label text-xs uppercase tracking-widest font-semibold text-on-surface-variant" for="email">Địa chỉ Email</label>
+<div class="relative">
+<input class="w-full bg-surface-container-highest border-none rounded-lg py-4 px-4 focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-outline" id="email" name="email" placeholder="name@example.com" required="" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="font-label text-xs uppercase tracking-widest font-semibold text-on-surface-variant" for="password">Mật khẩu</label>
+<a class="text-primary text-xs font-semibold hover:underline" href="#">Quên mật khẩu?</a>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-highest border-none rounded-lg py-4 px-4 focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-outline" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center space-x-3">
+<input class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/30 transition-all" id="remember" name="remember" type="checkbox"/>
+<label class="text-sm font-medium text-on-surface-variant select-none" for="remember">Ghi nhớ đăng nhập</label>
+</div>
+<!-- Primary CTA -->
+<button class="w-full bg-gradient-primary text-white font-headline font-bold py-4 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all" type="submit">
+                        Đăng nhập ngay
+                    </button>
+<!-- Divider -->
+<div class="relative py-4">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-outline-variant opacity-20"></div>
+</div>
+<div class="relative flex justify-center text-xs uppercase">
+<span class="bg-surface-container-lowest px-4 text-outline font-medium tracking-widest">Hoặc</span>
+</div>
+</div>
+<!-- Social Login -->
+<button class="w-full flex items-center justify-center gap-3 bg-surface-container-low hover:bg-surface-container-high text-on-surface font-semibold py-4 rounded-xl transition-all active:scale-[0.98]" type="button">
+<img alt="Google Logo" class="w-5 h-5" data-alt="Official Google icon for login button" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqdYFC-Q2rHn98K7MeQVssUSglUdPfnNgNnGkn3iBJYD9bIG_VYzSnmXR5rwZ5z8h2KLpQcYX5GcVL7kXKlQxY6mjEUZlEZ0kfmTPvSgKdaDeIfq12OaTDuU1ULT2ClEDupfOBzB7x5aFvpqKcaLBmt511-T8D4T3rIfdX_RbK6OuwMb-QhbR8mb2Ih6QJx1micIkwVFskpT6BN7q_X1KPvkHtlBP-qEfwix2Fn93xpe12WmsQaqN7XuYPcCPwCHZEm5K_GG-MKz7j"/>
+                        Tiếp tục với Google
+                    </button>
+</form>
+<!-- Footer Links -->
+<div class="mt-10 text-center">
+<p class="text-sm text-on-surface-variant">
+                        Chưa có tài khoản? 
+                        <a class="text-primary font-bold hover:underline ml-1" href="#">Đăng ký miễn phí</a>
+</p>
+</div>
+</div>
+<!-- Right Side: Imagery (The Living Pantry Aesthetic) -->
+<div class="hidden lg:block lg:col-span-7 relative overflow-hidden bg-surface-container-low">
+<!-- Tonal layering behind image -->
+<div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-tertiary/10"></div>
+<!-- Main Visual: Farm Fresh Produce -->
+<div class="relative h-full w-full flex items-center justify-center p-12">
+<div class="relative w-full h-full max-h-[700px] overflow-hidden rounded-xl">
+<img alt="Organic produce in a local market" class="absolute inset-0 w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-1000 ease-out" data-alt="Fresh organic vegetables and fruits in rustic wooden crates" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCz8lSwL-Jp08QDcoowpQHl5S_5ELTw5wPsAoIsxb8mJjWPGoGrASJtQQXGEKNGA7ftyahjwH5SSEHimgpZVPhzUR9etNuRqEOOyRKRxTZSJ_RdJsk5PEqHXqO-8sLGhItY-ggKYwJYT-oP1H7ViUIf_ItqsKKwqNmgoH7gJSfjzOhGwgFnRi67Efe6c2bu5-DZ-yaPRlMVoqSCK-D1MB0PumO0iFEFVtdFDcECsf5MgOB4BbqrS795gCjGlcVeN7XLBmQUSnDf5cRI"/>
+<!-- Floating Glassmorphism Info Card -->
+<div class="absolute bottom-10 left-10 right-10 p-8 rounded-xl bg-white/40 backdrop-blur-md border border-white/20">
+<div class="flex items-center gap-4 mb-4">
+<div class="bg-primary-container p-2 rounded-full">
+<span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">eco</span>
+</div>
+<span class="font-headline font-bold text-on-primary-container tracking-tight">100% Hữu Cơ</span>
+</div>
+<h2 class="font-headline text-3xl font-extrabold text-on-surface tracking-tighter mb-2">Sức Khỏe Từ Thiên Nhiên</h2>
+<p class="text-on-surface-variant font-medium leading-relaxed">
+                                Chúng tôi mang những sản phẩm tươi sạch nhất từ trang trại đến tận bàn ăn của gia đình bạn.
+                            </p>
+</div>
+</div>
+<!-- Asymmetric Decorative Element -->
+<div class="absolute -top-12 -right-12 w-64 h-64 bg-tertiary-fixed-dim/20 rounded-full blur-3xl"></div>
+<div class="absolute -bottom-12 -left-12 w-64 h-64 bg-primary-fixed-dim/20 rounded-full blur-3xl"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- Suppressed Shell Components for Transactional Screen -->
+<!-- As per instructions: Navigation shell is excluded for Transactional Login page -->
+</body></html>

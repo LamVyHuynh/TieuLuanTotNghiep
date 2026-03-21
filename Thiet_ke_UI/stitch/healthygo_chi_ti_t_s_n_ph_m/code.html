@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error-container": "#ffdad6",
+              "surface-dim": "#dadada",
+              "secondary-fixed-dim": "#ffb870",
+              "surface-variant": "#e2e2e2",
+              "on-error-container": "#93000a",
+              "tertiary-container": "#74aa34",
+              "inverse-primary": "#78dc77",
+              "on-background": "#1a1c1c",
+              "surface-container-lowest": "#ffffff",
+              "secondary": "#8b5000",
+              "on-surface-variant": "#3f4a3c",
+              "on-tertiary-fixed": "#0f2000",
+              "tertiary": "#3e6a00",
+              "primary-fixed": "#94f990",
+              "on-primary-container": "#003c0b",
+              "on-surface": "#1a1c1c",
+              "surface-bright": "#f9f9f9",
+              "on-primary-fixed": "#002204",
+              "primary-container": "#4caf50",
+              "surface-container-highest": "#e2e2e2",
+              "tertiary-fixed-dim": "#9ed75b",
+              "surface-container-low": "#f3f3f3",
+              "outline": "#6f7a6b",
+              "primary-fixed-dim": "#78dc77",
+              "outline-variant": "#becab9",
+              "surface-container": "#eeeeee",
+              "on-secondary-fixed-variant": "#693c00",
+              "surface-tint": "#006e1c",
+              "tertiary-fixed": "#b9f474",
+              "on-tertiary": "#ffffff",
+              "secondary-container": "#ff9800",
+              "surface": "#f9f9f9",
+              "inverse-on-surface": "#f1f1f1",
+              "error": "#ba1a1a",
+              "on-primary": "#ffffff",
+              "on-tertiary-container": "#203900",
+              "on-tertiary-fixed-variant": "#2e4f00",
+              "inverse-surface": "#2f3131",
+              "on-error": "#ffffff",
+              "on-secondary-container": "#653900",
+              "on-secondary-fixed": "#2c1600",
+              "surface-container-high": "#e8e8e8",
+              "secondary-fixed": "#ffdcbe",
+              "primary": "#006e1c",
+              "background": "#f9f9f9",
+              "on-secondary": "#ffffff",
+              "on-primary-fixed-variant": "#005313"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .font-plus-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+      .font-inter { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body antialiased">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+<a class="text-2xl font-bold tracking-tighter text-green-700 dark:text-green-400 font-plus-jakarta" href="#">HealthyGO</a>
+<div class="hidden md:flex items-center space-x-8 font-plus-jakarta text-sm font-medium tracking-tight">
+<a class="text-zinc-600 dark:text-zinc-400 hover:text-green-600 transition-colors" href="#">Home</a>
+<a class="text-green-700 dark:text-green-400 border-b-2 border-green-600 pb-1" href="#">Catalog</a>
+<a class="text-zinc-600 dark:text-zinc-400 hover:text-green-600 transition-colors" href="#">Cart</a>
+<a class="text-zinc-600 dark:text-zinc-400 hover:text-green-600 transition-colors" href="#">Account</a>
+</div>
+<div class="flex items-center space-x-4">
+<button class="p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined text-green-700 dark:text-green-400">shopping_cart</span>
+</button>
+<button class="p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined text-green-700 dark:text-green-400">account_circle</span>
+</button>
+</div>
+</div>
+<div class="bg-zinc-100 dark:bg-zinc-800 h-[1px] w-full"></div>
+</nav>
+<main class="pt-24 pb-16 max-w-7xl mx-auto px-6">
+<!-- Breadcrumb -->
+<nav class="flex mb-8 text-xs font-label tracking-widest uppercase text-zinc-500">
+<a class="hover:text-primary" href="#">Home</a>
+<span class="mx-2">/</span>
+<a class="hover:text-primary" href="#">Vegetables</a>
+<span class="mx-2">/</span>
+<span class="text-on-surface-variant">Organic Kale</span>
+</nav>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+<!-- Product Image Section (Asymmetric Breakout) -->
+<div class="lg:col-span-7 relative group">
+<div class="bg-surface-container-low rounded-xl overflow-hidden aspect-square flex items-center justify-center p-8">
+<img alt="Fresh Organic Kale" class="w-full h-full object-cover rounded-lg shadow-sm group-hover:scale-105 transition-transform duration-500" data-alt="Close up shot of fresh organic green kale leaves" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCk4DnRfcvtZTuadAc5qNSqSbcS7iLKWMvmFSsbsXONtcckULcDBlo3zEv169NM5Rs6WEP8fUWhqqQCenuUBEw1x4QqBFyDtg0GJzaJM0g4GlejjFnac-rYScmSid2eaVhWnU43JQnAhftru-9tZ6esIV-Zz2p2n2zwR2Ylw32UG5Tj21YYraAJPzGIawb6gZhvXAwDyB0l1aiieW0eT-o_zeskAsvDfBRTH-TgEGvQXiK9gz3fqT5KGZOvuDYAXFSsI1XCEGk6o8E3"/>
+</div>
+<!-- Promotional Tag -->
+<div class="absolute -top-4 -right-4 bg-tertiary-container text-on-tertiary-container px-6 py-3 rounded-full font-headline font-bold text-sm shadow-sm">
+                    Certified Organic
+                </div>
+</div>
+<!-- Product Details Section -->
+<div class="lg:col-span-5 space-y-8">
+<div>
+<h1 class="text-4xl lg:text-5xl font-headline font-extrabold tracking-tighter text-on-surface mb-2">Organic Lacinato Kale</h1>
+<div class="flex items-center gap-4">
+<span class="text-2xl font-headline font-bold text-primary">45.000đ<span class="text-base font-medium text-on-surface-variant">/kg</span></span>
+<span class="bg-secondary-container/20 text-on-secondary-container px-3 py-1 rounded-full text-xs font-label font-semibold">
+                            In Stock
+                        </span>
+</div>
+</div>
+<!-- Bento-style Nutritional Grid -->
+<div class="bg-surface-container-low p-6 rounded-xl space-y-4">
+<h3 class="font-headline font-bold text-sm uppercase tracking-wider text-on-surface-variant">Nutritional Facts <span class="text-[10px] font-normal">(per 100g)</span></h3>
+<div class="grid grid-cols-3 gap-3">
+<div class="bg-surface-container-lowest p-3 rounded-lg text-center border border-outline-variant/10">
+<p class="text-[10px] font-label text-zinc-500 uppercase">Energy</p>
+<p class="text-lg font-headline font-bold text-tertiary">49 kcal</p>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded-lg text-center border border-outline-variant/10">
+<p class="text-[10px] font-label text-zinc-500 uppercase">Protein</p>
+<p class="text-lg font-headline font-bold text-tertiary">4.3g</p>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded-lg text-center border border-outline-variant/10">
+<div class="flex flex-col">
+<p class="text-[10px] font-label text-zinc-500 uppercase">Carbs</p>
+<p class="text-lg font-headline font-bold text-tertiary">8.8g</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded-lg text-center border border-outline-variant/10">
+<p class="text-[10px] font-label text-zinc-500 uppercase">Fiber</p>
+<p class="text-lg font-headline font-bold text-tertiary">3.6g</p>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded-lg text-center border border-outline-variant/10">
+<p class="text-[10px] font-label text-zinc-500 uppercase">Fat</p>
+<p class="text-lg font-headline font-bold text-tertiary">0.9g</p>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded-lg text-center border border-outline-variant/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary-fixed-dim">eco</span>
+</div>
+</div>
+</div>
+<!-- Interaction Area -->
+<div class="space-y-6">
+<div class="flex items-center justify-between bg-surface-container-highest p-4 rounded-xl">
+<div class="flex items-center space-x-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest hover:bg-white text-on-surface active:scale-90 transition-all">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<span class="text-xl font-headline font-bold w-8 text-center">1</span>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest hover:bg-white text-on-surface active:scale-90 transition-all">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<div class="text-right">
+<p class="text-xs font-label text-zinc-500 uppercase">Total Estimate</p>
+<p class="text-xl font-headline font-extrabold text-on-surface">45.000đ</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-headline font-bold text-lg shadow-sm hover:shadow-md active:scale-95 transition-all">
+                            Add to Cart
+                        </button>
+<button class="py-4 bg-surface-container-highest text-on-surface rounded-xl font-headline font-bold text-lg hover:bg-surface-container-high active:scale-95 transition-all">
+                            Subscribe
+                        </button>
+</div>
+</div>
+<!-- Details Accordion -->
+<div class="pt-6 border-t border-outline-variant/20 space-y-4">
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-[10px] font-label text-zinc-400 uppercase tracking-widest">Origin</p>
+<p class="text-sm font-medium">Da Lat, Vietnam</p>
+</div>
+<div>
+<p class="text-[10px] font-label text-zinc-400 uppercase tracking-widest">Method</p>
+<p class="text-sm font-medium">Organic Farming (VIETGAP)</p>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg">
+<p class="text-[10px] font-label text-zinc-400 uppercase tracking-widest mb-1">Storage Instructions</p>
+<p class="text-sm text-on-surface-variant leading-relaxed">Keep refrigerated at 4-6°C in a breathable produce bag. Do not wash before storage to maintain crispness. Best consumed within 5-7 days.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Similar Products Section -->
+<section class="mt-24">
+<div class="flex justify-between items-end mb-10">
+<h2 class="text-3xl font-headline font-extrabold tracking-tight">You Might Also Like</h2>
+<a class="text-primary font-bold text-sm flex items-center gap-1 hover:underline underline-offset-4" href="#">
+                    View Catalog <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+<!-- Product Card 1 -->
+<div class="group cursor-pointer">
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden mb-4 relative aspect-[4/5] transition-all group-hover:bg-surface-container-high">
+<img alt="Organic Spinach" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Fresh bundle of organic baby spinach leaves" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDT2zS3jes0qw3cLz30HFXS4OMplJQYRWJxHukOw4gFLkZEoSImwIBUuvXgQzxyfFdqgmyOMtyjoOtBBODYb3W0EAbtz8LKzTJQNFGVV0s42_iMm2Zt4WBPeHDDnYerUQoowU7Yj6G7SpUeexB_eOT3-GfTevdiK1q4kXxsCQVHH33l22bgcK8CP5gKetkzm06s8yA2Psz86sIzjQJaw1OMpKk8b36e5GN4WC1nf14Fm9ru3M-2NM93T4RTfnQUgwyVUp3aKZh6ALZM"/>
+<div class="absolute top-4 right-4">
+<span class="bg-tertiary-container text-on-tertiary-container px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter">Organic</span>
+</div>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1">Organic Baby Spinach</h3>
+<p class="text-primary font-bold">32.000đ <span class="text-xs font-normal text-zinc-400">/250g</span></p>
+</div>
+<!-- Product Card 2 -->
+<div class="group cursor-pointer">
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden mb-4 relative aspect-[4/5] transition-all group-hover:bg-surface-container-high">
+<img alt="Baby Carrots" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Freshly harvested baby carrots with green tops" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAgeQoUoZx265n02vL4rJaon3zPq7bDOKK-srljW6la7USUf0OjF7eTpme4YuifSWygj68DfrruZvK773DOPQu6C5hw9mB-DbxEdgPF3SP0dhS-7dC11P4D3xkkQhgNyodDoHXhJI8bruJrCe2gxMqnusjCXXGuKfe1hN7bAzc_YIAxtE_LNy7J3Ty-h1lT99KJrgW4KqUIHjxRKleUFBHNs4DQjvYt-rC0muamlNs9eeM6B6AWek9yF27ExsbEO9esQcaGmtn119k"/>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1">Rainbow Baby Carrots</h3>
+<p class="text-primary font-bold">55.000đ <span class="text-xs font-normal text-zinc-400">/kg</span></p>
+</div>
+<!-- Product Card 3 -->
+<div class="group cursor-pointer">
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden mb-4 relative aspect-[4/5] transition-all group-hover:bg-surface-container-high">
+<img alt="Heirloom Tomatoes" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Assorted colorful heirloom tomatoes on a wooden surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAE98JxdVS-FUFuWmS6g34wHdzgpY1YzH9B7X11UtxBUx0X4hb8FR7jpaI12L6P2rc-1WWeIp0KJLn1aGuNJ87405csL5KYq-U76tJp7ZU50-CTaX6GtdaXaHS8VRvBTvHf3KhwQ5f-aK4Djdb18MM8kS25qHlk7DOTE2QNklM3OWSc5IRSlZ5_Z9s_yv3rJvjV4OqRjKWlutC0FAmKSc-o4-qPVfvP2smX-vZjLRC1UL_DIrsmzNpMNYiA0gBGojdArt-aQhZJoa5l"/>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1">Heirloom Tomatoes</h3>
+<p class="text-primary font-bold">78.000đ <span class="text-xs font-normal text-zinc-400">/kg</span></p>
+</div>
+<!-- Product Card 4 -->
+<div class="group cursor-pointer">
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden mb-4 relative aspect-[4/5] transition-all group-hover:bg-surface-container-high">
+<img alt="Fresh Broccoli" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Close up of a vibrant green broccoli head" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCxyWNHmIhWAmJc2TYAvSWeJx5A287FX_3Wqq3y70gAXClgGiO48uW54hEJODmJnmK3k-Yp3iu6c3LOgnHC2GOmfE4My7XQprUgsu90te-NHpOqRAWP6gb4wEU0tUZfx45oZe1XStP-UiSRAiJqGcrB-WbXE7aoYJjVEWagIVjCieGoz4HDd_ythyn6I9A89y2-zLCSEMLZLMckZ8Ip1_4DS5CadCZqq945Q7Oc3YoJMp4zgYOOqTRu3bv7eh8B8--JTl3p7R78nq5"/>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1">Organic Broccoli</h3>
+<p class="text-primary font-bold">42.000đ <span class="text-xs font-normal text-zinc-400">/500g</span></p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-12 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
+<div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12">
+<div class="space-y-6">
+<div class="hidden">HealthyGO Logo</div>
+<h4 class="font-headline font-extrabold text-xl tracking-tighter text-green-700 dark:text-green-400">HealthyGO</h4>
+<p class="font-body text-sm text-zinc-500 max-w-sm leading-relaxed">
+                    Bringing the freshness of the farm directly to your kitchen. 100% Organic, 100% Transparent, 100% Healthy.
+                </p>
+<div class="flex space-x-4">
+<span class="material-symbols-outlined text-zinc-400 hover:text-green-600 cursor-pointer">social_leaderboard</span>
+<span class="material-symbols-outlined text-zinc-400 hover:text-green-600 cursor-pointer">photo_camera</span>
+<span class="material-symbols-outlined text-zinc-400 hover:text-green-600 cursor-pointer">alternate_email</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-4">
+<h5 class="font-inter text-xs text-zinc-500 uppercase tracking-widest font-bold">Support</h5>
+<ul class="space-y-2">
+<li><a class="font-inter text-xs text-zinc-400 uppercase tracking-widest hover:text-green-500 hover:underline decoration-green-500 underline-offset-4 transition-all" href="#">Contact</a></li>
+<li><a class="font-inter text-xs text-zinc-400 uppercase tracking-widest hover:text-green-500 hover:underline decoration-green-500 underline-offset-4 transition-all" href="#">Shipping</a></li>
+<li><a class="font-inter text-xs text-zinc-400 uppercase tracking-widest hover:text-green-500 hover:underline decoration-green-500 underline-offset-4 transition-all" href="#">Returns</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<h5 class="font-inter text-xs text-zinc-500 uppercase tracking-widest font-bold">Legal</h5>
+<ul class="space-y-2">
+<li><a class="font-inter text-xs text-zinc-400 uppercase tracking-widest hover:text-green-500 hover:underline decoration-green-500 underline-offset-4 transition-all" href="#">Privacy Policy</a></li>
+<li><a class="font-inter text-xs text-zinc-400 uppercase tracking-widest hover:text-green-500 hover:underline decoration-green-500 underline-offset-4 transition-all" href="#">Terms of Service</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-zinc-100 dark:border-zinc-900">
+<p class="font-inter text-[10px] text-zinc-400 uppercase tracking-widest text-center">
+                © 2024 HealthyGO Organic. All rights reserved.
+            </p>
+</div>
+</footer>
+</body></html>

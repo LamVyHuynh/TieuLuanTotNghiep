@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tài khoản của tôi | HealthyGO</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary-fixed": "#94f990",
+              "on-secondary-fixed": "#2c1600",
+              "error": "#ba1a1a",
+              "secondary-fixed-dim": "#ffb870",
+              "secondary-fixed": "#ffdcbe",
+              "on-error": "#ffffff",
+              "surface": "#f9f9f9",
+              "on-surface-variant": "#3f4a3c",
+              "outline-variant": "#becab9",
+              "secondary": "#8b5000",
+              "primary-container": "#4caf50",
+              "surface-container-highest": "#e2e2e2",
+              "on-secondary-fixed-variant": "#693c00",
+              "on-error-container": "#93000a",
+              "on-primary-fixed-variant": "#005313",
+              "primary": "#006e1c",
+              "on-tertiary-fixed-variant": "#2e4f00",
+              "outline": "#6f7a6b",
+              "on-background": "#1a1c1c",
+              "tertiary": "#3e6a00",
+              "surface-container": "#eeeeee",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed-dim": "#9ed75b",
+              "tertiary-container": "#74aa34",
+              "on-surface": "#1a1c1c",
+              "on-secondary": "#ffffff",
+              "inverse-on-surface": "#f1f1f1",
+              "surface-dim": "#dadada",
+              "surface-container-high": "#e8e8e8",
+              "surface-bright": "#f9f9f9",
+              "inverse-primary": "#78dc77",
+              "error-container": "#ffdad6",
+              "tertiary-fixed": "#b9f474",
+              "primary-fixed-dim": "#78dc77",
+              "on-tertiary-container": "#203900",
+              "on-tertiary-fixed": "#0f2000",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#ffffff",
+              "background": "#f9f9f9",
+              "on-secondary-container": "#653900",
+              "secondary-container": "#ff9800",
+              "on-primary-container": "#003c0b",
+              "surface-variant": "#e2e2e2",
+              "surface-tint": "#006e1c",
+              "on-primary-fixed": "#002204",
+              "surface-container-low": "#f3f3f3",
+              "inverse-surface": "#2f3131"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-nav {
+        backdrop-filter: blur(12px);
+      }
+      .editorial-shadow {
+        box-shadow: 0 24px 48px -12px rgba(26, 28, 28, 0.04);
+      }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface selection:bg-primary-container/30">
+<!-- TopNavBar -->
+<header class="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md docked full-width top-0 sticky z-50 shadow-sm">
+<div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto w-full">
+<div class="font-['Plus_Jakarta_Sans'] tracking-tight">
+<span class="text-2xl font-bold bg-gradient-to-br from-green-700 to-green-500 bg-clip-text text-transparent">HealthyGO</span>
+</div>
+<nav class="hidden md:flex items-center space-x-8 font-['Plus_Jakarta_Sans'] tracking-tight">
+<a class="text-zinc-600 dark:text-zinc-400 hover:text-green-600 transition-colors hover:opacity-80 transition-all active:scale-95 duration-200" href="#">Cửa hàng</a>
+<a class="text-zinc-600 dark:text-zinc-400 hover:text-green-600 transition-colors hover:opacity-80 transition-all active:scale-95 duration-200" href="#">Khuyến mãi</a>
+<a class="text-zinc-600 dark:text-zinc-400 hover:text-green-600 transition-colors hover:opacity-80 transition-all active:scale-95 duration-200" href="#">Gói ăn</a>
+<a class="text-zinc-600 dark:text-zinc-400 hover:text-green-600 transition-colors hover:opacity-80 transition-all active:scale-95 duration-200" href="#">Về chúng tôi</a>
+</nav>
+<div class="flex items-center space-x-4">
+<button class="text-green-700 dark:text-green-500 hover:opacity-80 transition-all active:scale-95 duration-200 p-2">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+</button>
+<button class="text-green-700 dark:text-green-400 font-semibold border-b-2 border-green-600 hover:opacity-80 transition-all active:scale-95 duration-200 p-2">
+<span class="material-symbols-outlined" data-icon="account_circle" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-6 py-12 md:py-20">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Sidebar Navigation -->
+<aside class="lg:col-span-3 space-y-2">
+<div class="bg-surface-container-low rounded-xl p-6 mb-6">
+<div class="flex items-center gap-4 mb-2">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xl overflow-hidden">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Portrait of a young professional man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBecFH0nBloMDL22VTX2S1TMULoHo0zn26ewE89W3L1EWAtl588PJDj--bIIR0TrTjauXvuGEYkB11gMGAdUVLB-f6IgvAe6za4j4QeunF7OuDby-ysbXfwQwP8skdRdTCO5Qpec7hdGS56hMxXQXkJa_yff7rrxRVxSIUtRC5y9NOYkvoFJSdAhIZX8OTXV2NJ6FJ6u8AaTYUNV7nZvrW6PBXmhG9JkjKiTut14B4M3SBBE7uiBvWw_1o-dJH12VZr01MmrIrBQmT0"/>
+</div>
+<div>
+<p class="font-headline font-bold text-on-surface">Minh Anh</p>
+<p class="text-xs text-outline font-label uppercase tracking-wider">Hội viên Vàng</p>
+</div>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-on-primary font-medium transition-all shadow-md" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span>Thông tin cá nhân</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span>Lịch sử đơn hàng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="location_on">location_on</span>
+<span>Địa chỉ nhận hàng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span>Phương thức thanh toán</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="lock">lock</span>
+<span>Đổi mật khẩu</span>
+</a>
+<div class="pt-4 mt-4 border-t border-outline-variant/20">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-error hover:bg-error-container transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Đăng xuất</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<div class="lg:col-span-9 space-y-8">
+<!-- Activity Overview Bento -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="bg-surface-container-lowest rounded-xl p-6 editorial-shadow flex flex-col justify-between border-b-4 border-primary">
+<span class="material-symbols-outlined text-primary mb-4" data-icon="shopping_bag">shopping_bag</span>
+<div>
+<p class="text-outline font-label uppercase tracking-widest text-[10px] mb-1">Đơn hàng đã đặt</p>
+<h3 class="font-headline font-extrabold text-3xl text-on-surface">12</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-6 editorial-shadow flex flex-col justify-between border-b-4 border-secondary">
+<span class="material-symbols-outlined text-secondary mb-4" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<div>
+<p class="text-outline font-label uppercase tracking-widest text-[10px] mb-1">Điểm tích lũy</p>
+<h3 class="font-headline font-extrabold text-3xl text-on-surface">2,450</h3>
+</div>
+</div>
+<div class="bg-primary-container rounded-xl p-6 editorial-shadow flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 opacity-20 transform rotate-12">
+<span class="material-symbols-outlined text-9xl text-on-primary-container" data-icon="eco">eco</span>
+</div>
+<span class="material-symbols-outlined text-on-primary-container mb-4" data-icon="savings">savings</span>
+<div class="z-10">
+<p class="text-on-primary-container/70 font-label uppercase tracking-widest text-[10px] mb-1">Tiết kiệm được</p>
+<h3 class="font-headline font-extrabold text-3xl text-on-primary-container">850k</h3>
+</div>
+</div>
+</section>
+<!-- Profile Information Card -->
+<section class="bg-surface-container-lowest rounded-xl p-8 editorial-shadow">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+<div>
+<h2 class="font-headline font-bold text-2xl text-on-surface">Thông tin cá nhân</h2>
+<p class="text-on-surface-variant font-body">Cập nhật thông tin của bạn để nhận ưu đãi cá nhân hóa.</p>
+</div>
+<button class="px-6 py-2.5 bg-gradient-to-br from-primary to-primary-container text-white rounded-lg font-medium shadow-lg hover:opacity-90 transition-all active:scale-95">
+                            Cập nhật thông tin
+                        </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+<!-- Avatar Section -->
+<div class="md:col-span-2 flex items-center gap-6 pb-8 border-b border-surface-container">
+<div class="relative group">
+<div class="w-24 h-24 rounded-2xl overflow-hidden shadow-md">
+<img alt="Profile" class="w-full h-full object-cover" data-alt="Close up portrait of a male user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLaxRd_f0rIxauBM-zI4LgVNftA1v5vM6MOlVK3rdhpn81THp1tYiU6DGMtKIuIHQP1GgfvCr3fInjBz2MulZRR_CwbasRlkGp6Y6dQnNp9OtHSJDc8zukXhSaYqm7uUfB17nXZGpOJk9wCn-4G4LlvNSiApiKHIXuPFSEKSLkcFk8bDDvrYmNP3iu7oxL9TLKK_qA32GBftFnVfDRzzMLZNehSX3KsE0QZFgUP1OIzzMzV6q6L_1nwEycw7x3aW0nFEfxBIWBENHO"/>
+</div>
+<button class="absolute -bottom-2 -right-2 bg-white text-primary p-1.5 rounded-full shadow-lg border border-outline-variant/20 hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="photo_camera">photo_camera</span>
+</button>
+</div>
+<div>
+<h4 class="font-headline font-semibold text-lg">Ảnh đại diện</h4>
+<p class="text-sm text-outline">Định dạng JPG, PNG hoặc WEBP. Tối đa 5MB.</p>
+</div>
+</div>
+<!-- Form Fields -->
+<div class="space-y-2">
+<label class="block text-xs font-label uppercase tracking-wider text-outline">Họ và tên</label>
+<div class="bg-surface-container-low px-4 py-3 rounded-lg text-on-surface font-medium border border-transparent focus-within:border-outline/20 transition-all">
+                                Nguyễn Minh Anh
+                            </div>
+</div>
+<div class="space-y-2">
+<label class="block text-xs font-label uppercase tracking-wider text-outline">Địa chỉ Email</label>
+<div class="bg-surface-container-low px-4 py-3 rounded-lg text-on-surface font-medium border border-transparent flex items-center justify-between">
+<span>minhanh.nguyen@email.com</span>
+<span class="material-symbols-outlined text-primary text-sm" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block text-xs font-label uppercase tracking-wider text-outline">Số điện thoại</label>
+<div class="bg-surface-container-low px-4 py-3 rounded-lg text-on-surface font-medium">
+                                +84 90 123 4567
+                            </div>
+</div>
+<div class="space-y-2">
+<label class="block text-xs font-label uppercase tracking-wider text-outline">Ngày sinh</label>
+<div class="bg-surface-container-low px-4 py-3 rounded-lg text-on-surface font-medium">
+                                15 / 08 / 1995
+                            </div>
+</div>
+<div class="space-y-2">
+<label class="block text-xs font-label uppercase tracking-wider text-outline">Giới tính</label>
+<div class="flex gap-4">
+<label class="flex-1 bg-primary-container/10 border border-primary/20 rounded-lg px-4 py-3 flex items-center gap-2 cursor-pointer">
+<span class="material-symbols-outlined text-primary" data-icon="radio_button_checked">radio_button_checked</span>
+<span class="font-medium text-primary">Nam</span>
+</label>
+<label class="flex-1 bg-surface-container-low border border-transparent rounded-lg px-4 py-3 flex items-center gap-2 cursor-pointer">
+<span class="material-symbols-outlined text-outline" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+<span class="font-medium text-on-surface-variant">Nữ</span>
+</label>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block text-xs font-label uppercase tracking-wider text-outline">Mục tiêu sức khỏe</label>
+<div class="bg-surface-container-low px-4 py-3 rounded-lg text-on-surface font-medium flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="fitness_center">fitness_center</span>
+                                Giảm cân &amp; Ăn sạch
+                            </div>
+</div>
+</div>
+</section>
+<!-- Additional Security Info -->
+<div class="bg-secondary-container/10 p-6 rounded-xl border-l-4 border-secondary-container flex items-start gap-4">
+<span class="material-symbols-outlined text-secondary" data-icon="shield_person">shield_person</span>
+<div>
+<h4 class="font-headline font-bold text-on-secondary-container">Bảo mật tài khoản</h4>
+<p class="text-sm text-on-secondary-container/80 mt-1">Thông tin của bạn được mã hóa và bảo mật theo tiêu chuẩn quốc tế. Chúng tôi không bao giờ chia sẻ dữ liệu của bạn cho bên thứ ba mà không có sự đồng ý của bạn.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-zinc-50 dark:bg-zinc-950 full-width py-12 border-t border-zinc-200 dark:border-zinc-800">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-6 font-['Inter'] text-sm">
+<div class="space-y-4">
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-green-700 text-xl">HealthyGO</span>
+<p class="text-zinc-500 leading-relaxed">Mang nguồn dinh dưỡng sạch và lối sống lành mạnh đến từng bữa ăn của gia đình Việt.</p>
+</div>
+<div>
+<h4 class="font-headline font-bold text-green-800 dark:text-green-400 mb-4 uppercase tracking-wider text-xs">Liên kết nhanh</h4>
+<ul class="space-y-2">
+<li><a class="text-zinc-500 dark:text-zinc-500 hover:text-green-600 underline-offset-4 hover:underline transition-all duration-300" href="#">Gói ăn tháng</a></li>
+<li><a class="text-zinc-500 dark:text-zinc-500 hover:text-green-600 underline-offset-4 hover:underline transition-all duration-300" href="#">Thực phẩm tươi</a></li>
+<li><a class="text-zinc-500 dark:text-zinc-500 hover:text-green-600 underline-offset-4 hover:underline transition-all duration-300" href="#">Góc chuyên gia</a></li>
+<li><a class="text-zinc-500 dark:text-zinc-500 hover:text-green-600 underline-offset-4 hover:underline transition-all duration-300" href="#">Cộng đồng Healthy</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-headline font-bold text-green-800 dark:text-green-400 mb-4 uppercase tracking-wider text-xs">Hỗ trợ khách hàng</h4>
+<ul class="space-y-2">
+<li><a class="text-zinc-500 dark:text-zinc-500 hover:text-green-600 underline-offset-4 hover:underline transition-all duration-300" href="#">Chính sách bảo mật</a></li>
+<li><a class="text-zinc-500 dark:text-zinc-500 hover:text-green-600 underline-offset-4 hover:underline transition-all duration-300" href="#">Điều khoản sử dụng</a></li>
+<li><a class="text-zinc-500 dark:text-zinc-500 hover:text-green-600 underline-offset-4 hover:underline transition-all duration-300" href="#">Liên hệ</a></li>
+<li><a class="text-zinc-500 dark:text-zinc-500 hover:text-green-600 underline-offset-4 hover:underline transition-all duration-300" href="#">Hệ thống cửa hàng</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<h4 class="font-headline font-bold text-green-800 dark:text-green-400 mb-4 uppercase tracking-wider text-xs">Tải ứng dụng</h4>
+<div class="flex gap-2">
+<div class="bg-zinc-900 px-3 py-1.5 rounded flex items-center gap-2 cursor-pointer hover:bg-zinc-800 transition-colors">
+<span class="material-symbols-outlined text-white" data-icon="phone_iphone">phone_iphone</span>
+<div class="text-[10px] text-white">App Store</div>
+</div>
+<div class="bg-zinc-900 px-3 py-1.5 rounded flex items-center gap-2 cursor-pointer hover:bg-zinc-800 transition-colors">
+<span class="material-symbols-outlined text-white" data-icon="play_arrow">play_arrow</span>
+<div class="text-[10px] text-white">Play Store</div>
+</div>
+</div>
+</div>
+</div>
+<div class="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-zinc-200 dark:border-zinc-800 text-center">
+<p class="text-zinc-500 font-['Inter'] text-sm">© 2024 HealthyGO. The Living Pantry Concept.</p>
+</div>
+</footer>
+</body></html>
