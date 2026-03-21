@@ -7,6 +7,11 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Order from "../pages/User/Order";
 import Dashboard from "../pages/admin/Dashboard";
+import Users from "../pages/admin/Users";
+import Products from "../pages/admin/Products";
+import Reports from "../pages/admin/Reports";
+import Orders from "../pages/admin/Orders";
+import Stores from "../pages/admin/Stores";
 const publicRoutes = [
   { path: "/", element: Home },
   { path: "/cart", element: Cart },
@@ -17,6 +22,11 @@ const publicRoutes = [
   { path: "/register", element: Register },
   { path: "/order", element: Order },
   { path: "/admin/dashboard", element: Dashboard },
+  { path: "/admin/users", element: Users },
+  { path: "/admin/products", element: Products },
+  { path: "/admin/stores", element: Stores },
+  { path: "/admin/orders", element: Orders },
+  { path: "/admin/reports", element: Reports },
 ];
 
 export { publicRoutes };
