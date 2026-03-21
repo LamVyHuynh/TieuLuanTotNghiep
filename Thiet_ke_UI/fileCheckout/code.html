@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #006e1c 0%, #4caf50 100%);
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#2e4f00",
+              "on-secondary-fixed": "#2c1600",
+              "outline-variant": "#becab9",
+              "tertiary": "#3e6a00",
+              "primary": "#006e1c",
+              "surface-container-high": "#e8e8e8",
+              "on-primary-fixed-variant": "#005313",
+              "on-primary-fixed": "#002204",
+              "on-surface": "#1a1c1c",
+              "surface-dim": "#dadada",
+              "secondary-fixed": "#ffdcbe",
+              "on-tertiary": "#ffffff",
+              "on-background": "#1a1c1c",
+              "on-tertiary-container": "#203900",
+              "surface-container-highest": "#e2e2e2",
+              "on-surface-variant": "#3f4a3c",
+              "surface-tint": "#006e1c",
+              "inverse-on-surface": "#f1f1f1",
+              "surface-container-lowest": "#ffffff",
+              "on-primary-container": "#003c0b",
+              "secondary": "#8b5000",
+              "primary-container": "#4caf50",
+              "on-tertiary-fixed": "#0f2000",
+              "surface-container-low": "#f3f3f3",
+              "inverse-primary": "#78dc77",
+              "on-secondary-container": "#653900",
+              "inverse-surface": "#2f3131",
+              "tertiary-fixed-dim": "#9ed75b",
+              "tertiary-fixed": "#b9f474",
+              "primary-fixed": "#94f990",
+              "tertiary-container": "#74aa34",
+              "outline": "#6f7a6b",
+              "error-container": "#ffdad6",
+              "on-secondary-fixed-variant": "#693c00",
+              "on-error-container": "#93000a",
+              "surface-bright": "#f9f9f9",
+              "surface": "#f9f9f9",
+              "secondary-fixed-dim": "#ffb870",
+              "on-error": "#ffffff",
+              "secondary-container": "#ff9800",
+              "surface-container": "#eeeeee",
+              "background": "#f9f9f9",
+              "on-secondary": "#ffffff",
+              "primary-fixed-dim": "#78dc77",
+              "surface-variant": "#e2e2e2",
+              "error": "#ba1a1a",
+              "on-primary": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+</head>
+<body class="bg-surface font-body text-on-surface">
+<!-- TopNavBar - SUPPRESSED based on "The Destination Rule" for Transactional flows -->
+<!-- Creating a focused checkout header instead -->
+<header class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-outline-variant/10">
+<div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-2xl font-bold tracking-tighter text-primary font-headline">HealthyGO</span>
+<span class="h-4 w-[1px] bg-outline-variant mx-2"></span>
+<span class="font-headline font-semibold text-on-surface-variant">Thanh toán</span>
+</div>
+<div class="flex items-center gap-4 text-sm font-medium text-on-surface-variant">
+<span class="flex items-center gap-1 text-primary"><span class="material-symbols-outlined text-sm">lock</span> Bảo mật 100%</span>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-20 px-6 max-w-7xl mx-auto">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Checkout Steps -->
+<div class="lg:col-span-8 space-y-6">
+<!-- Step 1: Shipping Info -->
+<section class="bg-surface-container-lowest rounded-xl p-8 transition-all hover:bg-surface-container-low/50">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary font-bold">1</div>
+<h2 class="text-xl font-headline font-bold text-on-surface">Thông tin giao nhận</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="block text-xs font-label uppercase tracking-wider text-on-surface-variant ml-1">Họ và tên</label>
+<input class="w-full bg-surface-container-highest border-none rounded-lg p-3 focus:ring-1 focus:ring-primary/20 focus:bg-white transition-all" placeholder="Nguyễn Văn A" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="block text-xs font-label uppercase tracking-wider text-on-surface-variant ml-1">Số điện thoại</label>
+<input class="w-full bg-surface-container-highest border-none rounded-lg p-3 focus:ring-1 focus:ring-primary/20 focus:bg-white transition-all" placeholder="0901 234 567" type="tel"/>
+</div>
+<div class="md:col-span-2 space-y-2">
+<label class="block text-xs font-label uppercase tracking-wider text-on-surface-variant ml-1">Địa chỉ chi tiết</label>
+<textarea class="w-full bg-surface-container-highest border-none rounded-lg p-3 focus:ring-1 focus:ring-primary/20 focus:bg-white transition-all" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..." rows="3"></textarea>
+</div>
+</div>
+</section>
+<!-- Step 2: Delivery Slot -->
+<section class="bg-surface-container-lowest rounded-xl p-8">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary font-bold">2</div>
+<h2 class="text-xl font-headline font-bold text-on-surface">Chọn khung giờ giao hàng</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="relative group cursor-pointer">
+<input checked="" class="peer sr-only" name="delivery_time" type="radio"/>
+<div class="p-4 rounded-xl border-2 border-transparent bg-surface-container-low peer-checked:border-primary peer-checked:bg-primary-container/5 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="light_mode">light_mode</span>
+<div>
+<p class="font-headline font-bold text-on-surface">Buổi Sáng</p>
+<p class="text-sm text-on-surface-variant">8:00 - 12:00</p>
+</div>
+</div>
+</div>
+</label>
+<label class="relative group cursor-pointer">
+<input class="peer sr-only" name="delivery_time" type="radio"/>
+<div class="p-4 rounded-xl border-2 border-transparent bg-surface-container-low peer-checked:border-primary peer-checked:bg-primary-container/5 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="schedule">schedule</span>
+<div>
+<p class="font-headline font-bold text-on-surface">Buổi Chiều</p>
+<p class="text-sm text-on-surface-variant">14:00 - 18:00</p>
+</div>
+</div>
+</div>
+</label>
+</div>
+</section>
+<!-- Step 3: Payment Method -->
+<section class="bg-surface-container-lowest rounded-xl p-8">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary font-bold">3</div>
+<h2 class="text-xl font-headline font-bold text-on-surface">Phương thức thanh toán</h2>
+</div>
+<div class="space-y-3">
+<label class="flex items-center p-4 rounded-lg bg-surface-container-low border-2 border-transparent has-[:checked]:border-primary transition-all cursor-pointer">
+<input checked="" class="accent-primary w-5 h-5" name="payment" type="radio"/>
+<div class="ml-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="payments">payments</span>
+<span class="font-medium">Thanh toán khi nhận hàng (COD)</span>
+</div>
+</label>
+<label class="flex items-center p-4 rounded-lg bg-surface-container-low border-2 border-transparent has-[:checked]:border-primary transition-all cursor-pointer">
+<input class="accent-primary w-5 h-5" name="payment" type="radio"/>
+<div class="ml-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="account_balance">account_balance</span>
+<span class="font-medium">Chuyển khoản ngân hàng</span>
+</div>
+</label>
+<label class="flex items-center p-4 rounded-lg bg-surface-container-low border-2 border-transparent has-[:checked]:border-primary transition-all cursor-pointer">
+<input class="accent-primary w-5 h-5" name="payment" type="radio"/>
+<div class="ml-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-medium">Ví điện tử MoMo</span>
+</div>
+</label>
+</div>
+</section>
+</div>
+<!-- Right Column: Order Summary -->
+<aside class="lg:col-span-4 sticky top-24">
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="p-6 border-b border-outline-variant/10">
+<h3 class="text-lg font-headline font-bold text-on-surface">Tóm tắt đơn hàng</h3>
+</div>
+<!-- Product List -->
+<div class="p-6 space-y-4">
+<div class="flex gap-4 items-center">
+<div class="w-16 h-16 rounded-lg bg-surface-container-low overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Fresh chicken breast salad with greens" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqi1VRSgfd3HBso-xPustSCriuGHrNa2IgJT2ZhUeFfsY8Sa57eQhQdDe44kx3hkpnJHfprpwN4KYCllnhEyFFHyHN_gEleXh6dO1po20UJk9D264SSKeyUnSZRZyf70wb-ajQrPWhhhEEbRJDb2Kv3VXiKcuxsKyJKkP8ggLsrNiY8fU0qWYymw1TulVueCcnrCP4ouLXihuiQljJVu5zIA1sLSQPkT_vAVjA-i27g4wnvKWgh-KROL6m7ro2SPZu854JpocYlH9C"/>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-semibold text-on-surface leading-tight">Salad Ức Gà</h4>
+<div class="flex justify-between items-center mt-1">
+<p class="text-xs text-on-surface-variant">Số lượng: 1</p>
+<p class="text-sm font-bold text-primary">85.000đ</p>
+</div>
+</div>
+</div>
+<div class="flex gap-4 items-center">
+<div class="w-16 h-16 rounded-lg bg-surface-container-low overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Fresh orange juice in glass" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArV8uuIZ4uE4VyAqvP-h2r2f7CdaAJG6t_8JQbURPhoe282wYgjPRj9X4bWMNGEgByVXmI3v7PaXGo-DqnhFBpQ-iUDu6p_k47s1LXIBQIVlgcOLCcinr-g813rJv6S7LIN_wu1WBLkS5IJg8qNL08GnXt7YWkMVmyQNc4w1yDrdvmfFNorqKWcPUCABRsXZNtigAqj_2UHre7izHNxqk3a3XlYoa5oUxTIFNT3YKrdvgfYUKbQ1l9VLm0GzjPI6UrMUwpGeHxOiqh"/>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-semibold text-on-surface leading-tight">Nước Ép Cam</h4>
+<div class="flex justify-between items-center mt-1">
+<p class="text-xs text-on-surface-variant">Số lượng: 2</p>
+<p class="text-sm font-bold text-primary">70.000đ</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Price Details -->
+<div class="p-6 bg-surface-container-low/30 space-y-3">
+<div class="flex justify-between text-sm">
+<span class="text-on-surface-variant">Tạm tính</span>
+<span class="font-medium">155.000đ</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-on-surface-variant">Phí vận chuyển</span>
+<span class="font-medium">20.000đ</span>
+</div>
+<div class="flex justify-between text-sm text-secondary">
+<span>Giảm giá</span>
+<span class="font-medium">-15.000đ</span>
+</div>
+<div class="pt-4 mt-4 border-t border-outline-variant/20 flex justify-between items-baseline">
+<span class="font-headline font-bold text-on-surface">Tổng cộng</span>
+<span class="text-2xl font-headline font-extrabold text-primary">160.000đ</span>
+</div>
+</div>
+<div class="p-6">
+<button class="w-full py-4 rounded-xl bg-gradient-primary text-white font-headline font-bold text-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                            Xác nhận &amp; Đặt hàng
+                        </button>
+<p class="mt-4 text-[10px] text-center text-on-surface-variant px-4 leading-relaxed">
+                            Bằng cách đặt hàng, bạn đồng ý với Điều khoản dịch vụ và Chính sách bảo mật của HealthyGO.
+                        </p>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- Footer Component Execution -->
+<footer class="w-full py-12 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950">
+<div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+<div class="col-span-2 md:col-span-1">
+<span class="text-lg font-bold text-green-700">HealthyGO</span>
+<p class="mt-4 text-xs font-inter text-zinc-500 leading-relaxed uppercase tracking-wide">
+                    © 2024 HealthyGO. Thực phẩm hữu cơ tươi sạch mỗi ngày.
+                </p>
+</div>
+<div class="flex flex-col space-y-4">
+<h4 class="text-xs font-inter font-bold text-green-800 dark:text-green-400 uppercase tracking-widest">Khám phá</h4>
+<a class="text-xs font-inter text-zinc-500 hover:text-green-600 hover:translate-x-1 transition-transform" href="#">Về chúng tôi</a>
+<a class="text-xs font-inter text-zinc-500 hover:text-green-600 hover:translate-x-1 transition-transform" href="#">Liên hệ</a>
+</div>
+<div class="flex flex-col space-y-4">
+<h4 class="text-xs font-inter font-bold text-green-800 dark:text-green-400 uppercase tracking-widest">Chính sách</h4>
+<a class="text-xs font-inter text-zinc-500 hover:text-green-600 hover:translate-x-1 transition-transform" href="#">Chính sách bảo mật</a>
+<a class="text-xs font-inter text-zinc-500 hover:text-green-600 hover:translate-x-1 transition-transform" href="#">Điều khoản sử dụng</a>
+</div>
+<div class="flex flex-col space-y-4">
+<h4 class="text-xs font-inter font-bold text-green-800 dark:text-green-400 uppercase tracking-widest">Kết nối</h4>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-green-700 cursor-pointer" data-icon="facebook">social_leaderboard</span>
+<span class="material-symbols-outlined text-green-700 cursor-pointer" data-icon="instagram">retweet</span>
+</div>
+</div>
+</div>
+</footer>
+</body></html>
