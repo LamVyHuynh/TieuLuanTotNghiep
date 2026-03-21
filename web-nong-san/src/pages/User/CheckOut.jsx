@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, CreditCard, MapPin, Truck } from "lucide-react";
-import { CheckoutContext } from "../context/CheckoutContext";
+import { CheckoutContext } from "../../context/CheckoutContext";
 
 function CheckOut() {
   const navigate = useNavigate();
@@ -33,7 +33,8 @@ function CheckOut() {
           Đơn hàng chưa sẵn sàng!
         </h2>
         <p className="mt-3 text-base leading-7 text-slate-500">
-          Bạn chưa chọn sản phẩm nào để thanh toán cả. Quay lại nông trại chọn thêm rau củ tươi nhé!
+          Bạn chưa chọn sản phẩm nào để thanh toán cả. Quay lại nông trại chọn
+          thêm rau củ tươi nhé!
         </p>
         <button
           className="mt-7 rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(5,150,105,0.24)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-700"
@@ -45,7 +46,10 @@ function CheckOut() {
     );
   }
 
-  const total = checkoutList.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const total = checkoutList.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
 
   return (
     <div className="mx-auto max-w-[1220px] px-4 py-8 sm:px-6 lg:px-10">
@@ -150,7 +154,9 @@ function CheckOut() {
 
         <aside className="xl:sticky xl:top-36 xl:self-start">
           <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_14px_30px_rgba(15,23,42,0.06)] sm:p-6">
-            <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900">Đơn hàng của bạn</h3>
+            <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900">
+              Đơn hàng của bạn
+            </h3>
 
             <div className="mt-5 flex text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">
               <span className="flex-[2]">Sản phẩm</span>
@@ -169,9 +175,13 @@ function CheckOut() {
                       alt={item.name}
                       className="h-[45px] w-[45px] rounded-lg object-cover"
                     />
-                    <span className="text-sm font-semibold text-slate-700">{item.name}</span>
+                    <span className="text-sm font-semibold text-slate-700">
+                      {item.name}
+                    </span>
                   </div>
-                  <span className="flex-1 text-center text-sm text-slate-500">x{item.quantity}</span>
+                  <span className="flex-1 text-center text-sm text-slate-500">
+                    x{item.quantity}
+                  </span>
                   <span className="flex-1 text-right text-sm font-bold text-slate-800">
                     {(item.price * item.quantity).toLocaleString()}đ
                   </span>
@@ -183,7 +193,9 @@ function CheckOut() {
 
             <div className="flex items-center justify-between text-lg font-bold text-slate-900">
               <span>Tổng thanh toán</span>
-              <span className="text-[1.45rem] text-amber-500">{total.toLocaleString()}đ</span>
+              <span className="text-[1.45rem] text-amber-500">
+                {total.toLocaleString()}đ
+              </span>
             </div>
 
             <button
@@ -210,7 +222,12 @@ function PaymentOption({ checked, label, onClick }) {
       }`}
       onClick={onClick}
     >
-      <input type="radio" checked={checked} readOnly className="h-4 w-4 cursor-pointer accent-emerald-600" />
+      <input
+        type="radio"
+        checked={checked}
+        readOnly
+        className="h-4 w-4 cursor-pointer accent-emerald-600"
+      />
       <span className="text-sm font-medium text-slate-700">{label}</span>
     </div>
   );

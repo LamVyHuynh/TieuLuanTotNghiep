@@ -1,7 +1,7 @@
 import React from "react";
 import { ArrowRight, ChevronRight, Eye, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { products } from "../database/data.js";
+import { products } from "../../database/data.js";
 
 const nutritionArticles = [
   {

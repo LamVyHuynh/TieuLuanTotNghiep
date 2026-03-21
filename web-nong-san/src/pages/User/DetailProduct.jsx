@@ -1,9 +1,9 @@
 import React, { useContext, useState } from "react";
 import { ArrowLeft, Minus, Plus, ShoppingBasket } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CartContext } from "../context/CartContext";
-import { CheckoutContext } from "../context/CheckoutContext";
-import { ProductContext } from "../context/ProductContext";
+import { CartContext } from "../../context/CartContext";
+import { CheckoutContext } from "../../context/CheckoutContext";
+import { ProductContext } from "../../context/ProductContext";
 
 function DetailProduct() {
   const { productList } = useContext(ProductContext);
@@ -22,7 +22,9 @@ function DetailProduct() {
         <h2 className="text-3xl font-black tracking-[-0.03em] text-rose-500">
           Không tìm thấy sản phẩm!
         </h2>
-        <p className="mt-3 text-slate-500">Sản phẩm có thể đã bị xóa hoặc đổi đường dẫn.</p>
+        <p className="mt-3 text-slate-500">
+          Sản phẩm có thể đã bị xóa hoặc đổi đường dẫn.
+        </p>
         <button
           className="mt-6 rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700"
           onClick={() => navigate("/")}
@@ -75,18 +77,26 @@ function DetailProduct() {
             <h1 className="mt-2 text-3xl font-black leading-tight tracking-[-0.03em] text-slate-900 sm:text-4xl">
               {product.name}
             </h1>
-            <p className="mt-3 text-base leading-7 text-slate-500">{product.desc}</p>
+            <p className="mt-3 text-base leading-7 text-slate-500">
+              {product.desc}
+            </p>
 
             <div className="mt-5 flex items-end gap-2">
               <span className="text-4xl font-black tracking-[-0.04em] text-amber-500">
                 {product.price.toLocaleString("vi-VN")}đ
               </span>
-              <span className="pb-1 text-base font-medium text-slate-400">/ {product.unit}</span>
+              <span className="pb-1 text-base font-medium text-slate-400">
+                / {product.unit}
+              </span>
             </div>
 
             <div className="mt-4 flex items-center justify-between rounded-2xl border border-emerald-100 bg-emerald-50/55 px-4 py-3">
               <p className="text-sm text-slate-600">
-                Kho còn: <span className="font-bold text-slate-900">{product.quantity}</span> {product.unit}
+                Kho còn:{" "}
+                <span className="font-bold text-slate-900">
+                  {product.quantity}
+                </span>{" "}
+                {product.unit}
               </p>
               <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm">
                 Fresh daily
@@ -103,7 +113,9 @@ function DetailProduct() {
                 >
                   <Minus size={16} />
                 </button>
-                <span className="min-w-12 text-center text-lg font-bold text-slate-900">{quantity}</span>
+                <span className="min-w-12 text-center text-lg font-bold text-slate-900">
+                  {quantity}
+                </span>
                 <button
                   className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100"
                   onClick={handleIncrease}
@@ -113,7 +125,9 @@ function DetailProduct() {
               </div>
 
               <div className="rounded-xl bg-slate-50 px-4 py-3 text-left sm:text-right">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Tổng cộng</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                  Tổng cộng
+                </p>
                 <p className="mt-1 text-2xl font-black tracking-[-0.03em] text-slate-900">
                   {totalPrice.toLocaleString("vi-VN")} VNĐ
                 </p>

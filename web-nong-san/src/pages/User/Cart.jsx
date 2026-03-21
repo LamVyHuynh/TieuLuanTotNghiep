@@ -1,8 +1,8 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, CreditCard, Trash2 } from "lucide-react";
-import { CartContext } from "../context/CartContext.jsx";
-import { CheckoutContext } from "../context/CheckoutContext.jsx";
+import { CartContext } from "../../context/CartContext.jsx";
+import { CheckoutContext } from "../../context/CheckoutContext.jsx";
 
 function Cart() {
   const { cartItems, removeProductCart } = useContext(CartContext);

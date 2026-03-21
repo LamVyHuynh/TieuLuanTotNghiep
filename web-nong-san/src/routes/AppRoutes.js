@@ -1,11 +1,11 @@
-import Home from "../pages/Home";
-import Cart from "../pages/Cart";
-import Tracking from "../pages/Tracking";
-import DetailProduct from "../pages/DetailProduct";
-import CheckOut from "../pages/CheckOut";
+import Home from "../pages/User/Home";
+import Cart from "../pages/User/Cart";
+import Tracking from "../pages/User/Tracking";
+import DetailProduct from "../pages/User/DetailProduct";
+import CheckOut from "../pages/User/CheckOut";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
-import Order from "../pages/Order";
+import Order from "../pages/User/Order";
 import Dashboard from "../pages/admin/Dashboard";
 const publicRoutes = [
   { path: "/", element: Home },
