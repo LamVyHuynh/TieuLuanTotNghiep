@@ -131,7 +131,7 @@ function Home() {
         <div className="absolute inset-0">
           <img
             src={heroImage}
-              alt="Nông trại hữu cơ"
+            alt="Nông trại hữu cơ"
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(8,56,24,0.92)_0%,rgba(18,97,44,0.82)_38%,rgba(61,154,87,0.54)_100%)]" />
@@ -142,7 +142,7 @@ function Home() {
           <div className="max-w-3xl py-16">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-white backdrop-blur-md">
               <Sparkles size={14} />
-               100% sống khỏe mỗi ngày
+              100% sống khỏe mỗi ngày
             </div>
 
             <h1 className="mt-7 max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.06em] text-white sm:text-6xl lg:text-7xl xl:text-[5.5rem]">
@@ -158,14 +158,14 @@ function Home() {
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row">
               <button
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-bold text-emerald-800 shadow-[0_24px_60px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:bg-emerald-50"
+                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-bold text-emerald-800 shadow-[0_24px_60px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:bg-emerald-50"
                 onClick={() => navigate("/cart")}
               >
                 Mua sắm ngay
                 <ArrowRight size={18} />
               </button>
               <button
-                className="rounded-2xl border border-white/35 bg-white/10 px-8 py-4 text-base font-bold text-white backdrop-blur-sm transition hover:bg-white/16"
+                className="cursor-pointer rounded-2xl border border-white/35 bg-white/10 px-8 py-4 text-base font-bold text-white backdrop-blur-sm transition hover:bg-white/16"
                 onClick={() => navigate("/order")}
               >
                 Xem câu chuyện
@@ -220,7 +220,7 @@ function Home() {
               <select
                 value={selectedCategory}
                 onChange={(event) => setSelectedCategory(event.target.value)}
-                className="h-14 min-w-[210px] rounded-2xl border border-transparent bg-slate-100 px-5 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-300 focus:bg-white"
+                className="cursor-pointer h-14 min-w-[210px] rounded-2xl border border-transparent bg-slate-100 px-5 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-300 focus:bg-white"
               >
                 <option>Tất cả danh mục</option>
                 <option>Rau củ</option>
@@ -229,7 +229,7 @@ function Home() {
               </select>
 
               <button
-                className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-6 text-sm font-bold text-white shadow-[0_20px_40px_rgba(5,150,105,0.24)] transition hover:bg-emerald-800"
+                className="inline-flex h-14 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-6 text-sm font-bold text-white shadow-[0_20px_40px_rgba(5,150,105,0.24)] transition hover:bg-emerald-800"
                 onClick={handleFilter}
               >
                 <Search size={18} />
@@ -244,7 +244,7 @@ function Home() {
         <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-[0.24em] text-emerald-700">
-               Bộ sưu tập
+              Bộ sưu tập
             </span>
             <h2 className="mt-3 text-3xl font-black tracking-[-0.05em] text-slate-950 sm:text-4xl">
               Khám phá danh mục
@@ -252,7 +252,7 @@ function Home() {
           </div>
 
           <button
-            className="inline-flex items-center gap-2 text-sm font-bold text-emerald-700 transition hover:text-emerald-900"
+            className="cursor-pointer inline-flex items-center gap-2 text-sm font-bold text-emerald-700 transition hover:text-emerald-900"
             onClick={() => navigate("/cart")}
           >
             Tất cả sản phẩm
@@ -279,7 +279,7 @@ function Home() {
                 <p className="mt-3 text-sm leading-6 text-white/75">
                   {category.description}
                 </p>
-                <button className="mt-6 rounded-xl border border-white/25 bg-white/15 px-5 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white hover:text-slate-900">
+                <button className="mt-6 cursor-pointer rounded-xl border border-white/25 bg-white/15 px-5 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white hover:text-slate-900">
                   {category.button}
                 </button>
               </div>
@@ -293,7 +293,7 @@ function Home() {
           <div className="mx-auto mb-14 max-w-3xl text-center">
             <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-emerald-700">
               <Sparkles size={14} />
-               Gợi ý thông minh
+              Gợi ý thông minh
             </div>
             <h2 className="mt-4 text-4xl font-black tracking-[-0.05em] text-slate-950 sm:text-5xl">
               Gợi ý riêng cho bạn
@@ -308,7 +308,7 @@ function Home() {
               {recommendationTabs.map((tab) => (
                 <button
                   key={tab}
-                  className={`rounded-full px-6 py-3 text-sm font-bold transition ${
+                  className={`cursor-pointer rounded-full px-6 py-3 text-sm font-bold transition ${
                     selectedTab === tab
                       ? "bg-emerald-700 text-white shadow-[0_16px_30px_rgba(5,150,105,0.18)]"
                       : "border border-slate-200 bg-white text-slate-500 hover:text-emerald-700"
@@ -362,7 +362,7 @@ function Home() {
                   <span className="text-2xl font-black tracking-[-0.04em] text-emerald-700">
                     {item.price}
                   </span>
-                  <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-[0_12px_24px_rgba(5,150,105,0.22)] transition hover:scale-105">
+                  <button className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-[0_12px_24px_rgba(5,150,105,0.22)] transition hover:scale-105">
                     <ShoppingBag size={18} />
                   </button>
                 </div>
@@ -386,10 +386,10 @@ function Home() {
           </div>
 
           <div className="hidden items-center gap-2 sm:flex">
-            <button className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50">
+            <button className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50">
               <ChevronLeft size={18} />
             </button>
-            <button className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50">
+            <button className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50">
               <ChevronRight size={18} />
             </button>
           </div>
@@ -411,18 +411,18 @@ function Home() {
 
                 {index === 0 ? (
                   <span className="absolute left-5 top-5 rounded-full bg-rose-500 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-lg">
-                     Giảm 15%
+                    Giảm 15%
                   </span>
                 ) : null}
 
                 {index === 1 ? (
                   <span className="absolute left-5 top-5 rounded-full bg-lime-600 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-lg">
-                     Mới về
+                    Mới về
                   </span>
                 ) : null}
 
                 <button
-                  className="absolute bottom-6 left-6 right-6 translate-y-20 rounded-xl bg-emerald-700/95 py-3 text-sm font-bold text-white opacity-0 shadow-[0_18px_35px_rgba(5,150,105,0.22)] transition duration-500 group-hover:translate-y-0 group-hover:opacity-100"
+                  className="absolute bottom-6 left-6 right-6 translate-y-20 cursor-pointer rounded-xl bg-emerald-700/95 py-3 text-sm font-bold text-white opacity-0 shadow-[0_18px_35px_rgba(5,150,105,0.22)] transition duration-500 group-hover:translate-y-0 group-hover:opacity-100"
                   onClick={(event) => {
                     event.stopPropagation();
                     navigate(`/detail-product/${product.id}`);
@@ -447,7 +447,7 @@ function Home() {
                     {product.category}
                   </span>
                   <span className="rounded bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                     Tươi mới
+                    Tươi mới
                   </span>
                 </div>
 
@@ -474,16 +474,16 @@ function Home() {
               HealthyGO
             </div>
             <p className="mt-5 max-w-md text-sm leading-7 text-slate-500">
-               Nền tảng thương mại điện tử hướng đến bữa ăn lành mạnh, kết hợp
-               mua sắm thực phẩm sạch, đặt món và hướng AI tư vấn dinh dưỡng
-               trong tương lai.
+              Nền tảng thương mại điện tử hướng đến bữa ăn lành mạnh, kết hợp
+              mua sắm thực phẩm sạch, đặt món và hướng AI tư vấn dinh dưỡng
+              trong tương lai.
             </p>
 
             <div className="mt-6 flex gap-3">
-              <button className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition hover:bg-emerald-700 hover:text-white">
+              <button className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-slate-200 text-slate-600 transition hover:bg-emerald-700 hover:text-white">
                 <Leaf size={18} />
               </button>
-              <button className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition hover:bg-emerald-700 hover:text-white">
+              <button className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-slate-200 text-slate-600 transition hover:bg-emerald-700 hover:text-white">
                 <CircleUserRound size={18} />
               </button>
             </div>
@@ -492,7 +492,7 @@ function Home() {
           <div className="grid grid-cols-2 gap-8">
             <div>
               <h4 className="text-xs font-bold uppercase tracking-[0.24em] text-slate-900">
-                 Hỗ trợ khách hàng
+                Hỗ trợ khách hàng
               </h4>
               <div className="mt-4 space-y-3 text-sm text-slate-500">
                 <p>Contact</p>
@@ -502,7 +502,7 @@ function Home() {
             </div>
             <div>
               <h4 className="text-xs font-bold uppercase tracking-[0.24em] text-slate-900">
-                 Chính sách
+                Chính sách
               </h4>
               <div className="mt-4 space-y-3 text-sm text-slate-500">
                 <p>Privacy Policy</p>
@@ -522,7 +522,7 @@ function Home() {
       </footer>
 
       <button
-        className="fixed bottom-6 right-6 z-40 flex h-15 w-15 items-center justify-center rounded-full bg-emerald-700 text-white shadow-[0_24px_50px_rgba(5,150,105,0.35)] transition hover:scale-105 md:hidden"
+        className="fixed bottom-6 right-6 z-40 flex h-15 w-15 cursor-pointer items-center justify-center rounded-full bg-emerald-700 text-white shadow-[0_24px_50px_rgba(5,150,105,0.35)] transition hover:scale-105 md:hidden"
         onClick={() => navigate("/cart")}
       >
         <ShoppingBag size={24} />
