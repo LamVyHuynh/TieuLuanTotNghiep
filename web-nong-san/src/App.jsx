@@ -16,7 +16,7 @@ function App() {
             <Link to="/" className="shrink-0 no-underline">
               <div className="leading-none">
                 <span className="font-black tracking-[-0.06em] text-[2rem] text-emerald-600 sm:text-[2.35rem]">
-                  healthy
+                  Healthy
                 </span>
                 <span className="ml-1 font-black tracking-[-0.06em] text-[2rem] text-amber-500 sm:text-[2.35rem]">
                   GO

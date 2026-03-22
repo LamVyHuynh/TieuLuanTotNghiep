@@ -16,34 +16,34 @@ import { CheckoutContext } from "../../context/CheckoutContext.jsx";
 const recommendations = [
   {
     id: "rec-1",
-    name: "Banh mi nguyen cam",
-    desc: "It calo, giau chat xo",
+    name: "Bánh mì nguyên cám",
+    desc: "Ít calo, giàu chất xơ",
     price: "55.000d",
-    badge: "Ban chay",
+    badge: "Bán chạy",
     image:
       "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=700&q=80",
   },
   {
     id: "rec-2",
-    name: "Granola hat va trai cay",
-    desc: "Mon an vat tot cho suc khoe",
+    name: "Granola hạt và trái cây",
+    desc: "Món ăn vặt tốt cho sức khỏe",
     price: "120.000d",
     image:
       "https://images.unsplash.com/photo-1517093157656-b9eccef91cb1?auto=format&fit=crop&w=700&q=80",
   },
   {
     id: "rec-3",
-    name: "Sua hat dieu lanh",
-    desc: "Nguyen chat khong duong",
+    name: "Sữa hạt điều lạnh",
+    desc: "Nguyên chất không đường",
     price: "65.000d",
-    badge: "Moi",
+    badge: "Mới",
     image:
       "https://images.unsplash.com/photo-1553531889-56cc480ac5cb?auto=format&fit=crop&w=700&q=80",
   },
   {
     id: "rec-4",
-    name: "Khay trai cay nhiet doi",
-    desc: "Tuoi moi moi ngay",
+    name: "Khay trái cây nhiệt đới",
+    desc: "Tươi mới mỗi ngày",
     price: "95.000d",
     image:
       "https://images.unsplash.com/photo-1467453678174-768ec283a940?auto=format&fit=crop&w=700&q=80",
@@ -109,7 +109,7 @@ function Cart() {
           onClick={() => navigate(-1)}
         >
           <ArrowLeft size={18} />
-          Quay lai
+          Quay lại
         </button>
 
         <div className="rounded-[2rem] border border-slate-100 bg-white px-6 py-14 text-center shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
@@ -117,17 +117,17 @@ function Cart() {
             <ShoppingBasket size={30} />
           </div>
           <h2 className="mt-6 text-3xl font-black tracking-[-0.04em] text-slate-900">
-            Gio hang dang trong
+            Giỏ hàng đang trống
           </h2>
           <p className="mx-auto mt-3 max-w-md text-base leading-7 text-slate-500">
-            Ban chua chon san pham nao ca. Quay lai cua hang de them rau cu,
-            trai cay hoac combo healthy nhe.
+            Bạn chưa chọn sản phẩm nào cả. Quay lại cửa hàng để thêm rau củ,
+            trái cây hoặc combo healthy nhé.
           </p>
           <button
             className="mt-8 cursor-pointer rounded-full bg-emerald-700 px-6 py-3 text-sm font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.22)] transition hover:-translate-y-0.5 hover:bg-emerald-800"
             onClick={() => navigate("/")}
           >
-            Mua sam ngay
+            Mua sắm ngay
           </button>
         </div>
       </div>
@@ -142,11 +142,11 @@ function Cart() {
           onClick={() => navigate(-1)}
         >
           <ArrowLeft size={18} />
-          Quay lai
+          Quay lại
         </button>
 
         <h1 className="mb-8 text-4xl font-black tracking-[-0.05em] text-slate-950">
-          Gio hang cua ban
+          Giỏ hàng của bạn
         </h1>
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
@@ -163,7 +163,7 @@ function Cart() {
                 ✓
               </button>
               <span>
-                Chon tat ca ({selectIdItem.length}/{cartItems.length})
+                Chọn tất cả ({selectIdItem.length}/{cartItems.length})
               </span>
             </div>
 
@@ -238,7 +238,7 @@ function Cart() {
 
                       <div className="text-right">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                          Don gia
+                          Đơn giá
                         </p>
                         <p className="text-lg font-black text-emerald-700">
                           {(item.price * item.quantity).toLocaleString("vi-VN")}
@@ -256,30 +256,30 @@ function Cart() {
               onClick={() => navigate("/")}
             >
               <ArrowLeft size={16} />
-              Tiep tuc mua sam
+               Tiếp tục mua sắm
             </button>
           </section>
 
           <aside className="sticky top-24 rounded-[1.5rem] bg-[#eef3ea] p-7 shadow-sm">
             <h2 className="text-2xl font-black tracking-[-0.04em] text-slate-900">
-              Tom tat don hang
+              Tóm tắt đơn hàng
             </h2>
 
             <div className="mt-6 space-y-4 text-sm text-slate-500">
               <div className="flex justify-between gap-4">
-                <span>Tong tien hang</span>
+                  <span>Tổng tiền hàng</span>
                 <span className="font-semibold text-slate-900">
                   {subtotal.toLocaleString("vi-VN")}d
                 </span>
               </div>
               <div className="flex justify-between gap-4 text-lime-700">
-                <span>Giam gia uu dai</span>
+                  <span>Giảm giá ưu đãi</span>
                 <span className="font-semibold">
                   -{discount.toLocaleString("vi-VN")}d
                 </span>
               </div>
               <div className="flex justify-between gap-4">
-                <span>Phi van chuyen</span>
+                  <span>Phí vận chuyển</span>
                 <span className="font-semibold text-slate-900">
                   {shippingFee.toLocaleString("vi-VN")}d
                 </span>
@@ -287,14 +287,14 @@ function Cart() {
 
               <div className="mt-4 flex items-end justify-between gap-4 border-t border-slate-300/60 pt-5">
                 <span className="text-lg font-bold text-slate-900">
-                  Tong thanh toan
+                  Tổng thanh toán
                 </span>
                 <div className="text-right">
                   <span className="block text-3xl font-black tracking-[-0.04em] text-emerald-700">
                     {finalTotal.toLocaleString("vi-VN")}d
                   </span>
                   <span className="text-xs text-slate-400">
-                    (Da bao gom VAT)
+                    (Đã bao gồm VAT)
                   </span>
                 </div>
               </div>
@@ -305,13 +305,13 @@ function Cart() {
                 className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-500 px-6 py-4 text-base font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.20)] transition hover:opacity-95"
                 onClick={handleCheckout}
               >
-                Tien hanh thanh toan
+                 Tiến hành thanh toán
                 <CreditCard size={18} />
               </button>
 
               <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
                 <ShieldCheck size={15} />
-                Thanh toan an toan 100%
+                 Thanh toán an toàn 100%
               </div>
             </div>
           </aside>
@@ -321,15 +321,15 @@ function Cart() {
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-[0.22em] text-lime-700">
-                Goi y rieng cho ban
+                 Gợi ý riêng cho bạn
               </span>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.04em] text-slate-950">
-                Co the ban cung thich
+                 Có thể bạn cũng thích
               </h2>
             </div>
 
             <button className="hidden cursor-pointer items-center gap-2 text-sm font-bold text-emerald-700 md:inline-flex">
-              Xem tat ca
+               Xem tất cả
               <ArrowRight size={16} />
             </button>
           </div>
@@ -373,7 +373,7 @@ function Cart() {
 
         {showError && (
           <div className="fixed bottom-7 left-1/2 z-50 -translate-x-1/2 rounded-full bg-rose-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(225,29,72,0.35)]">
-            Ban chua chon san pham nao de thanh toan kia!
+            Bạn chưa chọn sản phẩm nào để thanh toán kìa!
           </div>
         )}
       </div>
