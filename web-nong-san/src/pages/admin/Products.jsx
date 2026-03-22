@@ -16,20 +16,6 @@ import {
   Users,
 } from "lucide-react";
 
-const sidebarItems = [
-  { label: "Tổng quan", icon: ClipboardList, active: false },
-  { label: "Người dùng", icon: Users, active: false },
-  { label: "Sản phẩm", icon: Package, active: true },
-  { label: "Cửa hàng", icon: Store, active: false },
-  { label: "Đơn hàng", icon: ShoppingBag, active: false },
-  { label: "Báo cáo", icon: ClipboardList, active: false },
-];
-
-const bottomSidebarItems = [
-  { label: "Cài đặt", icon: Settings },
-  { label: "Đăng xuất", icon: LogOut },
-];
-
 const stats = [
   { label: "Tổng SKU", value: "1,248", valueClass: "text-slate-900" },
   { label: "Hết hàng", value: "12", valueClass: "text-rose-600" },
@@ -107,54 +93,7 @@ const products = [
 
 function ProductsPage() {
   return (
-    <div className="min-h-screen bg-[#f7f8f5] text-slate-900">
-      <div className="lg:flex">
-        <aside className="border-b border-slate-200 bg-[#f1f2ee] p-4 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:w-64 lg:border-b-0 lg:border-r">
-          <div className="mb-8 px-2">
-            <h1 className="text-xl font-black tracking-[-0.05em] text-emerald-800">
-              HealthyGO Admin
-            </h1>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Cổng quản trị
-            </p>
-          </div>
-
-          <nav className="space-y-1">
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.label}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold transition ${
-                    item.active
-                      ? "bg-white text-emerald-700 shadow-sm"
-                      : "text-slate-500 hover:bg-slate-200 hover:text-slate-900"
-                  }`}
-                >
-                  <Icon size={18} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="mt-6 border-t border-slate-200 pt-4">
-            {bottomSidebarItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.label}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-500 transition hover:bg-slate-200 hover:text-slate-900"
-                >
-                  <Icon size={18} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </div>
-        </aside>
-
-        <main className="min-h-screen flex-1 p-4 sm:p-6 lg:ml-64 lg:p-8">
+    <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8">
           <header className="mb-12 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] text-slate-900">
@@ -372,8 +311,6 @@ function ProductsPage() {
               </div>
             </div>
           </section>
-        </main>
-      </div>
     </div>
   );
 }

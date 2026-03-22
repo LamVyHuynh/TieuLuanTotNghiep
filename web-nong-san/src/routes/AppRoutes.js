@@ -13,6 +13,7 @@ import Reports from "../pages/admin/Reports";
 import Orders from "../pages/admin/Orders";
 import Stores from "../pages/admin/Stores";
 import UserLayout from "../layouts/UserLayout";
+import AdminLayout from "../layouts/AdminLayout";
 
 const publicRoutes = [
   {
@@ -31,12 +32,19 @@ const publicRoutes = [
       { path: "order", element: Order },
     ],
   },
-  { path: "/admin/dashboard", element: Dashboard },
-  { path: "/admin/users", element: Users },
-  { path: "/admin/products", element: Products },
-  { path: "/admin/stores", element: Stores },
-  { path: "/admin/orders", element: Orders },
-  { path: "/admin/reports", element: Reports },
+  {
+    path: "/admin",
+    element: AdminLayout,
+    children: [
+      { index: true, element: Dashboard },
+      { path: "dashboard", element: Dashboard },
+      { path: "users", element: Users },
+      { path: "products", element: Products },
+      { path: "stores", element: Stores },
+      { path: "orders", element: Orders },
+      { path: "reports", element: Reports },
+    ],
+  },
 ];
 
 export { publicRoutes };
