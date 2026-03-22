@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import { Search, ShoppingBag } from "lucide-react";
 import { publicRoutes } from "./routes/AppRoutes";
+import ScrollToTop from "./components/ScrollToTop";
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const handleSearch = () => {
@@ -105,6 +106,7 @@ function App() {
           </div>
         </header>
         <main>
+          <ScrollToTop />
           <Routes>
             {publicRoutes.map((route, index) => {
               const Page = route.element;

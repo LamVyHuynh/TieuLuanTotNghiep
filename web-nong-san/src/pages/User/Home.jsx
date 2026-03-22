@@ -19,42 +19,42 @@ const heroImage =
 
 const categoryCards = [
   {
-    title: "Rau cu tuoi",
+    title: "Rau củ tươi",
     description:
-      "Nguon vitamin doi dao tu cac loai rau la xanh va cu qua duoc chon moi ngay.",
+      "Nguồn vitamin dồi dào từ các loại rau lá xanh và củ quả được chọn mới mỗi ngày.",
     image:
       "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80",
-    button: "Kham pha ngay",
+    button: "Khám phá ngay",
   },
   {
-    title: "Trai cay mua vu",
+    title: "Trái cây mùa vụ",
     description:
-      "Tuyen chon trai cay chin tu nhien, de an, de len bua an healthy moi ngay.",
+      "Tuyển chọn trái cây chín tự nhiên, dễ ăn, dễ lên bữa ăn healthy mỗi ngày.",
     image:
       "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=900&q=80",
-    button: "Xem bo suu tap",
+    button: "Xem bộ sưu tập",
   },
   {
-    title: "Combo suc khoe",
+    title: "Combo sức khỏe",
     description:
-      "Combo goi y cho bua sang, eat clean va meal prep nhanh gon hon.",
+      "Combo gợi ý cho bữa sáng, eat clean và meal prep nhanh gọn hơn.",
     image:
       "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=80",
     button: "Mua theo combo",
   },
 ];
 
-const recommendationTabs = ["Giam can", "Tang co", "Thao doc"];
+const recommendationTabs = ["Giảm cân", "Tăng cơ", "Thải độc"];
 
 const recommendationProducts = [
   {
     id: 1,
-    title: "Salad cau vong",
+    title: "Salad cầu vồng",
     description:
-      "Ket hop rau cu huu co nhieu chat xo, phu hop bua trua nhe va de tieu hoa.",
+      "Kết hợp rau củ hữu cơ nhiều chất xơ, phù hợp bữa trưa nhẹ và dễ tiêu hóa.",
     price: "85.000d",
     badges: ["120 Cal", "Fiber+"],
-    highlight: "Recommended",
+    highlight: "Đề xuất",
     image:
       "https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=700&q=80",
   },
@@ -62,7 +62,7 @@ const recommendationProducts = [
     id: 2,
     title: "Smoothie xanh",
     description:
-      "Can tay, tao va gung tuoi cho bua phu thanh mat va giam ngam nhanh hon.",
+      "Cần tây, táo và gừng tươi cho bữa phụ thanh mát và giảm ngấy nhanh hơn.",
     price: "45.000d",
     badges: ["Vit C++", "Detox"],
     image:
@@ -70,9 +70,9 @@ const recommendationProducts = [
   },
   {
     id: 3,
-    title: "Tao premium",
+    title: "Táo premium",
     description:
-      "Trai cay gion ngot tu nhien, hop cho bua phu va che do an kieng.",
+      "Trái cây giòn ngọt tự nhiên, hợp cho bữa phụ và chế độ ăn kiêng.",
     price: "120.000d",
     badges: ["High Fiber"],
     image:
@@ -80,9 +80,9 @@ const recommendationProducts = [
   },
   {
     id: 4,
-    title: "Yen mach ngu coc",
+    title: "Yến mạch ngũ cốc",
     description:
-      "Bua sang nhanh gon, giau nang luong va de phoi hop voi sua chua trai cay.",
+      "Bữa sáng nhanh gọn, giàu năng lượng và dễ phối hợp với sữa chua trái cây.",
     price: "95.000d",
     badges: ["Protein 12g"],
     image:
@@ -93,28 +93,28 @@ const recommendationProducts = [
 const trustItems = [
   {
     icon: ShieldCheck,
-    title: "Chung nhan organic",
+    title: "Chứng nhận organic",
     description:
-      "Nguon hang uu tien chat luong sach, ro nguon goc va duoc kiem tra dinh ky.",
+      "Nguồn hàng ưu tiên chất lượng sạch, rõ nguồn gốc và được kiểm tra định kỳ.",
   },
   {
     icon: Leaf,
-    title: "Tu nong trai den ban an",
+    title: "Từ nông trại đến bàn ăn",
     description:
-      "San pham duoc dong goi nhanh, giu do tuoi va de chon cho bua an gia dinh.",
+      "Sản phẩm được đóng gói nhanh, giữ độ tươi và dễ chọn cho bữa ăn gia đình.",
   },
   {
     icon: Truck,
-    title: "Giao hang nhanh",
+    title: "Giao hàng nhanh",
     description:
-      "Flow dat hang huong den tinh tien loi, phu hop voi nguoi ban ron va sinh vien.",
+      "Flow đặt hàng hướng đến tính tiện lợi, phù hợp với người bận rộn và sinh viên.",
   },
 ];
 
 function Home() {
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Tat ca danh muc");
+  const [selectedCategory, setSelectedCategory] = useState("Tất cả danh mục");
   const [selectedTab, setSelectedTab] = useState(recommendationTabs[0]);
 
   const featuredProducts = useMemo(() => {
@@ -122,7 +122,7 @@ function Home() {
   }, []);
 
   const handleFilter = () => {
-    console.log("Loc san pham:", { keyword, selectedCategory });
+    console.log("Lọc sản phẩm:", { keyword, selectedCategory });
   };
 
   return (
@@ -131,7 +131,7 @@ function Home() {
         <div className="absolute inset-0">
           <img
             src={heroImage}
-            alt="Nong trai huu co"
+              alt="Nông trại hữu cơ"
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(8,56,24,0.92)_0%,rgba(18,97,44,0.82)_38%,rgba(61,154,87,0.54)_100%)]" />
@@ -142,18 +142,18 @@ function Home() {
           <div className="max-w-3xl py-16">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-white backdrop-blur-md">
               <Sparkles size={14} />
-              100% healthy living
+               100% sống khỏe mỗi ngày
             </div>
 
             <h1 className="mt-7 max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.06em] text-white sm:text-6xl lg:text-7xl xl:text-[5.5rem]">
-              Song khoe
-              <span className="block text-[#b7ff8d]">tuoi sach moi ngay</span>
+              Sống khoẻ
+              <span className="block text-[#b7ff8d]"> tươi sạch mỗi ngày</span>
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-8 text-white/82 sm:text-lg md:text-xl">
-              HealthyGO ket hop mua sam thuc pham sach, goi y bua an va trai
-              nghiem dat hang hien dai cho nguoi ban ron muon an ngon va an lanh
-              manh hon moi ngay.
+              HealthyGO kết hợp mua sắm thực phẩm sạch, gợi ý bữa ăn và trải
+              nghiệm đặt hàng hiện đại cho người bận rộn muốn ăn ngon và ăn lành
+              mạnh hơn mỗi ngày.
             </p>
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row">
@@ -161,14 +161,14 @@ function Home() {
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-bold text-emerald-800 shadow-[0_24px_60px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:bg-emerald-50"
                 onClick={() => navigate("/cart")}
               >
-                Mua sam ngay
+                Mua sắm ngay
                 <ArrowRight size={18} />
               </button>
               <button
                 className="rounded-2xl border border-white/35 bg-white/10 px-8 py-4 text-base font-bold text-white backdrop-blur-sm transition hover:bg-white/16"
                 onClick={() => navigate("/order")}
               >
-                Xem cau chuyen
+                Xem câu chuyện
               </button>
             </div>
           </div>
@@ -211,7 +211,7 @@ function Home() {
                 type="text"
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
-                placeholder="Ban muon tim thuc pham gi cho hom nay?"
+                placeholder="Bạn muốn tìm thực phẩm gì cho hôm nay?"
                 className="h-14 w-full rounded-2xl border border-transparent bg-slate-100 pl-13 pr-5 text-sm text-slate-700 outline-none transition focus:border-emerald-300 focus:bg-white focus:shadow-[0_0_0_4px_rgba(16,185,129,0.08)]"
               />
             </div>
@@ -222,9 +222,9 @@ function Home() {
                 onChange={(event) => setSelectedCategory(event.target.value)}
                 className="h-14 min-w-[210px] rounded-2xl border border-transparent bg-slate-100 px-5 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-300 focus:bg-white"
               >
-                <option>Tat ca danh muc</option>
-                <option>Rau cu</option>
-                <option>Trai cay</option>
+                <option>Tất cả danh mục</option>
+                <option>Rau củ</option>
+                <option>Trái cây</option>
                 <option>Combo</option>
               </select>
 
@@ -233,7 +233,7 @@ function Home() {
                 onClick={handleFilter}
               >
                 <Search size={18} />
-                Loc
+                Lọc
               </button>
             </div>
           </div>
@@ -244,10 +244,10 @@ function Home() {
         <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-[0.24em] text-emerald-700">
-              Collections
+               Bộ sưu tập
             </span>
             <h2 className="mt-3 text-3xl font-black tracking-[-0.05em] text-slate-950 sm:text-4xl">
-              Kham pha danh muc
+              Khám phá danh mục
             </h2>
           </div>
 
@@ -255,7 +255,7 @@ function Home() {
             className="inline-flex items-center gap-2 text-sm font-bold text-emerald-700 transition hover:text-emerald-900"
             onClick={() => navigate("/cart")}
           >
-            Tat ca san pham
+            Tất cả sản phẩm
             <ArrowRight size={16} />
           </button>
         </div>
@@ -293,15 +293,15 @@ function Home() {
           <div className="mx-auto mb-14 max-w-3xl text-center">
             <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-emerald-700">
               <Sparkles size={14} />
-              Smart recommendations
+               Gợi ý thông minh
             </div>
             <h2 className="mt-4 text-4xl font-black tracking-[-0.05em] text-slate-950 sm:text-5xl">
-              Goi y rieng cho ban
+              Gợi ý riêng cho bạn
             </h2>
             <p className="mt-4 text-base leading-7 text-slate-600 sm:text-lg">
-              Huong AI tu van cua HealthyGO: dua tren nhu cau dinh duong va muc
-              tieu suc khoe de de xuat nhung lua chon hop ly hon cho bua an hang
-              ngay.
+              Hướng AI tư vấn của HealthyGO: dựa trên nhu cầu dinh dưỡng và mục
+              tiêu sức khỏe để đề xuất những lựa chọn hợp lý hơn cho bữa ăn hằng
+              ngày.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -376,11 +376,12 @@ function Home() {
         <div className="mb-12 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-black tracking-[-0.05em] text-slate-950 sm:text-4xl">
-              San pham tieu bieu
+              Sản phẩm tiêu biểu
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
-              Khu vuc nay duoc rebuild theo huong premium hon: card rong, anh lon,
-              nhan trang thai va nut thao tac ro rang de sau nay de noi API that.
+              Khu vực này được rebuild theo hướng premium hơn: card rộng, ảnh
+              lớn, nhãn trạng thái và nút thao tác rõ ràng để sau này dễ nối API
+              thật.
             </p>
           </div>
 
@@ -410,13 +411,13 @@ function Home() {
 
                 {index === 0 ? (
                   <span className="absolute left-5 top-5 rounded-full bg-rose-500 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-lg">
-                    -15% off
+                     Giảm 15%
                   </span>
                 ) : null}
 
                 {index === 1 ? (
                   <span className="absolute left-5 top-5 rounded-full bg-lime-600 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-lg">
-                    New arrival
+                     Mới về
                   </span>
                 ) : null}
 
@@ -427,7 +428,7 @@ function Home() {
                     navigate(`/detail-product/${product.id}`);
                   }}
                 >
-                  Quick add
+                  Xem nhanh
                 </button>
               </div>
 
@@ -446,7 +447,7 @@ function Home() {
                     {product.category}
                   </span>
                   <span className="rounded bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                    Fresh
+                     Tươi mới
                   </span>
                 </div>
 
@@ -473,9 +474,9 @@ function Home() {
               HealthyGO
             </div>
             <p className="mt-5 max-w-md text-sm leading-7 text-slate-500">
-              Nen tang thuong mai dien tu huong den bua an lanh manh, ket hop mua
-              sam thuc pham sach, dat mon va huong AI tu van dinh duong trong tuong
-              lai.
+               Nền tảng thương mại điện tử hướng đến bữa ăn lành mạnh, kết hợp
+               mua sắm thực phẩm sạch, đặt món và hướng AI tư vấn dinh dưỡng
+               trong tương lai.
             </p>
 
             <div className="mt-6 flex gap-3">
@@ -491,7 +492,7 @@ function Home() {
           <div className="grid grid-cols-2 gap-8">
             <div>
               <h4 className="text-xs font-bold uppercase tracking-[0.24em] text-slate-900">
-                Ho tro khach hang
+                 Hỗ trợ khách hàng
               </h4>
               <div className="mt-4 space-y-3 text-sm text-slate-500">
                 <p>Contact</p>
@@ -501,7 +502,7 @@ function Home() {
             </div>
             <div>
               <h4 className="text-xs font-bold uppercase tracking-[0.24em] text-slate-900">
-                Chinh sach
+                 Chính sách
               </h4>
               <div className="mt-4 space-y-3 text-sm text-slate-500">
                 <p>Privacy Policy</p>

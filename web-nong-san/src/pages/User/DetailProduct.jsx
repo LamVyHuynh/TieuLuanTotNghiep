@@ -37,9 +37,7 @@ function DetailProduct() {
       return [];
     }
 
-    return productList
-      .filter((item) => item.id !== product.id)
-      .slice(0, 4);
+    return productList.filter((item) => item.id !== product.id).slice(0, 4);
   }, [product, productList]);
 
   if (!product) {
@@ -104,7 +102,10 @@ function DetailProduct() {
         </button>
 
         <nav className="mb-8 flex flex-wrap text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-          <button className="transition hover:text-emerald-700" onClick={() => navigate("/")}>
+          <button
+            className="transition hover:text-emerald-700"
+            onClick={() => navigate("/")}
+          >
             Home
           </button>
           <span className="mx-2">/</span>
@@ -140,9 +141,9 @@ function DetailProduct() {
               </h1>
 
               <p className="mt-4 text-base leading-7 text-slate-500">
-                {product.desc} HealthyGO uu tien trinh bay ro thong tin san pham de
-                user de dang quyet dinh mua hang va noi them AI tu van dinh duong ve
-                sau.
+                {product.desc} HealthyGO uu tien trinh bay ro thong tin san pham
+                de user de dang quyet dinh mua hang va noi them AI tu van dinh
+                duong ve sau.
               </p>
 
               <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -285,8 +286,8 @@ function DetailProduct() {
                 San pham co the may se thich
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                Section nay giu tinh than cua file HTML mau va tan dung data that
-                trong project de sau nay noi API de hon.
+                Section nay giu tinh than cua file HTML mau va tan dung data
+                that trong project de sau nay noi API de hon.
               </p>
             </div>
 
