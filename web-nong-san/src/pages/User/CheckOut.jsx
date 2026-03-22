@@ -87,7 +87,7 @@ function CheckOut() {
           them nhe.
         </p>
         <button
-          className="mt-7 rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(5,150,105,0.24)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-700"
+          className="mt-7 cursor-pointer rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(5,150,105,0.24)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-700"
           onClick={() => navigate("/")}
         >
           Ve trang chu
@@ -102,7 +102,7 @@ function CheckOut() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-10">
           <div className="flex items-center gap-3">
             <button
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
               onClick={() => navigate(-1)}
             >
               <ArrowLeft size={16} />
@@ -182,7 +182,7 @@ function CheckOut() {
                   return (
                     <button
                       key={slot.id}
-                      className={`rounded-xl border-2 p-4 text-left transition ${
+                      className={`cursor-pointer rounded-xl border-2 p-4 text-left transition ${
                         active
                           ? "border-emerald-600 bg-emerald-50"
                           : "border-transparent bg-slate-100 hover:border-emerald-200"
@@ -222,7 +222,7 @@ function CheckOut() {
                   return (
                     <button
                       key={method.id}
-                      className={`flex w-full items-center rounded-xl border-2 p-4 text-left transition ${
+                      className={`flex w-full cursor-pointer items-center rounded-xl border-2 p-4 text-left transition ${
                         active
                           ? "border-emerald-600 bg-emerald-50"
                           : "border-transparent bg-slate-100 hover:border-emerald-200"
@@ -313,7 +313,7 @@ function CheckOut() {
 
               <div className="p-6">
                 <button
-                  className="w-full rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] py-4 text-lg font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.22)] transition hover:scale-[1.02]"
+                  className="w-full cursor-pointer rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] py-4 text-lg font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.22)] transition hover:scale-[1.02]"
                   onClick={() => alert("Thanh toan thanh cong!")}
                 >
                   Xac nhan va dat hang
