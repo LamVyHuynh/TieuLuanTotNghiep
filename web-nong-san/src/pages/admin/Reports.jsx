@@ -56,7 +56,7 @@ function ReportsPage() {
               ].map((item) => (
                 <button
                   key={item.id}
-                  className={`rounded-lg px-6 py-2 text-xs font-bold uppercase tracking-[0.18em] transition ${
+                  className={`cursor-pointer rounded-lg px-6 py-2 text-xs font-bold uppercase tracking-[0.18em] transition ${
                     period === item.id
                       ? "bg-white text-emerald-700 shadow-sm"
                       : "text-slate-500 hover:text-emerald-700"
@@ -161,7 +161,7 @@ function ReportsPage() {
                 <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900">
                   Top 5 sản phẩm bán chạy nhất
                 </h3>
-                <button className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 transition hover:underline">
+                 <button className="cursor-pointer text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 transition hover:underline">
                   Xuất CSV
                 </button>
               </div>

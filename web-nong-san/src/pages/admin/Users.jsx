@@ -103,7 +103,7 @@ function UsersPage() {
               </p>
             </div>
 
-            <button className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:scale-[1.01]">
+            <button className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:scale-[1.01]">
               <UserPlus size={18} />
               Thêm người dùng
             </button>
@@ -123,11 +123,11 @@ function UsersPage() {
             </div>
 
             <div className="ml-auto flex items-center gap-2">
-              <button className="inline-flex items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
+              <button className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
                 <Filter size={16} />
                 Bộ lọc
               </button>
-              <button className="inline-flex items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
+              <button className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
                 <Download size={16} />
                 Xuất CSV
               </button>
@@ -193,7 +193,7 @@ function UsersPage() {
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 transition group-hover:opacity-100">
-                          <button className="rounded-lg p-2 text-emerald-700 transition hover:bg-emerald-50">
+                          <button className="cursor-pointer rounded-lg p-2 text-emerald-700 transition hover:bg-emerald-50">
                             <MoreVertical size={18} />
                           </button>
                         </div>
@@ -215,16 +215,16 @@ function UsersPage() {
                 >
                   <ChevronLeft size={18} />
                 </button>
-                <button className="rounded-lg bg-emerald-700 px-3 py-1 text-sm font-bold text-white">
+                <button className="cursor-pointer rounded-lg bg-emerald-700 px-3 py-1 text-sm font-bold text-white">
                   1
                 </button>
-                <button className="rounded-lg bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
+                <button className="cursor-pointer rounded-lg bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
                   2
                 </button>
-                <button className="rounded-lg bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
+                <button className="cursor-pointer rounded-lg bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
                   3
                 </button>
-                <button className="rounded-lg bg-slate-200 p-2 text-slate-700 transition hover:bg-slate-300">
+                <button className="cursor-pointer rounded-lg bg-slate-200 p-2 text-slate-700 transition hover:bg-slate-300">
                   <ChevronRight size={18} />
                 </button>
               </div>

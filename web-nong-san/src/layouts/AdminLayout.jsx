@@ -69,7 +69,7 @@ function AdminLayout() {
             return (
               <button
                 key={item.label}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-500 transition hover:bg-slate-200 hover:text-slate-900"
+                className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-500 transition hover:bg-slate-200 hover:text-slate-900"
               >
                 <Icon size={18} />
                 <span>{item.label}</span>

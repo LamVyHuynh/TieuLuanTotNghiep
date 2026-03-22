@@ -37,7 +37,6 @@ const publicRoutes = [
     element: AdminLayout,
     children: [
       { index: true, element: Dashboard },
-      { path: "dashboard", element: Dashboard },
       { path: "users", element: Users },
       { path: "products", element: Products },
       { path: "stores", element: Stores },

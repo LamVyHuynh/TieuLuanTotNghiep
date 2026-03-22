@@ -126,7 +126,7 @@ function StoresPage() {
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex rounded-xl bg-[#eef2eb] p-1">
                 <button
-                  className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
                     viewMode === "table"
                       ? "bg-white font-bold text-slate-900 shadow-sm"
                       : "font-medium text-slate-500 hover:text-slate-900"
@@ -137,7 +137,7 @@ function StoresPage() {
                   Bảng
                 </button>
                 <button
-                  className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
                     viewMode === "map"
                       ? "bg-white font-bold text-slate-900 shadow-sm"
                       : "font-medium text-slate-500 hover:text-slate-900"
@@ -149,7 +149,7 @@ function StoresPage() {
                 </button>
               </div>
 
-              <button className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:opacity-90">
+              <button className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:opacity-90">
                 <Plus size={18} />
                 Thêm cửa hàng mới
               </button>
@@ -264,7 +264,7 @@ function StoresPage() {
                         </div>
                       </td>
                       <td className="px-8 py-5 text-right">
-                        <button className="rounded-lg p-2 text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-700">
+                        <button className="cursor-pointer rounded-lg p-2 text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-700">
                           <ClipboardList size={18} />
                         </button>
                       </td>
@@ -279,19 +279,19 @@ function StoresPage() {
                  Hiển thị <span className="font-bold text-slate-900">3</span> trong tổng số <span className="font-bold text-slate-900">142</span> cửa hàng
               </p>
               <div className="flex items-center gap-2">
-                <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef2eb] transition hover:bg-slate-200">
+                <button className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl bg-[#eef2eb] transition hover:bg-slate-200">
                   <ChevronLeft size={18} />
                 </button>
-                <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 font-bold text-white">
+                <button className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl bg-emerald-700 font-bold text-white">
                   1
                 </button>
-                <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef2eb] font-bold transition hover:bg-slate-200">
+                <button className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl bg-[#eef2eb] font-bold transition hover:bg-slate-200">
                   2
                 </button>
-                <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef2eb] font-bold transition hover:bg-slate-200">
+                <button className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl bg-[#eef2eb] font-bold transition hover:bg-slate-200">
                   3
                 </button>
-                <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef2eb] transition hover:bg-slate-200">
+                <button className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl bg-[#eef2eb] transition hover:bg-slate-200">
                   <ChevronRight size={18} />
                 </button>
               </div>
@@ -308,10 +308,10 @@ function StoresPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
 
               <div className="absolute left-6 top-6 flex flex-col gap-2">
-                <button className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-slate-900 shadow-lg transition hover:text-emerald-700">
+                <button className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-white text-slate-900 shadow-lg transition hover:text-emerald-700">
                   <Plus size={18} />
                 </button>
-                <button className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-slate-900 shadow-lg transition hover:text-emerald-700">
+                <button className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg bg-white text-slate-900 shadow-lg transition hover:text-emerald-700">
                   <ChevronLeft size={18} />
                 </button>
               </div>
@@ -362,7 +362,7 @@ function StoresPage() {
                     </p>
                   </div>
                 </div>
-                <button className="w-full rounded-xl bg-slate-200 py-3 text-sm font-bold text-slate-900 transition hover:bg-slate-300">
+                <button className="w-full cursor-pointer rounded-xl bg-slate-200 py-3 text-sm font-bold text-slate-900 transition hover:bg-slate-300">
                   Xem pipeline đối tác
                 </button>
               </div>

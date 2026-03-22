@@ -96,7 +96,7 @@ function Dashboard() {
             </div>
 
             <div className="flex items-center justify-between gap-4 lg:justify-end lg:gap-6">
-              <button className="relative rounded-full p-2 text-slate-600 transition hover:bg-slate-100">
+              <button className="relative cursor-pointer rounded-full p-2 text-slate-600 transition hover:bg-slate-100">
                 <Bell size={20} />
                 <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
               </button>
@@ -277,7 +277,7 @@ function Dashboard() {
                   ))}
                 </div>
 
-                <button className="mt-6 w-full rounded-xl py-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-50">
+                 <button className="mt-6 w-full cursor-pointer rounded-xl py-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-50">
                   Xem toàn bộ tồn kho
                 </button>
               </article>
@@ -293,7 +293,7 @@ function Dashboard() {
                     Nhật ký giao dịch thời gian thực từ mọi khu vực
                   </p>
                 </div>
-                <button className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-emerald-700 transition hover:bg-slate-50">
+                 <button className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-emerald-700 transition hover:bg-slate-50">
                   Xem tất cả
                   <ChevronRight size={16} />
                 </button>
@@ -346,7 +346,7 @@ function Dashboard() {
                           {order.total}
                         </td>
                         <td className="px-8 py-5">
-                          <button className="text-slate-400 transition hover:text-emerald-700">
+                          <button className="cursor-pointer text-slate-400 transition hover:text-emerald-700">
                             <MoreVertical size={16} />
                           </button>
                         </td>

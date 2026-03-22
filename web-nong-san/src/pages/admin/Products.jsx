@@ -104,7 +104,7 @@ function ProductsPage() {
               </p>
             </div>
 
-            <button className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:opacity-90">
+            <button className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:opacity-90">
               <Plus size={18} />
               Thêm sản phẩm
             </button>
@@ -125,11 +125,11 @@ function ProductsPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button className="inline-flex items-center gap-2 rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">
+                <button className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">
                   <Filter size={16} />
                   Danh mục
                 </button>
-                <button className="inline-flex items-center gap-2 rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">
+                <button className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">
                   <SlidersHorizontal size={16} />
                   Tồn kho
                 </button>
@@ -140,10 +140,10 @@ function ProductsPage() {
               <span className="mr-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Tác vụ hàng loạt:
               </span>
-              <button className="rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50">
+               <button className="cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50">
                 Xóa
               </button>
-              <button className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">
+               <button className="cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">
                 Sửa trạng thái
               </button>
             </div>
@@ -273,7 +273,7 @@ function ProductsPage() {
                         </div>
                       </td>
                       <td className="p-4 text-right">
-                        <button className="text-slate-400 transition hover:text-emerald-700">
+                         <button className="cursor-pointer text-slate-400 transition hover:text-emerald-700">
                           <MoreVertical size={18} />
                         </button>
                       </td>
@@ -289,23 +289,23 @@ function ProductsPage() {
               </span>
 
               <div className="flex items-center gap-1">
-                <button className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200">
+                <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200">
                   <ChevronLeft size={18} />
                 </button>
-                <button className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-700 text-xs font-bold text-white">
+                <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-emerald-700 text-xs font-bold text-white">
                   1
                 </button>
-                <button className="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold text-slate-700 transition hover:bg-slate-200">
+                <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-xs font-bold text-slate-700 transition hover:bg-slate-200">
                   2
                 </button>
-                <button className="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold text-slate-700 transition hover:bg-slate-200">
+                <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-xs font-bold text-slate-700 transition hover:bg-slate-200">
                   3
                 </button>
                 <span className="px-1 text-slate-400">...</span>
-                <button className="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold text-slate-700 transition hover:bg-slate-200">
+                <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-xs font-bold text-slate-700 transition hover:bg-slate-200">
                   312
                 </button>
-                <button className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200">
+                <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200">
                   <ChevronRight size={18} />
                 </button>
               </div>

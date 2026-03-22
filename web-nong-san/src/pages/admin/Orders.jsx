@@ -115,13 +115,13 @@ function OrdersPage() {
             </div>
 
             <div className="flex gap-3">
-              <button className="rounded-lg bg-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">
+              <button className="cursor-pointer rounded-lg bg-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">
                 <span className="inline-flex items-center gap-2">
                   <Download size={16} />
                   Xuất CSV
                 </span>
               </button>
-              <button className="rounded-lg bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90">
+              <button className="cursor-pointer rounded-lg bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90">
                 Tạo đơn thủ công
               </button>
             </div>
@@ -135,7 +135,7 @@ function OrdersPage() {
                   {statusTabs.map((tab) => (
                     <button
                       key={tab}
-                      className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                      className={`cursor-pointer rounded-full px-4 py-1.5 text-xs font-bold transition ${
                         activeTab === tab
                           ? "bg-white text-emerald-700 shadow-sm"
                           : "text-slate-500 hover:bg-slate-100"
@@ -157,7 +157,7 @@ function OrdersPage() {
                     className="w-full rounded-lg border-none bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:shadow-[0_0_0_3px_rgba(16,185,129,0.10)]"
                   />
                 </div>
-                <button className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-600">
+                <button className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-600">
                   <Search size={16} />
                   Thêm bộ lọc
                 </button>
@@ -228,7 +228,7 @@ function OrdersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <button className="text-sm font-bold text-emerald-700 transition hover:underline">
+                        <button className="cursor-pointer text-sm font-bold text-emerald-700 transition hover:underline">
                           Xem chi tiết
                         </button>
                       </td>
@@ -241,13 +241,13 @@ function OrdersPage() {
             <div className="flex flex-col gap-4 bg-slate-200/50 px-6 py-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 sm:flex-row sm:items-center sm:justify-between">
               <div>Hiển thị 1 - 10 trong tổng số 248 đơn</div>
               <div className="flex gap-2">
-                <button className="flex h-8 w-8 items-center justify-center rounded bg-white text-slate-500 transition hover:bg-slate-100">
+                <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded bg-white text-slate-500 transition hover:bg-slate-100">
                   <ChevronLeft size={16} />
                 </button>
-                <button className="flex h-8 w-8 items-center justify-center rounded bg-emerald-700 text-white">1</button>
-                <button className="flex h-8 w-8 items-center justify-center rounded bg-white text-slate-700 transition hover:bg-slate-100">2</button>
-                <button className="flex h-8 w-8 items-center justify-center rounded bg-white text-slate-700 transition hover:bg-slate-100">3</button>
-                <button className="flex h-8 w-8 items-center justify-center rounded bg-white text-slate-500 transition hover:bg-slate-100">
+                <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded bg-emerald-700 text-white">1</button>
+                <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded bg-white text-slate-700 transition hover:bg-slate-100">2</button>
+                <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded bg-white text-slate-700 transition hover:bg-slate-100">3</button>
+                <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded bg-white text-slate-500 transition hover:bg-slate-100">
                   <ChevronRight size={16} />
                 </button>
               </div>
