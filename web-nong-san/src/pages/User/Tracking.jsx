@@ -23,7 +23,7 @@ function Tracking() {
 
       <section className="mb-6 rounded-[26px] border border-emerald-100/70 bg-[linear-gradient(130deg,#f2fff7_0%,#ffffff_45%,#fff8ec_100%)] px-6 py-7 shadow-[0_18px_40px_rgba(15,23,42,0.06)] sm:px-8">
         <p className="mb-1 text-xs font-semibold tracking-[0.14em] text-emerald-600 uppercase">
-          Tracking
+          Theo dõi đơn
         </p>
         <h2 className="text-3xl font-black tracking-[-0.03em] text-slate-900 sm:text-4xl">
           Theo dõi đơn hàng #12345

@@ -27,7 +27,7 @@ function Order() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="mb-1 text-xs font-semibold tracking-[0.14em] text-emerald-600 uppercase">
-              Order History
+              Lịch sử mua hàng
             </p>
             <h2 className="text-3xl font-black tracking-[-0.03em] text-slate-900 sm:text-4xl">
               Lịch sử đơn hàng
@@ -35,7 +35,7 @@ function Order() {
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm">
             <Package size={16} />
-            Tổng đơn: {orders.length}
+            Tổng số đơn: {orders.length}
           </div>
         </div>
       </section>
@@ -86,7 +86,7 @@ function Order() {
               onClick={() => navigate("/tracking")}
             >
               <Clock3 size={16} />
-              Xem chi tiết theo dõi
+              Xem theo dõi đơn hàng
               <ChevronRight size={16} />
             </button>
           </article>
