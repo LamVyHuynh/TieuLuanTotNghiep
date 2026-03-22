@@ -15,14 +15,14 @@ import { CheckoutContext } from "../../context/CheckoutContext";
 const deliverySlots = [
   {
     id: "morning",
-    title: "Buoi sang",
+    title: "Buổi sáng",
     time: "8:00 - 12:00",
     icon: SunMedium,
     accent: "text-emerald-700",
   },
   {
     id: "afternoon",
-    title: "Buoi chieu",
+    title: "Buổi chiều",
     time: "14:00 - 18:00",
     icon: MapPin,
     accent: "text-amber-600",
@@ -32,17 +32,17 @@ const deliverySlots = [
 const paymentMethods = [
   {
     id: "cod",
-    label: "Thanh toan khi nhan hang (COD)",
+    label: "Thanh toán khi nhận hàng (COD)",
     icon: Banknote,
   },
   {
     id: "bank",
-    label: "Chuyen khoan ngan hang",
+    label: "Chuyển khoản ngân hàng",
     icon: Landmark,
   },
   {
     id: "momo",
-    label: "Vi dien tu MoMo",
+    label: "Ví điện tử MoMo",
     icon: Wallet,
   },
 ];
@@ -80,17 +80,17 @@ function CheckOut() {
           :(
         </div>
         <h2 className="text-3xl font-black tracking-[-0.03em] text-slate-900">
-          Don hang chua san sang!
+          Đơn hàng chưa sẵn sàng!
         </h2>
         <p className="mt-3 text-base leading-7 text-slate-500">
-          Ban chua chon san pham nao de thanh toan ca. Quay lai cua hang chon
-          them nhe.
+          Bạn chưa chọn sản phẩm nào để thanh toán cả. Quay lại cửa hàng chọn
+          thêm nhé.
         </p>
         <button
           className="mt-7 cursor-pointer rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(5,150,105,0.24)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-700"
           onClick={() => navigate("/")}
         >
-          Ve trang chu
+          Về trang chủ
         </button>
       </div>
     );
@@ -106,17 +106,17 @@ function CheckOut() {
               onClick={() => navigate(-1)}
             >
               <ArrowLeft size={16} />
-              Quay lai
+              Quay lại
             </button>
             <span className="hidden h-4 w-px bg-slate-300 sm:block" />
             <span className="hidden text-sm font-semibold text-slate-500 sm:block">
-              Thanh toan
+              Thanh toán
             </span>
           </div>
 
           <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
             <Lock size={16} />
-            Bao mat 100%
+            Bảo mật 100%
           </div>
         </div>
       </header>
@@ -130,33 +130,33 @@ function CheckOut() {
                   1
                 </div>
                 <h2 className="text-xl font-black tracking-[-0.03em] text-slate-900">
-                  Thong tin giao nhan
+                  Thông tin giao nhận
                 </h2>
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Field
-                  label="Ho va ten"
+                  label="Họ và tên"
                   value={formData.fullName}
                   onChange={(value) => handleChange("fullName", value)}
-                  placeholder="Nguyen Van A"
+                  placeholder="Nguyễn Văn A"
                 />
                 <Field
-                  label="So dien thoai"
+                  label="Số điện thoại"
                   value={formData.phone}
                   onChange={(value) => handleChange("phone", value)}
                   placeholder="0901 234 567"
                 />
                 <div className="space-y-2 md:col-span-2">
                   <label className="ml-1 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Dia chi chi tiet
+                    Địa chỉ chi tiết
                   </label>
                   <textarea
                     value={formData.address}
                     onChange={(event) =>
                       handleChange("address", event.target.value)
                     }
-                    placeholder="So nha, ten duong, phuong/xa, quan/huyen..."
+                    placeholder="Số nhà, tên đường, phường/xã, quận/huyện..."
                     rows={3}
                     className="w-full resize-none rounded-xl border-none bg-slate-100 p-3.5 text-sm text-slate-700 outline-none transition focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.10)]"
                   />
@@ -170,7 +170,7 @@ function CheckOut() {
                   2
                 </div>
                 <h2 className="text-xl font-black tracking-[-0.03em] text-slate-900">
-                  Chon khung gio giao hang
+                  Chọn khung giờ giao hàng
                 </h2>
               </div>
 
@@ -210,7 +210,7 @@ function CheckOut() {
                   3
                 </div>
                 <h2 className="text-xl font-black tracking-[-0.03em] text-slate-900">
-                  Phuong thuc thanh toan
+                  Phương thức thanh toán
                 </h2>
               </div>
 
@@ -252,7 +252,7 @@ function CheckOut() {
             <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
               <div className="border-b border-slate-200/70 p-6">
                 <h3 className="text-lg font-black tracking-[-0.03em] text-slate-900">
-                  Tom tat don hang
+                  Tóm tắt đơn hàng
                 </h3>
               </div>
 
@@ -272,7 +272,7 @@ function CheckOut() {
                       </h4>
                       <div className="mt-1 flex items-center justify-between gap-4">
                         <p className="text-xs text-slate-500">
-                          So luong: {item.quantity}
+                          Số lượng: {item.quantity}
                         </p>
                         <p className="text-sm font-bold text-emerald-700">
                           {(item.price * item.quantity).toLocaleString("vi-VN")}
@@ -286,25 +286,25 @@ function CheckOut() {
 
               <div className="space-y-3 bg-slate-50/80 p-6 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Tam tinh</span>
+                  <span className="text-slate-500">Tạm tính</span>
                   <span className="font-medium text-slate-900">
                     {subtotal.toLocaleString("vi-VN")}d
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Phi van chuyen</span>
+                  <span className="text-slate-500">Phí vận chuyển</span>
                   <span className="font-medium text-slate-900">
                     {shippingFee.toLocaleString("vi-VN")}d
                   </span>
                 </div>
                 <div className="flex justify-between text-amber-700">
-                  <span>Giam gia</span>
+                  <span>Giảm giá</span>
                   <span className="font-medium">
                     -{discount.toLocaleString("vi-VN")}d
                   </span>
                 </div>
                 <div className="mt-4 flex items-baseline justify-between border-t border-slate-200 pt-4">
-                  <span className="font-bold text-slate-900">Tong cong</span>
+                  <span className="font-bold text-slate-900">Tổng cộng</span>
                   <span className="text-2xl font-black tracking-[-0.04em] text-emerald-700">
                     {total.toLocaleString("vi-VN")}d
                   </span>
@@ -314,13 +314,13 @@ function CheckOut() {
               <div className="p-6">
                 <button
                   className="w-full cursor-pointer rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] py-4 text-lg font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.22)] transition hover:scale-[1.02]"
-                  onClick={() => alert("Thanh toan thanh cong!")}
+                  onClick={() => alert("Thanh toán thành công!")}
                 >
-                  Xac nhan va dat hang
+                  Xác nhận và đặt hàng
                 </button>
                 <p className="mt-4 px-4 text-center text-[10px] leading-relaxed text-slate-500">
-                  Bang cach dat hang, ban dong y voi Dieu khoan dich vu va Chinh
-                  sach bao mat cua HealthyGO.
+                  Bằng cách đặt hàng, bạn đồng ý với Điều khoản dịch vụ và Chính
+                  sách bảo mật của HealthyGO.
                 </p>
               </div>
             </div>
