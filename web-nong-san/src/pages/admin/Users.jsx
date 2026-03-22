@@ -18,17 +18,17 @@ import {
 } from "lucide-react";
 
 const sidebarItems = [
-  { label: "Dashboard", icon: ClipboardList, active: false },
-  { label: "Users", icon: Users, active: true },
-  { label: "Products", icon: Package, active: false },
-  { label: "Stores", icon: Store, active: false },
-  { label: "Orders", icon: ShoppingBag, active: false },
-  { label: "Reports", icon: ClipboardList, active: false },
+  { label: "Tổng quan", icon: ClipboardList, active: false },
+  { label: "Người dùng", icon: Users, active: true },
+  { label: "Sản phẩm", icon: Package, active: false },
+  { label: "Cửa hàng", icon: Store, active: false },
+  { label: "Đơn hàng", icon: ShoppingBag, active: false },
+  { label: "Báo cáo", icon: ClipboardList, active: false },
 ];
 
 const bottomSidebarItems = [
-  { label: "Settings", icon: Settings },
-  { label: "Logout", icon: LogOut },
+  { label: "Cài đặt", icon: Settings },
+  { label: "Đăng xuất", icon: LogOut },
 ];
 
 const users = [
@@ -36,9 +36,9 @@ const users = [
     name: "Marcus Thorne",
     joined: "Joined 12 Oct 2023",
     email: "marcus.thorne@example.com",
-    role: "Admin",
+    role: "Quản trị",
     roleClass: "bg-amber-100 text-amber-700",
-    status: "Active",
+    status: "Hoạt động",
     statusClass: "bg-emerald-500",
     lastLogin: "2 mins ago",
     avatar:
@@ -48,9 +48,9 @@ const users = [
     name: "Sarah Jenkins",
     joined: "Joined 05 Nov 2023",
     email: "s.jenkins@provider.net",
-    role: "Customer",
+    role: "Khách hàng",
     roleClass: "bg-lime-100 text-lime-700",
-    status: "Active",
+    status: "Hoạt động",
     statusClass: "bg-emerald-500",
     lastLogin: "14 hours ago",
     avatar:
@@ -60,9 +60,9 @@ const users = [
     name: "Elias Vance",
     joined: "Joined 18 Nov 2023",
     email: "vance.elias@corp.com",
-    role: "Customer",
+    role: "Khách hàng",
     roleClass: "bg-lime-100 text-lime-700",
-    status: "Suspended",
+    status: "Tạm khóa",
     statusClass: "bg-rose-500",
     lastLogin: "28 days ago",
     avatar:
@@ -72,9 +72,9 @@ const users = [
     name: "Julian Smith",
     joined: "Joined 21 Nov 2023",
     email: "j.smith@webmail.com",
-    role: "Customer",
+    role: "Khách hàng",
     roleClass: "bg-lime-100 text-lime-700",
-    status: "Active",
+    status: "Hoạt động",
     statusClass: "bg-emerald-500",
     lastLogin: "Yesterday",
     avatar:
@@ -84,19 +84,19 @@ const users = [
 
 const stats = [
   {
-    label: "Total Users",
+    label: "Tổng người dùng",
     value: "12,490",
     icon: Users,
     iconClass: "bg-emerald-100 text-emerald-700",
   },
   {
-    label: "Administrators",
+    label: "Quản trị viên",
     value: "14",
     icon: UserPlus,
     iconClass: "bg-amber-100 text-amber-700",
   },
   {
-    label: "Pending Suspension",
+    label: "Chờ tạm khóa",
     value: "3",
     icon: Plus,
     iconClass: "bg-lime-100 text-lime-700",
@@ -113,7 +113,7 @@ function UsersPage() {
               HealthyGO Admin
             </h1>
             <p className="mt-1 text-xs font-medium text-slate-500">
-              Management Portal
+              Cổng quản trị
             </p>
           </div>
 
@@ -156,17 +156,17 @@ function UsersPage() {
           <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] text-slate-900">
-                User Management
+                Quản lý người dùng
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                Review and manage your store&apos;s user base. Oversee permissions,
-                account statuses, and login activity from this central hub.
+                Xem và quản lý người dùng trong hệ thống. Theo dõi quyền, trạng
+                thái tài khoản và hoạt động đăng nhập tại một nơi.
               </p>
             </div>
 
             <button className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:scale-[1.01]">
               <UserPlus size={18} />
-              Add New User
+              Thêm người dùng
             </button>
           </header>
 
@@ -178,7 +178,7 @@ function UsersPage() {
               />
               <input
                 type="text"
-                placeholder="Search by name, email or role..."
+                  placeholder="Tìm theo tên, email hoặc vai trò..."
                 className="w-full rounded-lg border-none bg-white py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none ring-0 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.10)]"
               />
             </div>
@@ -186,11 +186,11 @@ function UsersPage() {
             <div className="ml-auto flex items-center gap-2">
               <button className="inline-flex items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
                 <Filter size={16} />
-                Filters
+                Bộ lọc
               </button>
               <button className="inline-flex items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
                 <Download size={16} />
-                Export CSV
+                Xuất CSV
               </button>
             </div>
           </section>
@@ -200,12 +200,12 @@ function UsersPage() {
               <table className="w-full min-w-[980px] border-collapse text-left">
                 <thead>
                   <tr className="bg-[#eef2eb] text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-                    <th className="px-6 py-4">Name</th>
-                    <th className="px-6 py-4">Email Address</th>
-                    <th className="px-6 py-4">Role</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4">Last Login</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
+                    <th className="px-6 py-4">Tên</th>
+                    <th className="px-6 py-4">Địa chỉ email</th>
+                    <th className="px-6 py-4">Vai trò</th>
+                    <th className="px-6 py-4">Trạng thái</th>
+                    <th className="px-6 py-4">Lần đăng nhập cuối</th>
+                    <th className="px-6 py-4 text-right">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -267,7 +267,7 @@ function UsersPage() {
 
             <div className="flex flex-col gap-4 border-t border-slate-100 bg-[#f7faf6] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-xs font-medium text-slate-500">
-                Showing 1 to 4 of 288 users
+                Hiển thị 1 đến 4 trong tổng số 288 người dùng
               </span>
               <div className="flex gap-2">
                 <button
@@ -319,15 +319,15 @@ function UsersPage() {
           <footer className="mt-12 border-t border-slate-200 bg-slate-50 px-2 py-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                © 2024 HealthyGO Organic. All rights reserved.
+                © 2024 HealthyGO Organic. Đã đăng ký bản quyền.
               </div>
               <div className="flex flex-wrap gap-6">
                 {[
-                  "Contact",
-                  "Shipping",
-                  "Returns",
-                  "Privacy Policy",
-                  "Terms of Service",
+                  "Liên hệ",
+                  "Vận chuyển",
+                  "Hoàn trả",
+                  "Chính sách bảo mật",
+                  "Điều khoản dịch vụ",
                 ].map((item) => (
                   <a
                     key={item}

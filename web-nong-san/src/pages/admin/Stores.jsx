@@ -18,22 +18,22 @@ import {
 } from "lucide-react";
 
 const sidebarItems = [
-  { label: "Dashboard", icon: BarChart3, active: false },
-  { label: "Users", icon: Users, active: false },
-  { label: "Products", icon: Package, active: false },
-  { label: "Stores", icon: Store, active: true },
-  { label: "Orders", icon: ShoppingBag, active: false },
-  { label: "Reports", icon: ClipboardList, active: false },
+  { label: "Tổng quan", icon: BarChart3, active: false },
+  { label: "Người dùng", icon: Users, active: false },
+  { label: "Sản phẩm", icon: Package, active: false },
+  { label: "Cửa hàng", icon: Store, active: true },
+  { label: "Đơn hàng", icon: ShoppingBag, active: false },
+  { label: "Báo cáo", icon: ClipboardList, active: false },
 ];
 
 const bottomSidebarItems = [
-  { label: "Settings", icon: Settings },
-  { label: "Logout", icon: LogOut },
+  { label: "Cài đặt", icon: Settings },
+  { label: "Đăng xuất", icon: LogOut },
 ];
 
 const stats = [
   {
-    label: "Total Stores",
+    label: "Tổng cửa hàng",
     value: "142",
     tag: "+12%",
     icon: Store,
@@ -41,25 +41,25 @@ const stats = [
     tagClass: "bg-emerald-100 text-emerald-700",
   },
   {
-    label: "Active Orders",
+    label: "Đơn đang hoạt động",
     value: "1,892",
-    tag: "Active",
+    tag: "Đang chạy",
     icon: TrendingUp,
     iconClass: "bg-amber-100 text-amber-700",
     tagClass: "bg-amber-100 text-amber-700",
   },
   {
-    label: "Avg. Partner Rating",
+    label: "Điểm đối tác TB",
     value: "4.8",
-    tag: "Global",
+    tag: "Toàn hệ thống",
     icon: Star,
     iconClass: "bg-lime-100 text-lime-700",
     tagClass: "bg-lime-100 text-lime-700",
   },
   {
-    label: "Restock Alerts",
+    label: "Cảnh báo nhập hàng",
     value: "8",
-    tag: "Critical",
+    tag: "Khẩn cấp",
     icon: ClipboardList,
     iconClass: "bg-rose-100 text-rose-700",
     tagClass: "bg-rose-100 text-rose-700",
@@ -69,15 +69,15 @@ const stats = [
 const stores = [
   {
     name: "Green Life Market",
-    badge: "Flagship",
+    badge: "Chủ lực",
     badgeClass: "bg-emerald-100 text-emerald-700",
     location: "Seattle, WA",
     address: "425 Pine St, Downtown",
     contactInitials: "ED",
     contactName: "Elena Davila",
     contactClass: "bg-lime-100 text-lime-700",
-    orders: "42 Orders",
-    capacity: "88% Capacity",
+    orders: "42 đơn",
+    capacity: "88% công suất",
     capacityWidth: "w-[88%]",
     capacityBar: "bg-emerald-600",
     rating: "4.9",
@@ -93,8 +93,8 @@ const stores = [
     contactInitials: "MW",
     contactName: "Marcus Webb",
     contactClass: "bg-amber-100 text-amber-700",
-    orders: "18 Orders",
-    capacity: "32% Capacity",
+    orders: "18 đơn",
+    capacity: "32% công suất",
     capacityWidth: "w-[32%]",
     capacityBar: "bg-lime-500",
     rating: "4.7",
@@ -103,15 +103,15 @@ const stores = [
   },
   {
     name: "Organic Roots",
-    badge: "Warning",
+    badge: "Cảnh báo",
     badgeClass: "bg-rose-100 text-rose-700",
     location: "San Francisco, CA",
     address: "2180 Mission St",
     contactInitials: "SC",
     contactName: "Sarah Chen",
     contactClass: "bg-emerald-100 text-emerald-700",
-    orders: "56 Orders",
-    capacity: "112% Capacity",
+    orders: "56 đơn",
+    capacity: "112% công suất",
     capacityWidth: "w-full",
     capacityBar: "bg-rose-500",
     rating: "4.2",
@@ -132,7 +132,7 @@ function StoresPage() {
               HealthyGO Admin
             </h1>
             <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Management Portal
+              Cổng quản trị
             </p>
           </div>
 
@@ -175,12 +175,12 @@ function StoresPage() {
           <header className="mb-12 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div>
               <h2 className="text-4xl font-black tracking-[-0.05em] text-slate-900">
-                Partner Stores
+                Cửa hàng đối tác
               </h2>
               <div className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-500">
-                <span>Admin</span>
+                <span>Quản trị</span>
                 <ChevronRight size={14} />
-                <span className="font-bold text-emerald-700">Store Management</span>
+                <span className="font-bold text-emerald-700">Quản lý cửa hàng</span>
               </div>
             </div>
 
@@ -195,7 +195,7 @@ function StoresPage() {
                   onClick={() => setViewMode("table")}
                 >
                   <ClipboardList size={16} />
-                  Table
+                  Bảng
                 </button>
                 <button
                   className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
@@ -206,13 +206,13 @@ function StoresPage() {
                   onClick={() => setViewMode("map")}
                 >
                   <Map size={16} />
-                  Map
+                  Bản đồ
                 </button>
               </div>
 
               <button className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:opacity-90">
                 <Plus size={18} />
-                Add New Store
+                Thêm cửa hàng mới
               </button>
             </div>
           </header>
@@ -245,13 +245,13 @@ function StoresPage() {
           <section className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm">
             <div className="flex flex-col gap-4 bg-[#f7faf6] px-8 py-6 lg:flex-row lg:items-center lg:justify-between">
               <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900">
-                Store Directory
+                 Danh sách cửa hàng
               </h3>
               <div className="relative w-full max-w-sm">
                 <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search stores, locations..."
+                  placeholder="Tìm cửa hàng, địa điểm..."
                   className="w-full rounded-xl border-none bg-[#eef2eb] py-2.5 pl-10 pr-4 text-sm outline-none focus:shadow-[0_0_0_3px_rgba(16,185,129,0.10)]"
                 />
               </div>
@@ -261,12 +261,12 @@ function StoresPage() {
               <table className="w-full min-w-[1100px] border-collapse text-left">
                 <thead>
                   <tr className="border-b border-slate-200 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-                    <th className="px-8 py-4">Store Details</th>
-                    <th className="px-8 py-4">Location</th>
-                    <th className="px-8 py-4">Contact Person</th>
-                    <th className="px-8 py-4">Active Orders</th>
-                    <th className="px-8 py-4 text-center">Rating</th>
-                    <th className="px-8 py-4 text-right">Actions</th>
+                     <th className="px-8 py-4">Chi tiết cửa hàng</th>
+                     <th className="px-8 py-4">Địa điểm</th>
+                     <th className="px-8 py-4">Người liên hệ</th>
+                     <th className="px-8 py-4">Đơn đang hoạt động</th>
+                     <th className="px-8 py-4 text-center">Đánh giá</th>
+                     <th className="px-8 py-4 text-right">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -337,7 +337,7 @@ function StoresPage() {
 
             <div className="flex flex-col gap-4 border-t border-slate-100 px-8 py-6 text-sm sm:flex-row sm:items-center sm:justify-between">
               <p className="text-slate-500">
-                Showing <span className="font-bold text-slate-900">3</span> of <span className="font-bold text-slate-900">142</span> stores
+                 Hiển thị <span className="font-bold text-slate-900">3</span> trong tổng số <span className="font-bold text-slate-900">142</span> cửa hàng
               </p>
               <div className="flex items-center gap-2">
                 <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef2eb] transition hover:bg-slate-200">
@@ -363,7 +363,7 @@ function StoresPage() {
             <article className="relative h-[450px] overflow-hidden rounded-3xl shadow-sm xl:col-span-2">
               <img
                 src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1200&q=80"
-                alt="Store location map"
+                alt="Bản đồ vị trí cửa hàng"
                 className="h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
@@ -381,7 +381,7 @@ function StoresPage() {
                 <div className="group cursor-pointer">
                   <div className="flex items-center gap-1 rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white shadow-xl transition group-hover:scale-110">
                     <Store size={14} />
-                    Green Life
+                    Green Life Market
                   </div>
                   <div className="mx-auto h-4 w-0.5 bg-emerald-700" />
                 </div>
@@ -391,20 +391,20 @@ function StoresPage() {
             <article className="flex flex-col justify-between rounded-3xl bg-[#eef2eb] p-8">
               <div>
                 <h4 className="mb-4 text-2xl font-black tracking-[-0.04em] text-emerald-700">
-                  Expansion Metrics
+                  Chỉ số mở rộng
                 </h4>
                 <p className="mb-8 text-sm leading-7 text-slate-500">
-                  Most of your growth is currently concentrated in the <span className="font-bold text-slate-900">Pacific Northwest</span>. Consider exploring southern hubs for Q4.
+                  Phần lớn tăng trưởng hiện tập trung ở khu vực <span className="font-bold text-slate-900">Pacific Northwest</span>. Có thể cân nhắc mở rộng thêm các hub phía nam cho Q4.
                 </p>
 
                 <ul className="space-y-4">
                   <li className="flex items-center justify-between rounded-xl bg-white p-3">
                     <span className="text-sm font-semibold text-slate-900">Portland Hub</span>
-                    <span className="text-xs font-bold text-lime-700">+24% Growth</span>
+                    <span className="text-xs font-bold text-lime-700">+24% tăng trưởng</span>
                   </li>
                   <li className="flex items-center justify-between rounded-xl bg-white p-3">
                     <span className="text-sm font-semibold text-slate-900">Seattle Central</span>
-                    <span className="text-xs font-bold text-emerald-700">Stable</span>
+                    <span className="text-xs font-bold text-emerald-700">Ổn định</span>
                   </li>
                 </ul>
               </div>
@@ -416,15 +416,15 @@ function StoresPage() {
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-                      Growth Forecast
+                      Dự báo tăng trưởng
                     </p>
                     <p className="text-sm font-bold text-slate-900">
-                      12 Potential Partners Found
+                      Tìm thấy 12 đối tác tiềm năng
                     </p>
                   </div>
                 </div>
                 <button className="w-full rounded-xl bg-slate-200 py-3 text-sm font-bold text-slate-900 transition hover:bg-slate-300">
-                  View Lead Pipeline
+                  Xem pipeline đối tác
                 </button>
               </div>
             </article>
@@ -434,10 +434,10 @@ function StoresPage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="mb-4 text-xs uppercase tracking-[0.18em] text-slate-500">
-                  © 2024 HealthyGO Organic. All rights reserved.
+                  © 2024 HealthyGO Organic. Đã đăng ký bản quyền.
                 </p>
                 <div className="flex flex-wrap gap-x-8 gap-y-2">
-                  {['Contact', 'Shipping', 'Returns'].map((item) => (
+                  {['Liên hệ', 'Vận chuyển', 'Hoàn trả'].map((item) => (
                     <a key={item} href="#" className="text-xs uppercase tracking-[0.18em] text-slate-400 transition hover:text-emerald-600">
                       {item}
                     </a>
@@ -445,7 +445,7 @@ function StoresPage() {
                 </div>
               </div>
               <div className="flex gap-x-8">
-                {['Privacy Policy', 'Terms of Service'].map((item) => (
+                {['Chính sách bảo mật', 'Điều khoản dịch vụ'].map((item) => (
                   <a key={item} href="#" className="text-xs uppercase tracking-[0.18em] text-slate-400 transition hover:text-emerald-600">
                     {item}
                   </a>

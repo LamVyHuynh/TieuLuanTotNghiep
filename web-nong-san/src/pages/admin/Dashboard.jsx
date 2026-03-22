@@ -19,22 +19,22 @@ import {
 } from "lucide-react";
 
 const sidebarItems = [
-  { label: "Dashboard", icon: BarChart3, active: true },
-  { label: "Users", icon: Users },
-  { label: "Products", icon: Package },
-  { label: "Stores", icon: Store },
-  { label: "Orders", icon: ShoppingBag },
-  { label: "Reports", icon: ClipboardList },
+  { label: "Tổng quan", icon: BarChart3, active: true },
+  { label: "Người dùng", icon: Users },
+  { label: "Sản phẩm", icon: Package },
+  { label: "Cửa hàng", icon: Store },
+  { label: "Đơn hàng", icon: ShoppingBag },
+  { label: "Báo cáo", icon: ClipboardList },
 ];
 
 const bottomSidebarItems = [
-  { label: "Settings", icon: Settings },
-  { label: "Logout", icon: LogOut },
+  { label: "Cài đặt", icon: Settings },
+  { label: "Đăng xuất", icon: LogOut },
 ];
 
 const kpis = [
   {
-    label: "Total Revenue",
+    label: "Tổng doanh thu",
     value: "$128,430.00",
     change: "+12.5%",
     icon: CircleDollarSign,
@@ -42,7 +42,7 @@ const kpis = [
     width: "w-3/4",
   },
   {
-    label: "New Orders",
+    label: "Đơn hàng mới",
     value: "1,240",
     change: "+8.2%",
     icon: ShoppingBag,
@@ -50,7 +50,7 @@ const kpis = [
     width: "w-1/2",
   },
   {
-    label: "Active Users",
+    label: "Người dùng hoạt động",
     value: "45,892",
     change: "+4.1%",
     icon: Users,
@@ -63,25 +63,25 @@ const chartHeights = ["h-[40%]", "h-[55%]", "h-[45%]", "h-[70%]", "h-[60%]", "h-
 
 const inventoryItems = [
   {
-    name: "Organic Carrots",
-    note: "Only 12 bundles left",
-    status: "LOW STOCK",
+    name: "Cà rốt organic",
+    note: "Chỉ còn 12 bó",
+    status: "SẮP HẾT HÀNG",
     badge: "bg-amber-100 text-amber-700",
     image:
       "https://images.unsplash.com/photo-1447175008436-054170c2e979?auto=format&fit=crop&w=200&q=80",
   },
   {
-    name: "Hass Avocados",
-    note: "450 units available",
-    status: "IN STOCK",
+    name: "Bơ Hass",
+    note: "Còn 450 đơn vị",
+    status: "CÒN HÀNG",
     badge: "bg-lime-100 text-lime-700",
     image:
       "https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?auto=format&fit=crop&w=200&q=80",
   },
   {
-    name: "Cherry Tomatoes",
-    note: "Waitlist: 45 customers",
-    status: "OUT OF STOCK",
+    name: "Cà chua bi",
+    note: "Danh sách chờ: 45 khách",
+    status: "HẾT HÀNG",
     badge: "bg-rose-100 text-rose-700",
     image:
       "https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=200&q=80",
@@ -89,11 +89,11 @@ const inventoryItems = [
 ];
 
 const orders = [
-  { id: "#HG-9842", customer: "Jane Doe", initials: "JD", date: "Oct 24, 2024", status: "DELIVERED", total: "$142.50", badge: "bg-lime-100 text-lime-700" },
-  { id: "#HG-9841", customer: "Brian Smith", initials: "BS", date: "Oct 24, 2024", status: "PROCESSING", total: "$89.00", badge: "bg-amber-100 text-amber-700" },
-  { id: "#HG-9840", customer: "Maria Lopez", initials: "ML", date: "Oct 23, 2024", status: "DELIVERED", total: "$210.30", badge: "bg-lime-100 text-lime-700" },
-  { id: "#HG-9839", customer: "Tom Cook", initials: "TC", date: "Oct 23, 2024", status: "CANCELLED", total: "$45.10", badge: "bg-rose-100 text-rose-700" },
-  { id: "#HG-9838", customer: "Elena Scott", initials: "ES", date: "Oct 22, 2024", status: "DELIVERED", total: "$125.00", badge: "bg-lime-100 text-lime-700" },
+  { id: "#HG-9842", customer: "Jane Doe", initials: "JD", date: "Oct 24, 2024", status: "ĐÃ GIAO", total: "$142.50", badge: "bg-lime-100 text-lime-700" },
+  { id: "#HG-9841", customer: "Brian Smith", initials: "BS", date: "Oct 24, 2024", status: "ĐANG XỬ LÝ", total: "$89.00", badge: "bg-amber-100 text-amber-700" },
+  { id: "#HG-9840", customer: "Maria Lopez", initials: "ML", date: "Oct 23, 2024", status: "ĐÃ GIAO", total: "$210.30", badge: "bg-lime-100 text-lime-700" },
+  { id: "#HG-9839", customer: "Tom Cook", initials: "TC", date: "Oct 23, 2024", status: "ĐÃ HỦY", total: "$45.10", badge: "bg-rose-100 text-rose-700" },
+  { id: "#HG-9838", customer: "Elena Scott", initials: "ES", date: "Oct 22, 2024", status: "ĐÃ GIAO", total: "$125.00", badge: "bg-lime-100 text-lime-700" },
 ];
 
 function Dashboard() {
@@ -106,7 +106,7 @@ function Dashboard() {
               HealthyGO Admin
             </h1>
             <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-slate-500">
-              Management Portal
+              Cổng quản trị
             </p>
           </div>
 
@@ -151,7 +151,7 @@ function Dashboard() {
               <Search size={18} className="mr-2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search analytics, orders, or products..."
+                placeholder="Tìm analytics, đơn hàng hoặc sản phẩm..."
                 className="w-full border-none bg-transparent p-0 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-0"
               />
             </div>
@@ -166,7 +166,7 @@ function Dashboard() {
                 <div className="text-right">
                   <p className="text-sm font-bold text-slate-900">Alex Rivera</p>
                   <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                    Senior Administrator
+                    Quản trị viên cấp cao
                   </p>
                 </div>
                 <img
@@ -181,10 +181,10 @@ function Dashboard() {
           <div className="space-y-8 p-4 sm:p-6 lg:p-8">
             <section>
               <h2 className="text-2xl font-black tracking-[-0.04em] text-slate-900">
-                Overview Performance
+                Tổng quan hiệu suất
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Real-time data for HealthyGO ecosystem.
+                Dữ liệu thời gian thực cho hệ sinh thái HealthyGO.
               </p>
             </section>
 
@@ -239,13 +239,13 @@ function Dashboard() {
                     </div>
                   </div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/70">
-                    Best Seller
+                    Bán chạy nhất
                   </p>
                   <h3 className="mt-1 text-xl font-black tracking-[-0.03em]">
                     Organic Kale Mix
                   </h3>
                   <p className="mt-2 text-sm text-white/80">
-                    2,450 units this week
+                    2.450 đơn vị trong tuần này
                   </p>
                 </div>
                 <Leaf className="absolute -bottom-4 -right-4 h-24 w-24 text-white/20" />
@@ -257,16 +257,16 @@ function Dashboard() {
                 <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h4 className="text-lg font-black tracking-[-0.03em] text-slate-900">
-                      Revenue Trends
+                      Xu hướng doanh thu
                     </h4>
                     <p className="text-xs text-slate-500">
-                      Monthly gross revenue vs previous period
+                      Doanh thu gộp theo tháng so với kỳ trước
                     </p>
                   </div>
                   <select className="rounded-lg border-none bg-slate-100 py-2 pl-3 pr-8 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-100">
-                    <option>Last 12 Months</option>
-                    <option>Last 6 Months</option>
-                    <option>Year to Date</option>
+                    <option>12 tháng gần nhất</option>
+                    <option>6 tháng gần nhất</option>
+                    <option>Từ đầu năm đến nay</option>
                   </select>
                 </div>
 
@@ -285,22 +285,22 @@ function Dashboard() {
 
                 <div className="mt-4 flex justify-between px-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
                   {[
-                    "Jan",
-                    "Feb",
-                    "Mar",
-                    "Apr",
-                    "May",
-                    "Jun",
-                    "Jul",
-                    "Aug",
-                    "Sep",
-                    "Oct",
-                    "Nov",
-                    "Dec",
+                    "Th1",
+                    "Th2",
+                    "Th3",
+                    "Th4",
+                    "Th5",
+                    "Th6",
+                    "Th7",
+                    "Th8",
+                    "Th9",
+                    "Th10",
+                    "Th11",
+                    "Th12",
                   ].map((month) => (
                     <span
                       key={month}
-                      className={month === "Aug" ? "text-emerald-700" : ""}
+                      className={month === "Th8" ? "text-emerald-700" : ""}
                     >
                       {month}
                     </span>
@@ -310,7 +310,7 @@ function Dashboard() {
 
               <article className="rounded-xl border border-slate-200/70 bg-white p-8 shadow-sm">
                 <h4 className="mb-6 text-lg font-black tracking-[-0.03em] text-slate-900">
-                  Inventory Status
+                  Tình trạng tồn kho
                 </h4>
 
                 <div className="space-y-6">
@@ -339,7 +339,7 @@ function Dashboard() {
                 </div>
 
                 <button className="mt-6 w-full rounded-xl py-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-50">
-                  View All Inventory
+                  Xem toàn bộ tồn kho
                 </button>
               </article>
             </section>
@@ -348,14 +348,14 @@ function Dashboard() {
               <div className="flex flex-col gap-4 border-b border-slate-100 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-6">
                 <div>
                   <h4 className="text-lg font-black tracking-[-0.03em] text-slate-900">
-                    Recent Orders
+                    Đơn hàng gần đây
                   </h4>
                   <p className="text-xs text-slate-500">
-                    Real-time transaction log from all regions
+                    Nhật ký giao dịch thời gian thực từ mọi khu vực
                   </p>
                 </div>
                 <button className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-emerald-700 transition hover:bg-slate-50">
-                  View All
+                  Xem tất cả
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -365,12 +365,12 @@ function Dashboard() {
                   <thead className="bg-slate-50/70">
                     <tr>
                       {[
-                        "Order ID",
-                        "Customer",
-                        "Date",
-                        "Status",
-                        "Total",
-                        "Actions",
+                        "Mã đơn",
+                        "Khách hàng",
+                        "Ngày",
+                        "Trạng thái",
+                        "Tổng tiền",
+                        "Thao tác",
                       ].map((heading) => (
                         <th
                           key={heading}
@@ -421,14 +421,14 @@ function Dashboard() {
             <footer className="mt-8 border-t border-slate-200 bg-slate-50 px-4 py-8 sm:px-8">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
-                  © 2024 HealthyGO Organic. All rights reserved.
+                  © 2024 HealthyGO Organic. Đã đăng ký bản quyền.
                 </p>
                 <div className="flex gap-6">
                   <a className="text-[10px] uppercase tracking-[0.2em] text-slate-400 transition hover:text-emerald-600" href="#">
-                    Privacy Policy
+                    Chính sách bảo mật
                   </a>
                   <a className="text-[10px] uppercase tracking-[0.2em] text-slate-400 transition hover:text-emerald-600" href="#">
-                    Terms of Service
+                    Điều khoản dịch vụ
                   </a>
                 </div>
               </div>

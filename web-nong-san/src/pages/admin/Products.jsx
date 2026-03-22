@@ -17,86 +17,86 @@ import {
 } from "lucide-react";
 
 const sidebarItems = [
-  { label: "Dashboard", icon: ClipboardList, active: false },
-  { label: "Users", icon: Users, active: false },
-  { label: "Products", icon: Package, active: true },
-  { label: "Stores", icon: Store, active: false },
-  { label: "Orders", icon: ShoppingBag, active: false },
-  { label: "Reports", icon: ClipboardList, active: false },
+  { label: "Tổng quan", icon: ClipboardList, active: false },
+  { label: "Người dùng", icon: Users, active: false },
+  { label: "Sản phẩm", icon: Package, active: true },
+  { label: "Cửa hàng", icon: Store, active: false },
+  { label: "Đơn hàng", icon: ShoppingBag, active: false },
+  { label: "Báo cáo", icon: ClipboardList, active: false },
 ];
 
 const bottomSidebarItems = [
-  { label: "Settings", icon: Settings },
-  { label: "Logout", icon: LogOut },
+  { label: "Cài đặt", icon: Settings },
+  { label: "Đăng xuất", icon: LogOut },
 ];
 
 const stats = [
-  { label: "Total SKU", value: "1,248", valueClass: "text-slate-900" },
-  { label: "Out of Stock", value: "12", valueClass: "text-rose-600" },
-  { label: "Avg. Performance", value: "94.2%", valueClass: "text-lime-700" },
-  { label: "Categories", value: "Organic", valueClass: "text-slate-900" },
+  { label: "Tổng SKU", value: "1,248", valueClass: "text-slate-900" },
+  { label: "Hết hàng", value: "12", valueClass: "text-rose-600" },
+  { label: "Hiệu suất TB", value: "94.2%", valueClass: "text-lime-700" },
+  { label: "Danh mục", value: "Organic", valueClass: "text-slate-900" },
 ];
 
 const products = [
   {
-    name: "Organic Broccoli",
+    name: "Bông cải xanh organic",
     sku: "SKU: VEG-204-BR",
-    category: "Vegetables",
+    category: "Rau củ",
     categoryClass: "bg-lime-100 text-lime-700",
-    stock: "85 Units",
+    stock: "85 đơn vị",
     stockWidth: "w-3/4",
     stockBar: "bg-emerald-600",
     stockText: "text-slate-900",
     price: "$4.50",
-    status: "Active",
+    status: "Hoạt động",
     statusDot: "bg-emerald-500",
     statusText: "text-emerald-700",
     image:
       "https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?auto=format&fit=crop&w=200&q=80",
   },
   {
-    name: "Seasonal Fruit Box",
+    name: "Hộp trái cây mùa vụ",
     sku: "SKU: CMB-102-FR",
     category: "Combo",
     categoryClass: "bg-amber-100 text-amber-700",
-    stock: "12 Units",
+    stock: "12 đơn vị",
     stockWidth: "w-1/5",
     stockBar: "bg-amber-500",
     stockText: "text-amber-700",
     price: "$29.99",
-    status: "Low Stock",
+    status: "Sắp hết",
     statusDot: "bg-amber-500",
     statusText: "text-amber-700",
     image:
       "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=200&q=80",
   },
   {
-    name: "Honeycrisp Apples",
+    name: "Táo Honeycrisp",
     sku: "SKU: FRT-009-AP",
-    category: "Fruits",
+    category: "Trái cây",
     categoryClass: "bg-emerald-100 text-emerald-700",
-    stock: "240 Units",
+    stock: "240 đơn vị",
     stockWidth: "w-full",
     stockBar: "bg-emerald-600",
     stockText: "text-slate-900",
     price: "$1.20/lb",
-    status: "Active",
+    status: "Hoạt động",
     statusDot: "bg-emerald-500",
     statusText: "text-emerald-700",
     image:
       "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&w=200&q=80",
   },
   {
-    name: "Baby Carrots",
+    name: "Cà rốt baby",
     sku: "SKU: VEG-301-CA",
-    category: "Vegetables",
+    category: "Rau củ",
     categoryClass: "bg-slate-200 text-slate-600",
-    stock: "0 Units",
+    stock: "0 đơn vị",
     stockWidth: "w-0",
     stockBar: "bg-rose-500",
     stockText: "text-rose-600",
     price: "$2.00",
-    status: "Archived",
+    status: "Lưu trữ",
     statusDot: "bg-slate-400",
     statusText: "text-slate-500",
     image:
@@ -115,7 +115,7 @@ function ProductsPage() {
               HealthyGO Admin
             </h1>
             <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Management Portal
+              Cổng quản trị
             </p>
           </div>
 
@@ -158,16 +158,16 @@ function ProductsPage() {
           <header className="mb-12 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] text-slate-900">
-                Product Management
+                Quản lý sản phẩm
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Manage your inventory, pricing, and product status.
+                Quản lý tồn kho, giá bán và trạng thái sản phẩm.
               </p>
             </div>
 
             <button className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-sm transition hover:opacity-90">
               <Plus size={18} />
-              Add Product
+              Thêm sản phẩm
             </button>
           </header>
 
@@ -180,7 +180,7 @@ function ProductsPage() {
                 />
                 <input
                   type="text"
-                  placeholder="Search products by name or SKU..."
+                  placeholder="Tìm sản phẩm theo tên hoặc SKU..."
                   className="w-full rounded-lg border-none bg-white py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none ring-0 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.10)]"
                 />
               </div>
@@ -188,24 +188,24 @@ function ProductsPage() {
               <div className="flex items-center gap-2">
                 <button className="inline-flex items-center gap-2 rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">
                   <Filter size={16} />
-                  Category
+                  Danh mục
                 </button>
                 <button className="inline-flex items-center gap-2 rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">
                   <SlidersHorizontal size={16} />
-                  Stock
+                  Tồn kho
                 </button>
               </div>
             </div>
 
             <div className="flex items-center gap-2 border-l border-slate-300/70 pl-4">
               <span className="mr-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Bulk actions:
+                Tác vụ hàng loạt:
               </span>
               <button className="rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50">
-                Delete
+                Xóa
               </button>
               <button className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">
-                Edit Status
+                Sửa trạng thái
               </button>
             </div>
           </section>
@@ -240,13 +240,13 @@ function ProductsPage() {
                       />
                     </th>
                     {[
-                      "Image",
-                      "Product Name",
-                      "Category",
-                      "Stock Level",
-                      "Price",
-                      "Status",
-                      "Actions",
+                      "Ảnh",
+                      "Tên sản phẩm",
+                      "Danh mục",
+                      "Mức tồn kho",
+                      "Giá",
+                      "Trạng thái",
+                      "Thao tác",
                     ].map((heading, index) => (
                       <th
                         key={heading}
@@ -346,7 +346,7 @@ function ProductsPage() {
 
             <div className="flex flex-col gap-4 bg-[#f7faf6] p-4 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Showing 1-4 of 1,248 products
+                 Hiển thị 1-4 trong tổng số 1,248 sản phẩm
               </span>
 
               <div className="flex items-center gap-1">

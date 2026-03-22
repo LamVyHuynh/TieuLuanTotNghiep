@@ -16,34 +16,34 @@ import {
 } from "lucide-react";
 
 const sidebarItems = [
-  { label: "Dashboard", icon: BarChart3, active: false },
-  { label: "Users", icon: Users, active: false },
-  { label: "Products", icon: Package, active: false },
-  { label: "Stores", icon: Store, active: false },
-  { label: "Orders", icon: ShoppingBag, active: false },
-  { label: "Reports", icon: ClipboardList, active: true },
+  { label: "Tổng quan", icon: BarChart3, active: false },
+  { label: "Người dùng", icon: Users, active: false },
+  { label: "Sản phẩm", icon: Package, active: false },
+  { label: "Cửa hàng", icon: Store, active: false },
+  { label: "Đơn hàng", icon: ShoppingBag, active: false },
+  { label: "Báo cáo", icon: ClipboardList, active: true },
 ];
 
 const bottomSidebarItems = [
-  { label: "Settings", icon: Settings },
-  { label: "Logout", icon: LogOut },
+  { label: "Cài đặt", icon: Settings },
+  { label: "Đăng xuất", icon: LogOut },
 ];
 
 const revenueBars = [50, 75, 60, 82, 68, 86, 100];
 
 const categoryData = [
-  { name: "Fresh Produce", percent: "42%", color: "bg-emerald-600" },
-  { name: "Dry Pantry", percent: "28%", color: "bg-amber-500" },
-  { name: "Supplements", percent: "15%", color: "bg-lime-600" },
-  { name: "Others", percent: "15%", color: "bg-slate-300" },
+  { name: "Thực phẩm tươi", percent: "42%", color: "bg-emerald-600" },
+  { name: "Đồ khô", percent: "28%", color: "bg-amber-500" },
+  { name: "Thực phẩm bổ sung", percent: "15%", color: "bg-lime-600" },
+  { name: "Khác", percent: "15%", color: "bg-slate-300" },
 ];
 
 const topProducts = [
-  { name: "Organic Farm Eggs (12pk)", category: "Dairy & Eggs", orders: "1,240", revenue: "$14,880", icon: Egg },
-  { name: "Wildflower Honey 500g", category: "Pantry", orders: "982", revenue: "$12,766", icon: Package },
-  { name: "Hydroponic Kale Mix", category: "Fresh Produce", orders: "855", revenue: "$6,840", icon: Leaf },
-  { name: "Medium Roast Coffee Beans", category: "Beverages", orders: "720", revenue: "$18,000", icon: Coffee },
-  { name: "Gluten-Free Oats 1kg", category: "Grains", orders: "640", revenue: "$5,120", icon: Cookie },
+  { name: "Trứng gà organic (12 quả)", category: "Sữa & trứng", orders: "1,240", revenue: "$14,880", icon: Egg },
+  { name: "Mật ong hoa rừng 500g", category: "Đồ khô", orders: "982", revenue: "$12,766", icon: Package },
+  { name: "Kale thủy canh mix", category: "Thực phẩm tươi", orders: "855", revenue: "$6,840", icon: Leaf },
+  { name: "Cà phê rang vừa", category: "Đồ uống", orders: "720", revenue: "$18,000", icon: Coffee },
+  { name: "Yến mạch không gluten 1kg", category: "Ngũ cốc", orders: "640", revenue: "$5,120", icon: Cookie },
 ];
 
 function ReportsPage() {
@@ -58,7 +58,7 @@ function ReportsPage() {
               HealthyGO Admin
             </h1>
             <p className="mt-1 text-xs font-medium text-slate-500">
-              Management Portal
+              Cổng quản trị
             </p>
           </div>
 
@@ -101,19 +101,19 @@ function ReportsPage() {
           <header className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
               <h2 className="mb-2 text-3xl font-black tracking-[-0.04em] text-slate-900">
-                Strategic Reports
+                Báo cáo chiến lược
               </h2>
               <p className="max-w-2xl text-sm leading-6 text-slate-500">
-                Analyze HealthyGO performance metrics, organic growth patterns,
-                and inventory efficiency through real-time data insights.
+                Phân tích hiệu suất HealthyGO, xu hướng tăng trưởng và hiệu quả
+                tồn kho thông qua dữ liệu thời gian thực.
               </p>
             </div>
 
             <div className="inline-flex rounded-xl bg-[#eef2eb] p-1">
               {[
-                { id: "daily", label: "Daily" },
-                { id: "monthly", label: "Monthly" },
-                { id: "yearly", label: "Yearly" },
+                 { id: "daily", label: "Ngày" },
+                 { id: "monthly", label: "Tháng" },
+                 { id: "yearly", label: "Năm" },
               ].map((item) => (
                 <button
                   key={item.id}
@@ -135,10 +135,10 @@ function ReportsPage() {
               <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900">
-                    Revenue Trends
+                    Xu hướng doanh thu
                   </h3>
                   <p className="text-sm text-slate-500">
-                    Net sales performance over the selected period
+                    Hiệu suất doanh thu thuần trong giai đoạn đã chọn
                   </p>
                 </div>
 
@@ -148,7 +148,7 @@ function ReportsPage() {
                   </span>
                   <div className="mt-1 inline-flex items-center text-xs font-bold text-lime-700">
                     <TrendingUp size={14} className="mr-1" />
-                    +12.4% vs last month
+                    +12.4% so với tháng trước
                   </div>
                 </div>
               </div>
@@ -174,7 +174,7 @@ function ReportsPage() {
               </div>
 
               <div className="mt-4 flex justify-between px-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'].map((month) => (
+                {['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7'].map((month) => (
                   <span key={month}>{month}</span>
                 ))}
               </div>
@@ -182,10 +182,10 @@ function ReportsPage() {
 
             <section className="rounded-xl border border-slate-200/70 bg-white p-8 xl:col-span-4">
               <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900">
-                Sales by Category
+                Doanh thu theo danh mục
               </h3>
               <p className="mb-8 text-sm text-slate-500">
-                Revenue distribution by product type
+                Tỷ trọng doanh thu theo loại sản phẩm
               </p>
 
               <div className="relative mb-8 flex justify-center">
@@ -220,10 +220,10 @@ function ReportsPage() {
             <section className="rounded-xl border border-slate-200/70 bg-white p-8 xl:col-span-7">
               <div className="mb-8 flex items-center justify-between">
                 <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900">
-                  Top 5 Best Selling Products
+                  Top 5 sản phẩm bán chạy nhất
                 </h3>
                 <button className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 transition hover:underline">
-                  Export CSV
+                  Xuất CSV
                 </button>
               </div>
 
@@ -231,10 +231,10 @@ function ReportsPage() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-                      <th className="pb-4">Product</th>
-                      <th className="pb-4">Category</th>
-                      <th className="pb-4">Orders</th>
-                      <th className="pb-4 text-right">Revenue</th>
+                      <th className="pb-4">Sản phẩm</th>
+                      <th className="pb-4">Danh mục</th>
+                      <th className="pb-4">Đơn hàng</th>
+                      <th className="pb-4 text-right">Doanh thu</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -273,10 +273,10 @@ function ReportsPage() {
               <article className="relative flex flex-1 flex-col justify-between overflow-hidden rounded-xl bg-emerald-700 p-8 text-white">
                 <div className="relative z-10">
                   <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-white/80">
-                    Global Community
+                    Cộng đồng khách hàng
                   </span>
                   <h3 className="mb-4 text-3xl font-black tracking-[-0.04em]">
-                    Customer Growth
+                    Tăng trưởng khách hàng
                   </h3>
                   <div className="flex items-baseline gap-2">
                     <span className="text-5xl font-black tracking-[-0.05em]">
@@ -306,7 +306,7 @@ function ReportsPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                      Retention Rate
+                      Tỷ lệ giữ chân
                     </span>
                     <h4 className="text-2xl font-black tracking-[-0.03em] text-slate-900">
                       76.4%
@@ -321,7 +321,7 @@ function ReportsPage() {
                   <div className="h-full w-[76%] rounded-full bg-lime-600" />
                 </div>
                 <p className="mt-3 text-xs font-medium text-slate-500">
-                  +2.1% improvement this quarter
+                  +2.1% cải thiện trong quý này
                 </p>
               </article>
             </section>
@@ -333,7 +333,7 @@ function ReportsPage() {
                 © 2024 HealthyGO Organic. All rights reserved.
               </p>
               <div className="flex flex-wrap gap-6">
-                {['Contact', 'Shipping', 'Returns', 'Privacy Policy'].map((item) => (
+                {['Liên hệ', 'Vận chuyển', 'Hoàn trả', 'Chính sách bảo mật'].map((item) => (
                   <a
                     key={item}
                     href="#"

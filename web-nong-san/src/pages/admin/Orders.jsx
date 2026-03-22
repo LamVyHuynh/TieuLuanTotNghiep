@@ -17,20 +17,20 @@ import {
 } from "lucide-react";
 
 const sidebarItems = [
-  { label: "Dashboard", icon: BarChart3, active: false },
-  { label: "Users", icon: Users, active: false },
-  { label: "Products", icon: Package, active: false },
-  { label: "Stores", icon: Store, active: false },
-  { label: "Orders", icon: ShoppingBag, active: true },
-  { label: "Reports", icon: ClipboardList, active: false },
+  { label: "Tổng quan", icon: BarChart3, active: false },
+  { label: "Người dùng", icon: Users, active: false },
+  { label: "Sản phẩm", icon: Package, active: false },
+  { label: "Cửa hàng", icon: Store, active: false },
+  { label: "Đơn hàng", icon: ShoppingBag, active: true },
+  { label: "Báo cáo", icon: ClipboardList, active: false },
 ];
 
 const bottomSidebarItems = [
-  { label: "Settings", icon: Settings },
-  { label: "Logout", icon: LogOut },
+  { label: "Cài đặt", icon: Settings },
+  { label: "Đăng xuất", icon: LogOut },
 ];
 
-const statusTabs = ["All Orders", "Pending", "Confirmed", "Shipping", "Delivered"];
+const statusTabs = ["Tất cả", "Chờ xử lý", "Đã xác nhận", "Đang giao", "Đã giao"];
 
 const orders = [
   {
@@ -40,7 +40,7 @@ const orders = [
     date: "Oct 24, 2023",
     amount: "$142.50",
     payment: "Credit Card (**** 4291)",
-    status: "Delivered",
+    status: "Đã giao",
     statusClass: "bg-lime-100 text-lime-700",
     avatar:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80",
@@ -52,7 +52,7 @@ const orders = [
     date: "Oct 24, 2023",
     amount: "$89.99",
     payment: "Apple Pay",
-    status: "Shipping",
+    status: "Đang giao",
     statusClass: "bg-amber-100 text-amber-700",
     avatar:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
@@ -64,7 +64,7 @@ const orders = [
     date: "Oct 23, 2023",
     amount: "$210.00",
     payment: "PayPal",
-    status: "Confirmed",
+    status: "Đã xác nhận",
     statusClass: "bg-slate-200 text-slate-600",
     avatar:
       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=120&q=80",
@@ -76,7 +76,7 @@ const orders = [
     date: "Oct 23, 2023",
     amount: "$56.25",
     payment: "Credit Card (**** 9002)",
-    status: "Pending",
+    status: "Chờ xử lý",
     statusClass: "bg-rose-100 text-rose-700",
     avatar:
       "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=120&q=80",
@@ -85,8 +85,8 @@ const orders = [
 
 const insights = [
   {
-    title: "Delivery Efficiency",
-    note: "92% on-time delivery rate this week.",
+    title: "Hiệu quả giao hàng",
+    note: "92% giao đúng hẹn trong tuần này.",
     value: "92%",
     width: "w-[92%]",
     bar: "bg-lime-600",
@@ -94,8 +94,8 @@ const insights = [
     iconWrap: "bg-lime-100 text-lime-700",
   },
   {
-    title: "Abandoned Carts",
-    note: "18% rate - 4% decrease from last period.",
+    title: "Giỏ hàng bị bỏ quên",
+    note: "Tỷ lệ 18% - giảm 4% so với kỳ trước.",
     value: "18%",
     width: "w-[18%]",
     bar: "bg-amber-500",
@@ -103,8 +103,8 @@ const insights = [
     iconWrap: "bg-amber-100 text-amber-700",
   },
   {
-    title: "Customer Rating",
-    note: "Based on 1.2k customer reviews.",
+    title: "Đánh giá khách hàng",
+    note: "Dựa trên 1.2k lượt đánh giá của khách.",
     value: "4.9",
     width: "w-full",
     bar: "bg-emerald-600",
@@ -125,7 +125,7 @@ function OrdersPage() {
               HealthyGO Admin
             </h1>
             <p className="mt-1 text-xs font-medium text-slate-500">
-              Management Portal
+              Cổng quản trị
             </p>
           </div>
 
@@ -168,10 +168,10 @@ function OrdersPage() {
           <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="mb-2 text-3xl font-black tracking-[-0.04em] text-slate-900">
-                Order Management
+                Quản lý đơn hàng
               </h2>
               <p className="text-sm font-medium text-slate-500">
-                Review and fulfill your customers organic fresh orders.
+                Theo dõi và xử lý các đơn hàng thực phẩm organic trong hệ thống.
               </p>
             </div>
 
@@ -179,11 +179,11 @@ function OrdersPage() {
               <button className="rounded-lg bg-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">
                 <span className="inline-flex items-center gap-2">
                   <Download size={16} />
-                  Export CSV
+                  Xuất CSV
                 </span>
               </button>
               <button className="rounded-lg bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90">
-                Create Manual Order
+                Tạo đơn thủ công
               </button>
             </div>
           </header>
@@ -191,7 +191,7 @@ function OrdersPage() {
           <section className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-12">
             <article className="rounded-xl bg-[#eef2eb] p-6 xl:col-span-8">
               <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <h3 className="text-lg font-bold text-slate-900">Order Status Filters</h3>
+                <h3 className="text-lg font-bold text-slate-900">Bộ lọc trạng thái đơn</h3>
                 <div className="flex flex-wrap gap-1 rounded-full bg-slate-200 p-1">
                   {statusTabs.map((tab) => (
                     <button
@@ -214,13 +214,13 @@ function OrdersPage() {
                   <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search by Order ID or Customer..."
+                    placeholder="Tìm theo mã đơn hoặc khách hàng..."
                     className="w-full rounded-lg border-none bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:shadow-[0_0_0_3px_rgba(16,185,129,0.10)]"
                   />
                 </div>
                 <button className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-600">
                   <Search size={16} />
-                  More Filters
+                  Thêm bộ lọc
                 </button>
               </div>
             </article>
@@ -228,14 +228,14 @@ function OrdersPage() {
             <article className="relative overflow-hidden rounded-xl bg-emerald-700 p-6 text-white xl:col-span-4">
               <div className="relative z-10">
                 <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-lime-100">
-                  Today&apos;s Revenue
+                  Doanh thu hôm nay
                 </p>
                 <h4 className="mb-4 text-4xl font-black tracking-[-0.04em]">
                   $12,482.90
                 </h4>
                 <div className="flex items-center gap-2 text-sm font-semibold text-lime-100">
                   <BarChart3 size={16} />
-                  <span>+14.2% from yesterday</span>
+                  <span>+14.2% so với hôm qua</span>
                 </div>
               </div>
               <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
@@ -247,13 +247,13 @@ function OrdersPage() {
               <table className="w-full min-w-[1100px] border-collapse text-left">
                 <thead>
                   <tr className="bg-slate-200/70 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-                    <th className="px-6 py-4">Order ID</th>
-                    <th className="px-6 py-4">Customer Name</th>
-                    <th className="px-6 py-4">Date</th>
-                    <th className="px-6 py-4">Total Amount</th>
-                    <th className="px-6 py-4">Payment</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Action</th>
+                     <th className="px-6 py-4">Mã đơn</th>
+                     <th className="px-6 py-4">Tên khách hàng</th>
+                     <th className="px-6 py-4">Ngày</th>
+                     <th className="px-6 py-4">Tổng tiền</th>
+                     <th className="px-6 py-4">Thanh toán</th>
+                     <th className="px-6 py-4">Trạng thái</th>
+                     <th className="px-6 py-4 text-right">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200/60">
@@ -290,7 +290,7 @@ function OrdersPage() {
                       </td>
                       <td className="px-6 py-5 text-right">
                         <button className="text-sm font-bold text-emerald-700 transition hover:underline">
-                          View Details
+                          Xem chi tiết
                         </button>
                       </td>
                     </tr>
@@ -300,7 +300,7 @@ function OrdersPage() {
             </div>
 
             <div className="flex flex-col gap-4 bg-slate-200/50 px-6 py-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-              <div>Showing 1 - 10 of 248 orders</div>
+              <div>Hiển thị 1 - 10 trong tổng số 248 đơn</div>
               <div className="flex gap-2">
                 <button className="flex h-8 w-8 items-center justify-center rounded bg-white text-slate-500 transition hover:bg-slate-100">
                   <ChevronLeft size={16} />
