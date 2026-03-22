@@ -105,7 +105,7 @@ function Cart() {
     return (
       <div className="mx-auto max-w-[980px] px-4 py-16 sm:px-6 lg:px-8">
         <button
-          className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+          className="mb-5 inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
           onClick={() => navigate(-1)}
         >
           <ArrowLeft size={18} />
@@ -124,7 +124,7 @@ function Cart() {
             trai cay hoac combo healthy nhe.
           </p>
           <button
-            className="mt-8 rounded-full bg-emerald-700 px-6 py-3 text-sm font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.22)] transition hover:-translate-y-0.5 hover:bg-emerald-800"
+            className="mt-8 cursor-pointer rounded-full bg-emerald-700 px-6 py-3 text-sm font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.22)] transition hover:-translate-y-0.5 hover:bg-emerald-800"
             onClick={() => navigate("/")}
           >
             Mua sam ngay
@@ -138,7 +138,7 @@ function Cart() {
     <div className="bg-[#f6f8f4] pb-20 pt-8 text-slate-900">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
         <button
-          className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+          className="mb-5 inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
           onClick={() => navigate(-1)}
         >
           <ArrowLeft size={18} />
@@ -153,7 +153,7 @@ function Cart() {
           <section className="space-y-6 lg:col-span-2">
             <div className="inline-flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
               <button
-                className={`flex h-6 w-6 items-center justify-center rounded-md border transition ${
+                className={`flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border transition ${
                   allSelected
                     ? "border-emerald-600 bg-emerald-600 text-white"
                     : "border-slate-300 bg-white text-transparent"
@@ -176,7 +176,7 @@ function Cart() {
                   className="group flex flex-col gap-5 rounded-[1.5rem] bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition duration-300 hover:bg-[#f0f4ee] sm:flex-row sm:items-center sm:p-6"
                 >
                   <button
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
+                    className={`flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md border transition ${
                       selected
                         ? "border-emerald-600 bg-emerald-600 text-white"
                         : "border-slate-300 bg-white text-transparent"
@@ -206,7 +206,7 @@ function Cart() {
                       </div>
 
                       <button
-                        className="text-slate-400 transition hover:text-rose-500"
+                        className="cursor-pointer text-slate-400 transition hover:text-rose-500"
                         onClick={() => removeProductCart(item.id)}
                       >
                         <Trash2 size={20} />
@@ -216,7 +216,7 @@ function Cart() {
                     <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
                       <div className="inline-flex items-center rounded-full border border-slate-200 bg-[#eef3ea] px-3 py-1.5">
                         <button
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-emerald-700 transition hover:bg-emerald-100"
+                          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-emerald-700 transition hover:bg-emerald-100"
                           onClick={() =>
                             updateCartQuantity(item.id, item.quantity - 1)
                           }
@@ -227,7 +227,7 @@ function Cart() {
                           {item.quantity}
                         </span>
                         <button
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-emerald-700 transition hover:bg-emerald-100"
+                          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-emerald-700 transition hover:bg-emerald-100"
                           onClick={() =>
                             updateCartQuantity(item.id, item.quantity + 1)
                           }
@@ -241,7 +241,8 @@ function Cart() {
                           Don gia
                         </p>
                         <p className="text-lg font-black text-emerald-700">
-                          {(item.price * item.quantity).toLocaleString("vi-VN")}d
+                          {(item.price * item.quantity).toLocaleString("vi-VN")}
+                          d
                         </p>
                       </div>
                     </div>
@@ -251,7 +252,7 @@ function Cart() {
             })}
 
             <button
-              className="group inline-flex items-center gap-2 py-2 text-sm font-bold text-emerald-700 transition hover:-translate-x-1"
+              className="group inline-flex cursor-pointer items-center gap-2 py-2 text-sm font-bold text-emerald-700 transition hover:-translate-x-1"
               onClick={() => navigate("/")}
             >
               <ArrowLeft size={16} />
@@ -292,14 +293,16 @@ function Cart() {
                   <span className="block text-3xl font-black tracking-[-0.04em] text-emerald-700">
                     {finalTotal.toLocaleString("vi-VN")}d
                   </span>
-                  <span className="text-xs text-slate-400">(Da bao gom VAT)</span>
+                  <span className="text-xs text-slate-400">
+                    (Da bao gom VAT)
+                  </span>
                 </div>
               </div>
             </div>
 
             <div className="mt-8 space-y-3">
               <button
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-500 px-6 py-4 text-base font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.20)] transition hover:opacity-95"
+                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-500 px-6 py-4 text-base font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.20)] transition hover:opacity-95"
                 onClick={handleCheckout}
               >
                 Tien hanh thanh toan
@@ -325,7 +328,7 @@ function Cart() {
               </h2>
             </div>
 
-            <button className="hidden items-center gap-2 text-sm font-bold text-emerald-700 md:inline-flex">
+            <button className="hidden cursor-pointer items-center gap-2 text-sm font-bold text-emerald-700 md:inline-flex">
               Xem tat ca
               <ArrowRight size={16} />
             </button>
@@ -356,8 +359,10 @@ function Cart() {
                 <p className="mt-1 text-sm text-slate-500">{item.desc}</p>
 
                 <div className="mt-4 flex items-center justify-between">
-                  <span className="font-bold text-emerald-700">{item.price}</span>
-                  <button className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-700 text-white transition hover:bg-emerald-800">
+                  <span className="font-bold text-emerald-700">
+                    {item.price}
+                  </span>
+                  <button className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-emerald-700 text-white transition hover:bg-emerald-800">
                     <ShoppingBasket size={16} />
                   </button>
                 </div>
