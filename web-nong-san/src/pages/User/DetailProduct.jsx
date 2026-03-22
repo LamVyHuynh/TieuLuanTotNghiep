@@ -44,16 +44,16 @@ function DetailProduct() {
     return (
       <div className="mx-auto max-w-[900px] px-4 py-20 text-center sm:px-6 lg:px-10">
         <h2 className="text-3xl font-black tracking-[-0.03em] text-rose-500">
-          Khong tim thay san pham!
+          Không tìm thấy sản phẩm!
         </h2>
         <p className="mt-3 text-slate-500">
-          San pham co the da bi xoa hoac doi duong dan.
+          Sản phẩm có thể đã bị xóa hoặc đổi đường dẫn.
         </p>
         <button
-          className="mt-6 rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700"
+          className="mt-6 cursor-pointer rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700"
           onClick={() => navigate("/")}
         >
-          Ve trang chu
+          Về trang chủ
         </button>
       </div>
     );
@@ -67,7 +67,7 @@ function DetailProduct() {
       return;
     }
 
-    alert("Het hang roi may oi! :(");
+    alert("Hết hàng rồi mày ơi! :(");
   };
 
   const handleDecrease = () => {
@@ -94,16 +94,16 @@ function DetailProduct() {
     <div className="bg-[#f6f8f4] pb-20 pt-8 text-slate-900">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
         <button
-          className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+          className="mb-6 inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
           onClick={() => navigate(-1)}
         >
           <ArrowLeft size={18} />
-          Quay lai
+          Quay lại
         </button>
 
         <nav className="mb-8 flex flex-wrap text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
           <button
-            className="transition hover:text-emerald-700"
+            className="cursor-pointer transition hover:text-emerald-700"
             onClick={() => navigate("/")}
           >
             Home
@@ -133,7 +133,7 @@ function DetailProduct() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">
                 <Sparkles size={14} />
-                Chi tiet san pham
+                Chi tiết sản phẩm
               </div>
 
               <h1 className="mt-4 text-4xl font-black tracking-[-0.05em] text-slate-950 sm:text-5xl">
@@ -141,9 +141,9 @@ function DetailProduct() {
               </h1>
 
               <p className="mt-4 text-base leading-7 text-slate-500">
-                {product.desc} HealthyGO uu tien trinh bay ro thong tin san pham
-                de user de dang quyet dinh mua hang va noi them AI tu van dinh
-                duong ve sau.
+                {product.desc} HealthyGO ưu tiên trình bày rõ thông tin sản phẩm
+                để user dễ dàng quyết định mua hàng và nối thêm AI tư vấn dinh
+                dưỡng về sau.
               </p>
 
               <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -154,7 +154,7 @@ function DetailProduct() {
                   </span>
                 </span>
                 <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-amber-700">
-                  Con hang
+                  Còn hàng
                 </span>
               </div>
             </div>
@@ -194,7 +194,7 @@ function DetailProduct() {
               <div className="flex items-center justify-between rounded-[1.35rem] bg-[#e4e8e1] p-4 sm:p-5">
                 <div className="inline-flex items-center gap-3 rounded-full bg-white px-2 py-2 shadow-sm">
                   <button
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
+                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
                     onClick={handleDecrease}
                   >
                     <Minus size={16} />
@@ -203,7 +203,7 @@ function DetailProduct() {
                     {quantity}
                   </span>
                   <button
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
+                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
                     onClick={handleIncrease}
                   >
                     <Plus size={16} />
@@ -212,7 +212,7 @@ function DetailProduct() {
 
                 <div className="text-right">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Tong tam tinh
+                    Tổng tạm tính
                   </p>
                   <p className="mt-1 text-2xl font-black tracking-[-0.03em] text-slate-900">
                     {totalPrice.toLocaleString("vi-VN")}d
@@ -222,18 +222,18 @@ function DetailProduct() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <button
-                  className={`rounded-xl px-5 py-4 text-base font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.18)] transition ${
+                  className={`cursor-pointer rounded-xl px-5 py-4 text-base font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.18)] transition ${
                     isAdded
                       ? "bg-emerald-500"
                       : "bg-gradient-to-br from-emerald-700 to-emerald-500 hover:-translate-y-0.5"
                   }`}
                   onClick={handleAddToCart}
                 >
-                  {isAdded ? "Da them vao gio" : "Them vao gio"}
+                  {isAdded ? "Đã thêm vào giỏ" : "Thêm vào giỏ"}
                 </button>
 
                 <button
-                  className="rounded-xl bg-[#dfe4dc] px-5 py-4 text-base font-bold text-slate-900 transition hover:-translate-y-0.5 hover:bg-[#d4dad1]"
+                  className="cursor-pointer rounded-xl bg-[#dfe4dc] px-5 py-4 text-base font-bold text-slate-900 transition hover:-translate-y-0.5 hover:bg-[#d4dad1]"
                   onClick={handleBuyNow}
                 >
                   Mua ngay
@@ -245,15 +245,15 @@ function DetailProduct() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                    Origin
+                    Nguồn gốc
                   </p>
                   <p className="mt-1 text-sm font-semibold text-slate-900">
-                    Da Lat, Viet Nam
+                    Đà Lạt, Việt Nam
                   </p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                    Method
+                    Phương thức
                   </p>
                   <p className="mt-1 text-sm font-semibold text-slate-900">
                     Organic Farming (VIETGAP)
@@ -263,17 +263,17 @@ function DetailProduct() {
 
               <div className="rounded-xl bg-[#eef3ea] p-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                  Storage instructions
+                  Hướng dẫn bảo quản
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Bao quan lanh tu 4-6°C, tranh rua truoc khi luu tru de giu do
-                  gion va nen su dung trong 5-7 ngay de dam bao chat luong tot
-                  nhat.
+                  Bảo quản lạnh từ 4-6°C, tránh rửa trước khi lưu trữ để giữ độ
+                  giòn và nên sử dụng trong 5-7 ngày để đảm bảo chất lượng tốt
+                  nhất.
                 </p>
               </div>
 
               <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                Kho hien tai: <strong>{product.quantity}</strong> {product.unit}
+                Kho hiện tại: <strong>{product.quantity}</strong> {product.unit}
               </div>
             </section>
           </div>
@@ -283,19 +283,19 @@ function DetailProduct() {
           <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] text-slate-950">
-                San pham co the may se thich
+                Sản phẩm có thể bạn sẽ thích
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                Section nay giu tinh than cua file HTML mau va tan dung data
-                that trong project de sau nay noi API de hon.
+                Section này giữ tinh thần của file HTML mẫu và tận dụng data
+                thật trong project để sau này nối API dễ hơn.
               </p>
             </div>
 
             <button
-              className="inline-flex items-center gap-2 text-sm font-bold text-emerald-700 transition hover:text-emerald-900"
+              className="inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-emerald-700 transition hover:text-emerald-900"
               onClick={() => navigate("/")}
             >
-              Ve catalog
+              Về catalog
               <ArrowRight size={16} />
             </button>
           </div>
