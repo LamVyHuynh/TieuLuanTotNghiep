@@ -7,7 +7,6 @@ function renderRoutes(routes) {
   return routes.map((route, index) => {
     // Lấy component từ route.element
     // gán cho Page để dễ sử dụng
-    //
     const Page = route.element;
 
     // kiểm tra router này có router con không
