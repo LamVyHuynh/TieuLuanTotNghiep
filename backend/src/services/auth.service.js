@@ -4,6 +4,9 @@ const pool = require("../config/db");
 // Import thư viện zod để validate dữ liệu email
 const { z } = require("zod");
 
+// Thư viện hash password
+const bcrypt = require("bcrypt");
+
 async function registerUser(userData) {
   if (!userData) {
     throw new Error("userData is undefined");
@@ -73,6 +76,12 @@ async function registerUser(userData) {
     throw new Error("Email đã tồn tại");
   }
 
+  // Hash password trước khi lưu vào database
+  // Hash password thì cần 2 thứ, thứ nhất là password, thứ hai là salt rounds (số lần băm)
+  // Hash password là bất động bộ nên dùng await để chờ kết quả trả về
+  // Nếu không dùng await thì nó sẽ trả về 1 promise chứ không phải chuỗi password đã hash
+  const hashedPassword = await bcrypt.hash(password, 10);
+  console.log("Password đã hash: ", hashedPassword);
   console.log("userData:", userData);
   console.log("Full Name:", full_name);
   console.log("Email:", email);
