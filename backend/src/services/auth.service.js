@@ -19,7 +19,7 @@ async function registerUser(userData) {
   // );
 
   if (!full_name || !email || !password || !phone) {
-    throw new Error("thiếu thông tin đăng ký");
+    throw new Error("Thông tin đăng ký không đầy đủ");
   }
 
   if (password.length < 8) {
@@ -100,7 +100,7 @@ async function registerUser(userData) {
     [full_name, email, cleanPhone, hashedPassword, role_id]
   );
   return {
-    id: insertResult.isertId,
+    id: insertResult.insertId,
     full_name,
     email,
     phone: cleanPhone,

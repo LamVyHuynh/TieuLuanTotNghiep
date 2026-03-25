@@ -17,7 +17,7 @@ const register = async (req, res) => {
     });
   } catch (error) {
     if (
-      error.message === "thiếu thông tin đăng ký" ||
+      error.message === "Thông tin đăng ký không đầy đủ" ||
       error.message === "Mật khẩu phải có ít nhất 8 ký tự" ||
       error.message === "Mật khẩu và xác nhận mật khẩu không khớp" ||
       error.message === "Số điện thoại không được để trống" ||
@@ -31,7 +31,9 @@ const register = async (req, res) => {
     }
     if (
       error.message === "Email đã tồn tại" ||
-      error.message === "Số điện thoại đã tồn tại"
+      error.message === "Số điện thoại đã tồn tại" ||
+      error.message === "Role 'user' không tồn tại" ||
+      error.message === "userData is undefined"
     ) {
       return res.status(409).json({
         message: error.message,
