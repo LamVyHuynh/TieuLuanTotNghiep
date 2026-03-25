@@ -13,10 +13,10 @@ async function registerUser(userData) {
   }
   // Nhận dữ liệu người dùng từ controller (được gửi từ client)
   const { full_name, email, phone, password, confirm_password } = userData;
-  console.log(
-    "service userData controller gửi dữ liệu sai phía trước:",
-    userData
-  );
+  // console.log(
+  //   "service userData controller gửi dữ liệu sai phía trước:",
+  //   userData
+  // );
 
   if (!full_name || !email || !password || !confirm_password || !phone) {
     throw new Error("thiếu thông tin đăng ký");
@@ -81,13 +81,29 @@ async function registerUser(userData) {
   // Hash password là bất động bộ nên dùng await để chờ kết quả trả về
   // Nếu không dùng await thì nó sẽ trả về 1 promise chứ không phải chuỗi password đã hash
   const hashedPassword = await bcrypt.hash(password, 10);
-  console.log("Password đã hash: ", hashedPassword);
-  console.log("userData:", userData);
-  console.log("Full Name:", full_name);
-  console.log("Email:", email);
-  console.log("Phone:", phone);
 
-  return { full_name, email, phone, password, confirm_password };
+  // Lấy role_id của role 'user' từ bảng roles
+  const [roleRows] = await pool.query("SELECT id FROM roles WHERE name = ?", [
+    "customer",
+  ]);
+  if (roleRows.length === 0) {
+    throw new Error("Role 'customer' không tồn tại trong database");
+  }
+  const role_id = roleRows[0].id;
+
+  console.log("Role ID của role 'customer': ", role_id);
+  // console.log("Password đã hash: ", hashedPassword);
+  // console.log("userData:", userData);
+  // console.log("Full Name:", full_name);
+  // console.log("Email:", email);
+  // console.log("Phone:", phone);
+
+  // Inser user vào database
+  const [insertResult] = await pool.query(
+    "INSERT INTO users(full_name, email,phone,password_hash, role_id) VALUES (?,?,?,?,?)",
+    [full_name, email, phone, hashedPassword, role_id]
+  );
+  return { id: insertResult.id, full_name, email, phone: cleanPhone, role_id };
 }
 
 module.exports = { registerUser };
