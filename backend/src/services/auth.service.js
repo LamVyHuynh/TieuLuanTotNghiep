@@ -1,4 +1,5 @@
-function registerUser(userData) {
+const pool = require("../config/db");
+async function registerUser(userData) {
   if (!userData) {
     throw new Error("userData is undefined");
   }
@@ -46,13 +47,23 @@ function registerUser(userData) {
   }
 
   // Kiểm trang trùng email
-  // const pool = require("../config/db");
-  // const email_check = pool.query("SELECT * FROM users WHERE email = ?", [
-  //   email,
-  // ]);
-  // if (email_check.length > 0) {
-  //   throw new Error("Email đã tồn tại");
-  // }
+
+  //
+  // Bắt buộc phải dùng bất đồng bộ async/await vì  query DB
+  //Node.js sẽ gửi yêu cầu qua MySQL Server
+  // MySQL Server sẽ xử lý yêu cầu và trả về kết quả
+  // Quá trình đó không ngay lập tức được nên phải có await để chờ kết quả trả về
+  // Nếu không đợi thì code bên dưới sẽ chạy khi chưa có dữ liệu trả về
+
+  // await pool.query() tức là gửi câu lệnh đi
+  //  Đứng chờ kết quả
+  // Kết quả trả về rồi gán cho email_check
+  const [rows] = await pool.query("SELECT id FROM users WHERE email = ?", [
+    email,
+  ]);
+  if (rows.length > 0) {
+    throw new Error("Email đã tồn tại");
+  }
 
   console.log("userData:", userData);
   console.log("Full Name:", full_name);
