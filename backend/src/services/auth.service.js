@@ -12,22 +12,18 @@ async function registerUser(userData) {
     throw new Error("userData is undefined");
   }
   // Nhận dữ liệu người dùng từ controller (được gửi từ client)
-  const { full_name, email, phone, password, confirm_password } = userData;
+  const { full_name, email, phone, password } = userData;
   // console.log(
   //   "service userData controller gửi dữ liệu sai phía trước:",
   //   userData
   // );
 
-  if (!full_name || !email || !password || !confirm_password || !phone) {
+  if (!full_name || !email || !password || !phone) {
     throw new Error("thiếu thông tin đăng ký");
   }
 
   if (password.length < 8) {
     throw new Error("Mật khẩu phải có ít nhất 8 ký tự");
-  }
-
-  if (password !== confirm_password) {
-    throw new Error("Mật khẩu và xác nhận mật khẩu không khớp");
   }
 
   // Check Phone
@@ -100,10 +96,16 @@ async function registerUser(userData) {
 
   // Inser user vào database
   const [insertResult] = await pool.query(
-    "INSERT INTO users(full_name, email,phone,password_hash, role_id) VALUES (?,?,?,?,?)",
-    [full_name, email, phone, hashedPassword, role_id]
+    "INSERT INTO users(full_name, email, phone, password_hash, role_id) VALUES (?,?,?,?,?)",
+    [full_name, email, cleanPhone, hashedPassword, role_id]
   );
-  return { id: insertResult.id, full_name, email, phone: cleanPhone, role_id };
+  return {
+    id: insertResult.isertId,
+    full_name,
+    email,
+    phone: cleanPhone,
+    role_id,
+  };
 }
 
 module.exports = { registerUser };

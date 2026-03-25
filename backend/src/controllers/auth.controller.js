@@ -23,14 +23,16 @@ const register = async (req, res) => {
       error.message === "Số điện thoại không được để trống" ||
       error.message === "Số điện thoại chỉ được chứa chữ số" ||
       error.message === "Số điện thoại phải có 10 hoặc 11 chữ số" ||
-      error.message === "Số điện thoại đã tồn tại" ||
       error.message === "Email không hợp lệ"
     ) {
       return res.status(400).json({
         message: error.message,
       });
     }
-    if (error.message === "Email đã tồn tại") {
+    if (
+      error.message === "Email đã tồn tại" ||
+      error.message === "Số điện thoại đã tồn tại"
+    ) {
       return res.status(409).json({
         message: error.message,
       });

@@ -1,10 +1,51 @@
 import { Link } from "react-router-dom";
 import { UserPlus } from "lucide-react"; // Icon cho xịn
-
+import { useState } from "react";
+import axios from "axios";
 function Register() {
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirm_password: "",
+  });
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/auth/register",
+        formData
+      );
+      console.log("Đăng ký thành công:", response.data);
+      // Có thể thêm thông báo thành công hoặc chuyển hướng sau khi đăng ký
+      setSuccessMessage(response.data.message || "Đăng ký thành công");
+      setFormData({
+        full_name: "",
+        email: "",
+        phone: "",
+        password: "",
+        confirm_password: "",
+      });
+    } catch (error) {
+      setErrorMessage(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Đăng ký thất bại"
+      );
+    }
+  };
+
   return (
     <div style={styles.pageContainer}>
-      <div style={styles.loginCard}>
+      <form style={styles.loginCard} onSubmit={handleSubmit}>
         <div style={styles.brandContainer}>
           <h2 style={styles.title}>Đăng ký</h2>
           <div style={styles.logoText}>
@@ -20,22 +61,35 @@ function Register() {
           />
           Tạo tài khoản mới để bắt đầu!
         </p>
-
-        <input style={styles.input} placeholder="Họ và tên" />
-        <input style={styles.input} placeholder="Email hoặc số điện thoại" />
-        <input style={styles.input} type="password" placeholder="Mật khẩu" />
+        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+        {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
         <input
+          name="full_name"
+          style={styles.input}
+          onChange={handleChange}
+          placeholder="Họ và tên"
+        />
+        <input
+          name="email"
+          style={styles.input}
+          placeholder="Email của bạn"
+          onChange={handleChange}
+        />
+        <input
+          name="phone"
+          style={styles.input}
+          placeholder="Phone của bạn"
+          onChange={handleChange}
+        />
+        <input
+          name="password"
           style={styles.input}
           type="password"
-          placeholder="Xác nhận mật khẩu"
+          placeholder="Mật khẩu"
+          onChange={handleChange}
         />
 
-        <button
-          style={styles.loginBtn}
-          onClick={() =>
-            alert("Đăng ký thành công! Chào mừng mạy đến với healthyGO")
-          }
-        >
+        <button style={styles.loginBtn} type="submit">
           Đăng ký tài khoản
         </button>
 
@@ -45,7 +99,7 @@ function Register() {
             Đăng nhập ngay
           </Link>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
