@@ -33,6 +33,27 @@ function registerUser(userData) {
     throw new Error("Số điện thoại phải có 10 hoặc 11 chữ số");
   }
 
+  // Kiểm tra định dạng email
+  // import thư viện zod để validate dữ liệu
+  const { z } = require("zod");
+  const emailSchema = z.string().email();
+
+  // safeParse() là một phương thức của Zod để kiểm tra xem dữ liệu có hợp lệ theo schema đã định nghĩa hay không.
+  // safeParse() sẽ trả về một đối tượng có dạng { success: boolean, data?: T, error?: ZodError }
+  const emailValidation = emailSchema.safeParse(email);
+  if (!emailValidation.success) {
+    throw new Error("Email không hợp lệ");
+  }
+
+  // Kiểm trang trùng email
+  // const pool = require("../config/db");
+  // const email_check = pool.query("SELECT * FROM users WHERE email = ?", [
+  //   email,
+  // ]);
+  // if (email_check.length > 0) {
+  //   throw new Error("Email đã tồn tại");
+  // }
+
   console.log("userData:", userData);
   console.log("Full Name:", full_name);
   console.log("Email:", email);
