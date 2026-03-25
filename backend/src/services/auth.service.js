@@ -1,4 +1,9 @@
+// Kết nối database, xử lý logic đăng ký người dùng
 const pool = require("../config/db");
+
+// Import thư viện zod để validate dữ liệu email
+const { z } = require("zod");
+
 async function registerUser(userData) {
   if (!userData) {
     throw new Error("userData is undefined");
@@ -33,10 +38,18 @@ async function registerUser(userData) {
   if (cleanPhone.length < 10 || cleanPhone.length > 11) {
     throw new Error("Số điện thoại phải có 10 hoặc 11 chữ số");
   }
+  // Kiểm tra trùng số điện thoại
+  const [phoneRows] = await pool.query("SELECT id FROM users WHERE phone = ?", [
+    cleanPhone,
+  ]);
+  if (phoneRows.length > 0) {
+    throw new Error("Số điện thoại đã tồn tại");
+  }
+
+  // Kiểm trang trùng email
 
   // Kiểm tra định dạng email
   // import thư viện zod để validate dữ liệu
-  const { z } = require("zod");
   const emailSchema = z.string().email();
 
   // safeParse() là một phương thức của Zod để kiểm tra xem dữ liệu có hợp lệ theo schema đã định nghĩa hay không.
@@ -45,16 +58,11 @@ async function registerUser(userData) {
   if (!emailValidation.success) {
     throw new Error("Email không hợp lệ");
   }
-
-  // Kiểm trang trùng email
-
-  //
   // Bắt buộc phải dùng bất đồng bộ async/await vì  query DB
   //Node.js sẽ gửi yêu cầu qua MySQL Server
   // MySQL Server sẽ xử lý yêu cầu và trả về kết quả
   // Quá trình đó không ngay lập tức được nên phải có await để chờ kết quả trả về
-  // Nếu không đợi thì code bên dưới sẽ chạy khi chưa có dữ liệu trả về
-
+  // Nếu không đợi thì code bên dưới sẽ chạy khi chưa có dữ liệu trả về\
   // await pool.query() tức là gửi câu lệnh đi
   //  Đứng chờ kết quả
   // Kết quả trả về rồi gán cho email_check
