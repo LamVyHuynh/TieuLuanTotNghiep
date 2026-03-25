@@ -6,6 +6,7 @@ const register = async (req, res) => {
   try {
     // Lấy kết quả xử lí từ service
     const result = await registerUser(userData);
+
     // lệnh throw này dùng để thử lỗi, nếu gặp  thì tất cả những câu lệnh phía dưới nó đều không chạy
     //  Nó sẽ dừng lại ngay lập tức và chuyển qua catch để xử lý lỗi
     // throw new Error("This is a test error");
