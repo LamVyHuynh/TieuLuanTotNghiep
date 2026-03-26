@@ -25,6 +25,7 @@ const app = express();
 app.use(cors());
 
 // Cho phép server đọc JSON từ request body
+// Đọc những gì mà client gửi lên (dữ liệu đăng ký, đăng nhập,...) và chuyển nó thành object JavaScript để server có thể xử lý
 app.use(express.json());
 
 // Mount routes (gắn route)

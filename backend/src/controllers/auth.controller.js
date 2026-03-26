@@ -1,5 +1,6 @@
 const { registerUser } = require("../services/auth.service");
 const register = async (req, res) => {
+  // Lấy dữ liệu người dùng từ request body (dữ liệu được gửi từ client qua postman)
   const userData = req.body;
 
   // console.log("user data ở controller (postman gửi dữ liệu qua):", userData);
@@ -19,7 +20,6 @@ const register = async (req, res) => {
     if (
       error.message === "Thông tin đăng ký không đầy đủ" ||
       error.message === "Mật khẩu phải có ít nhất 8 ký tự" ||
-      error.message === "Mật khẩu và xác nhận mật khẩu không khớp" ||
       error.message === "Số điện thoại không được để trống" ||
       error.message === "Số điện thoại chỉ được chứa chữ số" ||
       error.message === "Số điện thoại phải có 10 hoặc 11 chữ số" ||

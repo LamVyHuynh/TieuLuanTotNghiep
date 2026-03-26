@@ -31,7 +31,10 @@ function Register() {
   };
 
   const handleSubmit = async (e) => {
+    // e.preventDefault() để ngăn trình duyệt gửi form theo cách truyền thống và làm mới trang
+    // cho phép chúng ta xử lý logic đăng ký bằng JavaScript.
     e.preventDefault();
+
     setErrorMessage("");
     setSuccessMessage("");
 
@@ -41,6 +44,14 @@ function Register() {
     }
 
     try {
+      // Axios dùng để gọi API request (gửi request HTTP) giữa frontend và backend
+      // Flow:frontend gửi request đăng ký -> backend nhận request, xử lý logic đăng ký, trả về response
+      // -> frontend nhận response, hiển thị ra thành công hoặc lỗi ra giao diện
+
+      // Axios dùng để gửi dữ liệu (POST): đăng ký, đăng nhập, tạo dữ liệu
+      // Lấy dữ liệu (GET): lấy thông tin người dùng, danh sách sản phẩm và đơn hàng
+      // Cập nhật dữ liệu (PUT/PATCH): cập nhật thông tin người dùng, trạng thái đơn hàng
+      // Xoá dữ liệu (DELETE): xoá sản phẩm, xoá đơn hàng
       const response = await axios.post(
         "http://localhost:5000/auth/register",
         formData
@@ -57,6 +68,9 @@ function Register() {
       setTimeout(() => navigate("/login"), 500);
       setAgreeTerms(false);
     } catch (error) {
+      // Xử lý lỗi: hiển thị lỗi từ backend trả về
+      // Ban đầu kiểm tra xem là backedn có message không -> có dùng không thì kiểm tra tiếp
+      //  Có error không? -> có dùng không thì hiển thị lỗi mặc định "Đăng ký thất bại"
       setErrorMessage(
         error.response?.data?.message ||
           error.response?.data?.error ||
@@ -104,9 +118,14 @@ function Register() {
           <div className="mb-10">
             <div className="mb-8 flex items-center gap-2">
               <Leaf size={30} className="text-emerald-700" />
-              <span className="text-[2rem] font-black tracking-[-0.06em] text-emerald-600 sm:text-[2.35rem]">
-                HealthyGO
-              </span>
+              <div className="leading-none">
+                <span className="text-[2rem] font-black tracking-[-0.06em] text-emerald-600 sm:text-[2.35rem]">
+                  Healthy
+                </span>
+                <span className="ml-1 text-[2rem] font-black tracking-[-0.06em] text-amber-500 sm:text-[2.35rem]">
+                  GO
+                </span>
+              </div>
             </div>
             <h2 className="text-3xl font-black tracking-[-0.05em] text-slate-900">
               Tạo tài khoản mới

@@ -11,6 +11,7 @@ async function registerUser(userData) {
   if (!userData) {
     throw new Error("userData is undefined");
   }
+
   // Nhận dữ liệu người dùng từ controller (được gửi từ client)
   const { full_name, email, phone, password } = userData;
   // console.log(
@@ -57,14 +58,15 @@ async function registerUser(userData) {
   if (!emailValidation.success) {
     throw new Error("Email không hợp lệ");
   }
-  // Bắt buộc phải dùng bất đồng bộ async/await vì  query DB
+
+  // Bắt buộc phải dùng bất đồng bộ async/await vì query DB là bất đồng bộ
   //Node.js sẽ gửi yêu cầu qua MySQL Server
   // MySQL Server sẽ xử lý yêu cầu và trả về kết quả
   // Quá trình đó không ngay lập tức được nên phải có await để chờ kết quả trả về
-  // Nếu không đợi thì code bên dưới sẽ chạy khi chưa có dữ liệu trả về\
+  // Nếu không đợi thì code bên dưới sẽ chạy khi chưa có dữ liệu trả về
   // await pool.query() tức là gửi câu lệnh đi
   //  Đứng chờ kết quả
-  // Kết quả trả về rồi gán cho email_check
+  // Kết quả trả về rồi gán cho biến rows
   const [rows] = await pool.query("SELECT id FROM users WHERE email = ?", [
     email,
   ]);
@@ -78,7 +80,7 @@ async function registerUser(userData) {
   // Nếu không dùng await thì nó sẽ trả về 1 promise chứ không phải chuỗi password đã hash
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Lấy role_id của role 'user' từ bảng roles
+  // Lấy role_id của role 'customer' từ bảng roles
   const [roleRows] = await pool.query("SELECT id FROM roles WHERE name = ?", [
     "customer",
   ]);
