@@ -1,18 +1,25 @@
 import React, { useState } from "react";
-import { Link, Outlet } from "react-router-dom";
-import { Search, ShoppingBag } from "lucide-react";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { ChevronDown, Search, ShoppingBag } from "lucide-react";
 
 function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
-  // Lấy dữ liệu user lưu trong localStorage để hiển thị ra bên ngoài
-  // Chuyển từ chuỗi JSON thành object javascript để có thể truy cập vào các thuộc tính của userDataLogin
-  // Hiển thị ra bên ngoài
-  // const userDataLogin = JSON.parse(localStorage.getItem("userDataLogin"));
-  // console.log("Dữ liệu user đăng nhập:", userDataLogin);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
+  const userDataLogin = JSON.parse(localStorage.getItem("userDataLogin"));
 
   // Hàm xử lý khi người dùng nhấn nút tìm kiếm
   const handleSearch = () => {
     console.log("Tìm kiếm với từ khóa:", searchTerm);
+  };
+
+  // Làm logout xoá dữ liệu được lưu trong Storage
+  const handleLogout = () => {
+    localStorage.removeItem("userDataLogin");
+    setShowUserMenu(false);
+    //  Sau khi đã xoá dữ liệu đăng nhập lưu trong storage thì điều hướng về trang chủ
+    //  Nó sẽ check lại xem có dữ liệu ở userDataLogin hay không, nếu không có thì nó sẽ hiện nút đăng nhập và đăng kí
+    navigate("/");
   };
 
   return (
@@ -54,12 +61,43 @@ function UserLayout() {
             >
               <ShoppingBag size={18} />
             </Link>
-            {/* {userDataLogin ? (
-              <div className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 no-underline transition hover:bg-emerald-100 sm:px-5">
-                {userDataLogin.full_name}
+            {userDataLogin ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowUserMenu((prev) => !prev)}
+                  className="flex cursor-pointer items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 sm:px-5"
+                >
+                  <span>{userDataLogin.full_name}</span>
+                  <ChevronDown size={16} />
+                </button>
+
+                {showUserMenu ? (
+                  <div className="absolute right-0 top-[calc(100%+10px)] z-50 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)]">
+                    <button
+                      type="button"
+                      className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      Cập nhật thông tin cá nhân
+                    </button>
+                    <button
+                      type="button"
+                      className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      Đổi mật khẩu
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ) : (
-              <div>
+              <div className="flex items-center gap-2 sm:gap-3">
                 <Link
                   to="/login"
                   className="rounded-full border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 no-underline transition hover:bg-emerald-50 sm:px-5"
@@ -73,20 +111,7 @@ function UserLayout() {
                   Đăng ký
                 </Link>
               </div>
-            )} */}
-
-            <Link
-              to="/login"
-              className="rounded-full border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 no-underline transition hover:bg-emerald-50 sm:px-5"
-            >
-              Đăng nhập
-            </Link>
-            <Link
-              to="/register"
-              className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white no-underline shadow-[0_10px_18px_rgba(5,150,105,0.22)] transition hover:-translate-y-0.5 hover:bg-emerald-700 sm:px-5"
-            >
-              Đăng ký
-            </Link>
+            )}
           </div>
         </div>
 

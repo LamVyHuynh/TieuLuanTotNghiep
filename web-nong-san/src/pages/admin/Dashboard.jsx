@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   BarChart3,
   Bell,
@@ -7,7 +7,7 @@ import {
   CircleDollarSign,
   ClipboardList,
   Leaf,
-  LogOut,
+  ChevronDown,
   MoreVertical,
   Package,
   Search,
@@ -17,7 +17,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 const kpis = [
   {
     label: "Tổng doanh thu",
@@ -135,11 +135,17 @@ const orders = [
   },
 ];
 
-// Lấy dữ liệu admin từ localStorage
-const adminData = JSON.parse(localStorage.getItem("userDataLogin"));
-console.log("Dữ liệu admin đăng nhập:", adminData);
-
 function Dashboard() {
+  const [showAdminMenu, setShowAdminMenu] = useState(false);
+  const adminData = JSON.parse(localStorage.getItem("userDataLogin"));
+  const navigate = useNavigate();
+
+  const handleLogoutAdmin = () => {
+    localStorage.removeItem("userDataLogin");
+    setShowAdminMenu(false);
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8">
       <header className="sticky top-0 z-30 flex flex-col gap-4 border-b border-slate-200 bg-white/85 px-4 py-4 backdrop-blur-md sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
@@ -158,25 +164,56 @@ function Dashboard() {
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
           </button>
 
-          <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
-            <div className="text-right">
-              {adminData ? (
-                <p className="text-sm font-bold text-slate-900">
-                  {adminData.full_name}
-                </p>
-              ) : (
-                <p className="text-sm font-bold text-slate-900">Admin</p>
-              )}
+          <div className="relative flex items-center gap-3 border-l border-slate-200 pl-4">
+            <button
+              type="button"
+              onClick={() => setShowAdminMenu((prev) => !prev)}
+              className="flex cursor-pointer items-center gap-3 rounded-2xl px-2 py-1 transition hover:bg-slate-50"
+            >
+              <div className="text-right">
+                {adminData ? (
+                  <p className="text-sm font-bold text-slate-900">
+                    {adminData.full_name}
+                  </p>
+                ) : (
+                  <p className="text-sm font-bold text-slate-900">Admin</p>
+                )}
 
-              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                Quản trị viên cấp cao
-              </p>
-            </div>
-            <img
-              src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80"
-              alt="Admin avatar"
-              className="h-10 w-10 rounded-full object-cover ring-2 ring-emerald-100"
-            />
+                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                  Quản trị viên cấp cao
+                </p>
+              </div>
+              <img
+                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80"
+                alt="Admin avatar"
+                className="h-10 w-10 rounded-full object-cover ring-2 ring-emerald-100"
+              />
+              <ChevronDown size={16} className="text-slate-400" />
+            </button>
+
+            {showAdminMenu ? (
+              <div className="absolute right-0 top-[calc(100%+10px)] z-50 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)]">
+                <button
+                  type="button"
+                  className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  Cập nhật thông tin cá nhân
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  Đổi mật khẩu
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogoutAdmin}
+                  className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                >
+                  Đăng xuất
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </header>
