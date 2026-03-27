@@ -7,8 +7,10 @@ function UserLayout() {
   // Lấy dữ liệu user lưu trong localStorage để hiển thị ra bên ngoài
   // Chuyển từ chuỗi JSON thành object javascript để có thể truy cập vào các thuộc tính của userDataLogin
   // Hiển thị ra bên ngoài
-  const userDataLogin = JSON.parse(localStorage.getItem("userDataLogin"));
-  console.log("Dữ liệu user đăng nhập:", userDataLogin);
+  // const userDataLogin = JSON.parse(localStorage.getItem("userDataLogin"));
+  // console.log("Dữ liệu user đăng nhập:", userDataLogin);
+
+  // Hàm xử lý khi người dùng nhấn nút tìm kiếm
   const handleSearch = () => {
     console.log("Tìm kiếm với từ khóa:", searchTerm);
   };
@@ -52,7 +54,7 @@ function UserLayout() {
             >
               <ShoppingBag size={18} />
             </Link>
-            {userDataLogin ? (
+            {/* {userDataLogin ? (
               <div className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 no-underline transition hover:bg-emerald-100 sm:px-5">
                 {userDataLogin.full_name}
               </div>
@@ -71,7 +73,20 @@ function UserLayout() {
                   Đăng ký
                 </Link>
               </div>
-            )}
+            )} */}
+
+            <Link
+              to="/login"
+              className="rounded-full border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 no-underline transition hover:bg-emerald-50 sm:px-5"
+            >
+              Đăng nhập
+            </Link>
+            <Link
+              to="/register"
+              className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white no-underline shadow-[0_10px_18px_rgba(5,150,105,0.22)] transition hover:-translate-y-0.5 hover:bg-emerald-700 sm:px-5"
+            >
+              Đăng ký
+            </Link>
           </div>
         </div>
 
