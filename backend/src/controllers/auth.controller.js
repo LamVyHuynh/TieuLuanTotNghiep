@@ -9,7 +9,7 @@ const register = async (req, res) => {
     // Lấy kết quả xử lí từ service
     const result = await registerUser(userData);
 
-    // Kiểm tra kết quả trả về từ service xem nó có undefined hay không
+    // Kiểm tra kết quả trả về từ service xem nó có undefined / null hay không
     if (!result) {
       throw new Error("Kết quả trả về từ service không hợp lệ");
     }
@@ -57,7 +57,7 @@ const login = async (req, res) => {
   try {
     const result = await loginUser(email, password);
 
-    // Kiểm tra kết quả trả về từ service xem nó có undefined hay không
+    // Kiểm tra kết quả trả về từ service xem nó có undefined hay null không
     if (!result) {
       throw new Error("Kết quả trả về từ service không hợp lệ");
     }

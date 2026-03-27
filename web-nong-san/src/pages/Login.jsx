@@ -29,10 +29,21 @@ function Login() {
       );
 
       setSuccessMessage(response.data.message || "Đăng nhập thành công");
-      if (response.data.data.role_id === 1) {
+
+      // Lưu dữ liệu của user đăng nhập vào localStorage để có thể sử dụng ở các trang khác
+
+      const userData = response.data.data;
+      // Chuyển userData thành chuỗi JSON trước khi lưu vào localStorage vì localStorage chỉ lưu được chuỗi
+      console.log("userData trước khi lưu vào localStorage:", userData);
+      localStorage.setItem("userDataLogin", JSON.stringify(userData));
+      console.log(
+        "userData đã lưu vào localStorage:",
+        JSON.parse(localStorage.getItem("userDataLogin"))
+      );
+      if (userData.role_id === 1) {
         navigate("/admin");
         console.log("Qua trang admin");
-      } else if (response.data.data.role_id === 2) {
+      } else if (userData.role_id === 2) {
         navigate("/");
         console.log("Qua trang user");
       }
