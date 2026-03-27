@@ -87,29 +87,33 @@ function UserLayout() {
                   <ChevronDown size={16} />
                 </button>
 
-                {showUserMenu ? (
-                  <div className="absolute right-0 top-[calc(100%+10px)] z-50 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)]">
-                    <button
-                      type="button"
-                      className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                    >
-                      Cập nhật thông tin cá nhân
-                    </button>
-                    <button
-                      type="button"
-                      className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                    >
-                      Đổi mật khẩu
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
-                    >
-                      Đăng xuất
-                    </button>
-                  </div>
-                ) : null}
+                <div
+                  className={`absolute right-0 top-[calc(100%+10px)] z-50 w-52 origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${
+                    showUserMenu
+                      ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                      : "pointer-events-none -translate-y-2 scale-95 opacity-0"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cập nhật thông tin cá nhân
+                  </button>
+                  <button
+                    type="button"
+                    className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Đổi mật khẩu
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-2 sm:gap-3">
