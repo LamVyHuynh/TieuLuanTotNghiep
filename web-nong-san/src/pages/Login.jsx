@@ -4,7 +4,10 @@ import axios from "axios";
 import { Leaf, Mail, Lock, ArrowRight } from "lucide-react";
 
 function Login() {
-  const [frmDataLogin, setFrmDataLogin] = useState({ email: "", password: "" });
+  const [frmDataLogin, setFrmDataLogin] = useState({
+    email: "",
+    password: "",
+  });
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [rememberLogin, setRememberLogin] = useState(false);
@@ -26,8 +29,14 @@ function Login() {
       );
 
       setSuccessMessage(response.data.message || "Đăng nhập thành công");
+      if (response.data.data.role_id === 1) {
+        navigate("/admin");
+        console.log("Qua trang admin");
+      } else if (response.data.data.role_id === 2) {
+        navigate("/");
+        console.log("Qua trang user");
+      }
       setFrmDataLogin({ email: "", password: "" });
-      // setTimeout(() => navigate("/"), 1500);
       console.log("Login successful:", response.data);
     } catch (error) {
       setErrorMessage(
