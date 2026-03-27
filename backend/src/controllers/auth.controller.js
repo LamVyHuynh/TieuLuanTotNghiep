@@ -9,6 +9,10 @@ const register = async (req, res) => {
     // Lấy kết quả xử lí từ service
     const result = await registerUser(userData);
 
+    // Kiểm tra kết quả trả về từ service xem nó có undefined hay không
+    if (!result) {
+      throw new Error("Kết quả trả về từ service không hợp lệ");
+    }
     // lệnh throw này dùng để thử lỗi, nếu gặp  thì tất cả những câu lệnh phía dưới nó đều không chạy
     //  Nó sẽ dừng lại ngay lập tức và chuyển qua catch để xử lý lỗi
     // throw new Error("This is a test error");
@@ -53,8 +57,12 @@ const login = async (req, res) => {
   try {
     const result = await loginUser(email, password);
 
+    // Kiểm tra kết quả trả về từ service xem nó có undefined hay không
+    if (!result) {
+      throw new Error("Kết quả trả về từ service không hợp lệ");
+    }
     res.status(200).json({
-      message: "Loging successful",
+      message: "Login successful",
       data: result,
     });
   } catch (error) {
@@ -66,6 +74,10 @@ const login = async (req, res) => {
     if (error.message === "Email hoặc mật khẩu không được để trống") {
       return res.status(400).json({ message: error.message });
     }
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 module.exports = { register, login };

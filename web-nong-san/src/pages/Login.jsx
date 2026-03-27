@@ -27,7 +27,8 @@ function Login() {
 
       setSuccessMessage(response.data.message || "Đăng nhập thành công");
       setFrmDataLogin({ email: "", password: "" });
-      setTimeout(() => navigate("/"), 1500); // Chuyển đến trang home sau 1.5 giây
+      // setTimeout(() => navigate("/"), 1500); // Chuyển đến trang home sau 1.5 giây
+      console.log("Login successful:", response.data);
     } catch (error) {
       setErrorMessage(
         error.response?.data?.message ||

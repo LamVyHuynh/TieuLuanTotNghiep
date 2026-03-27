@@ -132,6 +132,12 @@ async function loginUser(email, password) {
     throw new Error("Email hoặc mật khẩu không đúng");
   }
 
-  // Kiểm tra các trường có trống không cho đăng nhập
+  return {
+    id: user.id,
+    full_name: user.full_name,
+    email: user.email,
+    phone: user.phone,
+    role_id: user.role_id,
+  };
 }
 module.exports = { registerUser, loginUser };
