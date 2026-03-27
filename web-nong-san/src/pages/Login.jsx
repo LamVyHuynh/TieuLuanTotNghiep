@@ -1,5 +1,41 @@
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 function Login() {
+  const [frmDataLogin, setFrmDataLogin] = useState({ email: "", password: "" });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  // Dùng tạm navigate để mô phỏng chức năng điều hướng sau khi đăng nhập thành công,
+  // ví dụ: navigate("/home") để chuyển đến trang home
+  const navigate = useNavigate();
+  const handleChange = (e) => {
+    setFrmDataLogin({ ...frmDataLogin, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    //e.preventDefault không cho gửi form theo cách truyền thống - gửi và tải lại trang
+    e.preventDefault();
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/auth/login",
+        frmDataLogin
+      );
+
+      setSuccessMessage(response.data.message || "Đăng nhập thành công");
+      setFrmDataLogin({ email: "", password: "" });
+      setTimeout(() => navigate("/"), 1500); // Chuyển đến trang home sau 1.5 giây
+    } catch (error) {
+      setErrorMessage(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Đăng nhập thất bại"
+      );
+    }
+  };
   return (
     <div style={styles.pageContainer}>
       <div style={styles.loginCard}>
@@ -14,15 +50,37 @@ function Login() {
 
         <p style={styles.subtitle}>👏 Chào mừng mạy trở lại! 😊</p>
 
-        <input style={styles.input} placeholder="Tên tài khoản" />
-        <input style={styles.input} type="password" placeholder="Mật khẩu" />
+        <form onSubmit={handleSubmit}>
+          {errorMessage ? (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              {errorMessage}
+            </div>
+          ) : null}
 
-        <button
-          style={styles.loginBtn}
-          onClick={() => alert("Đăng nhập thành công")}
-        >
-          Đăng nhập
-        </button>
+          {successMessage ? (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              {successMessage}
+            </div>
+          ) : null}
+          <input
+            style={styles.input}
+            placeholder="Email của bạn"
+            name="email"
+            type="email"
+            onChange={handleChange}
+          />
+          <input
+            style={styles.input}
+            type="password"
+            placeholder="Mật khẩu"
+            name="password"
+            onChange={handleChange}
+          />
+
+          <button style={styles.loginBtn} type="submit">
+            Đăng nhập
+          </button>
+        </form>
 
         <div style={styles.footerLink}>
           <Link to="/forgot-password" style={styles.link}>

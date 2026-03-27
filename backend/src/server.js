@@ -32,6 +32,9 @@ app.use(express.json());
 // Gắn route vào server
 app.use("/auth", authRoutes);
 
+// gắn router login
+// app.use("/login", authRoutes);
+
 // Kiểm tra route
 app.get("/", (req, res) => {
   res.send("Backend is running");

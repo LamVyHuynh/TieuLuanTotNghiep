@@ -1,4 +1,5 @@
 const { registerUser } = require("../services/auth.service");
+const { loginUser } = require("../services/auth.service");
 const register = async (req, res) => {
   // Lấy dữ liệu người dùng từ request body (dữ liệu được gửi từ client qua postman)
   const userData = req.body;
@@ -32,7 +33,7 @@ const register = async (req, res) => {
     if (
       error.message === "Email đã tồn tại" ||
       error.message === "Số điện thoại đã tồn tại" ||
-      error.message === "Role 'user' không tồn tại" ||
+      error.message === "Role 'customer' không tồn tại" ||
       error.message === "userData is undefined"
     ) {
       return res.status(409).json({
@@ -45,4 +46,26 @@ const register = async (req, res) => {
     });
   }
 };
-module.exports = { register };
+
+const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const result = await loginUser(email, password);
+
+    res.status(200).json({
+      message: "Loging successful",
+      data: result,
+    });
+  } catch (error) {
+    if (error.message === "Email hoặc mật khẩu không đúng") {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+    if (error.message === "Email hoặc mật khẩu không được để trống") {
+      return res.status(400).json({ message: error.message });
+    }
+  }
+};
+module.exports = { register, login };
