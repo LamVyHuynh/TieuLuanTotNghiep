@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { ChevronDown, Search, ShoppingBag } from "lucide-react";
 
@@ -6,7 +6,22 @@ function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
+  const userMenuRef = useRef(null);
   const userDataLogin = JSON.parse(localStorage.getItem("userDataLogin"));
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Hàm xử lý khi người dùng nhấn nút tìm kiếm
   const handleSearch = () => {
@@ -62,7 +77,7 @@ function UserLayout() {
               <ShoppingBag size={18} />
             </Link>
             {userDataLogin ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   type="button"
                   onClick={() => setShowUserMenu((prev) => !prev)}

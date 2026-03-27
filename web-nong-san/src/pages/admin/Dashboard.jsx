@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   BarChart3,
   Bell,
@@ -139,6 +139,21 @@ function Dashboard() {
   const [showAdminMenu, setShowAdminMenu] = useState(false);
   const adminData = JSON.parse(localStorage.getItem("userDataLogin"));
   const navigate = useNavigate();
+  const adminMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
+        setShowAdminMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleLogoutAdmin = () => {
     localStorage.removeItem("userDataLogin");
@@ -164,7 +179,7 @@ function Dashboard() {
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
           </button>
 
-          <div className="relative flex items-center gap-3 border-l border-slate-200 pl-4">
+          <div className="relative flex items-center gap-3 border-l border-slate-200 pl-4" ref={adminMenuRef}>
             <button
               type="button"
               onClick={() => setShowAdminMenu((prev) => !prev)}
