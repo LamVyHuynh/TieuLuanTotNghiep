@@ -4,8 +4,8 @@ import {
   Bell,
   Box,
   ChevronRight,
+  KeyRound,
   CircleDollarSign,
-  ClipboardList,
   Leaf,
   ChevronDown,
   MoreVertical,
@@ -15,7 +15,9 @@ import {
   ShoppingBag,
   Store,
   TrendingUp,
+  UserRound,
   Users,
+  LogOut,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const kpis = [
@@ -143,7 +145,10 @@ function Dashboard() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
+      if (
+        adminMenuRef.current &&
+        !adminMenuRef.current.contains(event.target)
+      ) {
         setShowAdminMenu(false);
       }
     };
@@ -179,7 +184,10 @@ function Dashboard() {
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
           </button>
 
-          <div className="relative flex items-center gap-3 border-l border-slate-200 pl-4" ref={adminMenuRef}>
+          <div
+            className="relative flex items-center gap-3 border-l border-slate-200 pl-4"
+            ref={adminMenuRef}
+          >
             <button
               type="button"
               onClick={() => setShowAdminMenu((prev) => !prev)}
@@ -215,21 +223,24 @@ function Dashboard() {
             >
               <button
                 type="button"
-                className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
-                Cập nhật thông tin cá nhân
+                <UserRound size={16} className="text-slate-400" />
+                Cập nhật thông tin
               </button>
               <button
                 type="button"
-                className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
+                <KeyRound size={16} className="text-slate-400" />
                 Đổi mật khẩu
               </button>
               <button
                 type="button"
                 onClick={handleLogoutAdmin}
-                className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
               >
+                <LogOut size={16} className="text-rose-500" />
                 Đăng xuất
               </button>
             </div>

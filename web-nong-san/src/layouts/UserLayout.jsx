@@ -1,6 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { ChevronDown, Search, ShoppingBag } from "lucide-react";
+import {
+  ChevronDown,
+  KeyRound,
+  Search,
+  ShoppingBag,
+  UserRound,
+  LogOut,
+} from "lucide-react";
 
 function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -96,21 +103,24 @@ function UserLayout() {
                 >
                   <button
                     type="button"
-                    className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                   >
-                    Cập nhật thông tin cá nhân
+                    <UserRound size={16} className="text-slate-400" />
+                    Cập nhật thông tin
                   </button>
                   <button
                     type="button"
-                    className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                   >
+                    <KeyRound size={16} className="text-slate-400" />
                     Đổi mật khẩu
                   </button>
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="flex w-full cursor-pointer items-center px-4 py-3 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                   >
+                    <LogOut size={16} className="text-rose-500" />
                     Đăng xuất
                   </button>
                 </div>
