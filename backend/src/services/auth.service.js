@@ -140,4 +140,21 @@ async function loginUser(email, password) {
     role_id: user.role_id,
   };
 }
-module.exports = { registerUser, loginUser };
+
+async function getCurrentUserById(userId) {
+  const [rows] = await pool.query(
+    "SELECT id, full_name, email,phone, role_id FROM users WHERE id = ?",
+    [userId]
+  );
+  if (rows.length === 0) {
+    throw new Error("User không tồn tại");
+  }
+  return {
+    id: rows[0].id,
+    full_name: rows[0].full_name,
+    email: rows[0].email,
+    phone: rows[0].phone,
+    role_id: rows[0].role_id,
+  };
+}
+module.exports = { registerUser, loginUser, getCurrentUserById };

@@ -1,4 +1,8 @@
-const { registerUser, loginUser } = require("../services/auth.service");
+const {
+  registerUser,
+  loginUser,
+  getCurrentUserById,
+} = require("../services/auth.service");
 
 // Thư viện jsonwebtoken có 3 mục đích chính:
 //  1. Tạo token:  jsonwebtoken.sign() tạo ra token mới dựa trên payload (thông tin người dùng) và secret key (để đảm bảo tính bảo mật của token).
@@ -73,6 +77,14 @@ const login = async (req, res) => {
       throw new Error("Kết quả trả về từ service không hợp lệ");
     }
 
+    // Tạo token JWT với payload chứa id và role của người dùng,
+    // secret key lấy từ biến môi trường JWT_SECRET,
+    //  và thời gian hết hạn là 1 giờ
+    const token = jwt.sign(
+      { id: result.id, role: result.role_id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
     res.status(200).json({
       message: "Login successful",
       token: token,
@@ -94,4 +106,34 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const getMe = async (req, res) => {
+  try {
+    const userId = req.user.id; // Thông tin được lấy từ middleware authenticateToken sau khi xác thực token thành công
+
+    const user = await getCurrentUserById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: "User không tồn tại",
+      });
+    }
+    res.status(200).json({
+      message: "Lấy thông tin người dùng thành công",
+      user: user,
+    });
+  } catch (error) {
+    if (
+      error.message === "Token không tồn tại" ||
+      error.message === "Token không hợp lệ, truy cập bị từ chối"
+    ) {
+      return res.status(401).json({
+        message: error.message,
+      });
+    }
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { register, login, getMe };

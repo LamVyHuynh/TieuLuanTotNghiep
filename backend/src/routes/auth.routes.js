@@ -15,7 +15,7 @@ const router = express.Router();
 // - route chỉ gọi hàm register của controller
 const { register } = require("../controllers/auth.controller");
 const { login } = require("../controllers/auth.controller");
-
+const { getMe } = require("../controllers/auth.controller");
 // - Khai báo 1 route dạng POST
 // - đường dẫn là /register (tức là http://localhost:5000/auth/register)
 // - khi client gửi request tới đây thì gọi hàm register
@@ -26,6 +26,13 @@ router.post("/register", register);
 //  đường dẫn là /login (tức là http://localhost:5000/auth/login)
 // khi client gửi request tới đây thì gọi hàm login
 router.post("/login", login);
+
+// Nối với middleware authMiddleware để kiểm tra token trước khi gọi hàm getMe
+// Phải nối với middleware authenticateToken trước vì nó sẽ kiểm tra token có hợp lệ không,
+//  nếu không hợp lệ thì sẽ trả về lỗi và không gọi hàm getMe nữa
+router.use(require("../middlewares/auth.middleware").authenticateToken);
+// Lấy thông tin người dùng hiện tại
+router.get("/me", getMe);
 
 // export router ra ngoài để server.js có thể import và dùng
 module.exports = router;
