@@ -1,5 +1,16 @@
-const { registerUser } = require("../services/auth.service");
-const { loginUser } = require("../services/auth.service");
+const { registerUser, loginUser } = require("../services/auth.service");
+
+// Thư viện jsonwebtoken có 3 mục đích chính:
+//  1. Tạo token:  jsonwebtoken.sign() tạo ra token mới dựa trên payload (thông tin người dùng) và secret key (để đảm bảo tính bảo mật của token).
+//  Vào còn thêm 1 chỉ số nữa là expiresIn để xác định thời gian hết hạn của token
+//  Khi đăng nhập thành công sẽ tạo ra jwt
+// 2. Xác thực token: jsonwebtoken.verify() được dùng để xác thực token đã tạo ra trước đó, xem nó có hợp lệ không?
+// backend nhận token từ client gửi lên từ frontend,
+// Kiểm tra xem chữ kí token có hợp lệ chưa
+// Token có hết hạng chưa
+// 3. giải mã token: jsonwebtoken.decode() được dùng để giải mã token mà không cần xác thực
+//  Nó sẽ trả về payload (đối tượng chức thông tin người dùng) mà không kiểm tra tính hợp lệ của token
+const jwt = require("jsonwebtoken");
 const register = async (req, res) => {
   // Lấy dữ liệu người dùng từ request body (dữ liệu được gửi từ client qua postman)
   const userData = req.body;
@@ -61,13 +72,15 @@ const login = async (req, res) => {
     if (!result) {
       throw new Error("Kết quả trả về từ service không hợp lệ");
     }
+
     res.status(200).json({
       message: "Login successful",
-      data: result,
+      token: token,
+      user: result,
     });
   } catch (error) {
     if (error.message === "Email hoặc mật khẩu không đúng") {
-      return res.status(400).json({
+      return res.status(401).json({
         message: error.message,
       });
     }
@@ -80,4 +93,5 @@ const login = async (req, res) => {
     });
   }
 };
+
 module.exports = { register, login };
