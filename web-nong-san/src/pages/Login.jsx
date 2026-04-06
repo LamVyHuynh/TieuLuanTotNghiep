@@ -31,22 +31,33 @@ function Login() {
       setSuccessMessage(response.data.message || "Đăng nhập thành công");
 
       // Lưu dữ liệu của user đăng nhập vào localStorage để có thể sử dụng ở các trang khác
+      // dùng response.data.token để lấy token từ response trả về của backend
+      // const userData = response.data.data;
+      const token = response.data.token;
+      const user = response.data.user;
+      // Lưu token vào localStorage để sử dụng cho các yêu cầu sau
+      localStorage.setItem("accessToken", token);
+      // Chuyển userData thành chuỗi JSON trước khi lưu vào localStorage vì localStorage chỉ lưu được chuỗi JSON
+      // console.log("userData trước khi lưu vào localStorage:", userData);
+      // localStorage.setItem("userDataLogin", JSON.stringify(userData));
+      // console.log(
+      //   "userData đã lưu vào localStorage:",
+      //   JSON.parse(localStorage.getItem("userDataLogin"))
+      // );
 
-      const userData = response.data.data;
-      // Chuyển userData thành chuỗi JSON trước khi lưu vào localStorage vì localStorage chỉ lưu được chuỗi
-      console.log("userData trước khi lưu vào localStorage:", userData);
-      localStorage.setItem("userDataLogin", JSON.stringify(userData));
-      console.log(
-        "userData đã lưu vào localStorage:",
-        JSON.parse(localStorage.getItem("userDataLogin"))
-      );
-      if (userData.role_id === 1) {
-        navigate("/admin");
-        console.log("Qua trang admin");
-      } else if (userData.role_id === 2) {
-        navigate("/");
-        console.log("Qua trang user");
-      }
+      // tạo ra tín hiệu event
+      window.dispatchEvent(new Event("authChange"));
+
+      setTimeout(() => {
+        if (user.role_id === 1) {
+          navigate("/admin");
+          console.log("Qua trang admin");
+        } else if (user.role_id === 2) {
+          navigate("/");
+          console.log("Qua trang user");
+        }
+      }, 1500);
+
       setFrmDataLogin({ email: "", password: "" });
       console.log("Login successful:", response.data);
     } catch (error) {

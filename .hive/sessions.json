@@ -1,0 +1,11 @@
+{
+  "sessions": [
+    {
+      "sessionId": "ses_2c54a5b0bffeZhIveeuUTVoF2f",
+      "startedAt": "2026-03-31T08:38:10.171Z",
+      "lastActiveAt": "2026-03-31T08:38:10.171Z",
+      "agent": "orchestrator",
+      "sessionKind": "unknown"
+    }
+  ]
+}

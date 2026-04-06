@@ -8,13 +8,60 @@ import {
   UserRound,
   LogOut,
 } from "lucide-react";
-
 function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
-  const userDataLogin = JSON.parse(localStorage.getItem("userDataLogin"));
+  const [currentUser, setCurrentUser] = useState(null);
+  // const [accessToken, setAccessToken] = useState(null);
+
+  // dùng useEffect để theo dõi token
+  const fetchCurrentUser = async () => {
+    // Lấy dữ liệu đã được luu trong localStorage ở key "userDataLogin" và parse nó thành object JavaScript
+    const token = localStorage.getItem("accessToken");
+    console.log("Token từ localStorage:", token);
+
+    // Thêm token vào state để theo dõi sự thay đổi của nó
+    // setAccessToken(token);
+    if (!token) {
+      setCurrentUser(null);
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/auth/me", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        localStorage.removeItem("accessToken");
+        setCurrentUser(null);
+        return;
+      }
+      const data = await response.json();
+      setCurrentUser(data.user);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      setCurrentUser(null);
+    }
+  };
+  useEffect(() => {
+    fetchCurrentUser();
+  }, []);
+
+  // Tạo ra 1 useEffect để biết event có thay đổi bên login
+  useEffect(() => {
+    const handleAuthChange = () => {
+      fetchCurrentUser();
+    };
+    window.addEventListener("authChange", handleAuthChange);
+    return () => {
+      window.removeEventListener("authChange", handleAuthChange);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -37,10 +84,14 @@ function UserLayout() {
 
   // Làm logout xoá dữ liệu được lưu trong Storage
   const handleLogout = () => {
-    localStorage.removeItem("userDataLogin");
+    localStorage.removeItem("accessToken");
     setShowUserMenu(false);
     //  Sau khi đã xoá dữ liệu đăng nhập lưu trong storage thì điều hướng về trang chủ
-    //  Nó sẽ check lại xem có dữ liệu ở userDataLogin hay không, nếu không có thì nó sẽ hiện nút đăng nhập và đăng kí
+    //  Nó sẽ check lại xem có dữ liệu ở accessToken hay không, nếu không có thì nó sẽ hiện nút đăng nhập và đăng kí
+
+    setCurrentUser(null);
+    // Cho token về null
+    // setAccessToken(null);
     navigate("/");
   };
 
@@ -83,14 +134,14 @@ function UserLayout() {
             >
               <ShoppingBag size={18} />
             </Link>
-            {userDataLogin ? (
+            {currentUser ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   type="button"
                   onClick={() => setShowUserMenu((prev) => !prev)}
                   className="flex cursor-pointer items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 sm:px-5"
                 >
-                  <span>{userDataLogin.full_name}</span>
+                  <span>{currentUser.full_name}</span>
                   <ChevronDown size={16} />
                 </button>
 

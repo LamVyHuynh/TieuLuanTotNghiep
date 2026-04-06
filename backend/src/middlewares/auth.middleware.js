@@ -3,8 +3,8 @@ const jwt = require("jsonwebtoken");
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
 
-  // Tácch token ra khỏi header
-  // Thường token nó sẽ có dịnh dạng Bearer token, nên mình sẽ tách nó ra để lấy token thôi
+  // Tách token ra khỏi header
+  // Thường token nó sẽ có dịnh dạng Bearer + token, nên mình sẽ tách nó ra để lấy token thôi
   const token = authHeader && authHeader.split(" ")[1];
 
   // Kiểm tra xem token có tồn tại không
@@ -14,7 +14,7 @@ function authenticateToken(req, res, next) {
     });
   }
 
-  // Kiểm tra token có hợp lệ không vằng jwt.vergify()
+  // Kiểm tra token có hợp lệ không? bằng jwt.vergify()
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
       return res.status(401).json({
