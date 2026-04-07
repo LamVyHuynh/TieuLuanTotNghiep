@@ -14,6 +14,7 @@ import Orders from "../pages/admin/Orders";
 import Stores from "../pages/admin/Stores";
 import UserLayout from "../layouts/UserLayout";
 import AdminLayout from "../layouts/AdminLayout";
+import ProtectedRoute from "./ProtectedRoute";
 
 const publicRoutes = [
   {
@@ -34,14 +35,20 @@ const publicRoutes = [
   },
   {
     path: "/admin",
-    element: AdminLayout,
+    element: ProtectedRoute,
     children: [
-      { index: true, element: Dashboard },
-      { path: "users", element: Users },
-      { path: "products", element: Products },
-      { path: "stores", element: Stores },
-      { path: "orders", element: Orders },
-      { path: "reports", element: Reports },
+      {
+        path: "",
+        element: AdminLayout,
+        children: [
+          { index: true, element: Dashboard },
+          { path: "users", element: Users },
+          { path: "products", element: Products },
+          { path: "stores", element: Stores },
+          { path: "orders", element: Orders },
+          { path: "reports", element: Reports },
+        ],
+      },
     ],
   },
 ];
