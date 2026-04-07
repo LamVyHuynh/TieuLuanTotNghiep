@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Leaf, Mail, Lock, ArrowRight } from "lucide-react";
-
+import { useAuth } from "../context/AuthContext";
 function Login() {
   const [frmDataLogin, setFrmDataLogin] = useState({
     email: "",
@@ -11,6 +11,7 @@ function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [rememberLogin, setRememberLogin] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -40,7 +41,7 @@ function Login() {
       const token = response.data.token;
       const user = response.data.user;
       // Lưu token vào localStorage để sử dụng cho các yêu cầu sau
-      localStorage.setItem("accessToken", token);
+      // localStorage.setItem("accessToken", token);
       // Chuyển userData thành chuỗi JSON trước khi lưu vào localStorage vì localStorage chỉ lưu được chuỗi JSON
       // console.log("userData trước khi lưu vào localStorage:", userData);
       // localStorage.setItem("userDataLogin", JSON.stringify(userData));
@@ -50,7 +51,10 @@ function Login() {
       // );
 
       // tạo ra tín hiệu event
-      window.dispatchEvent(new Event("authChange"));
+      // window.dispatchEvent(new Event("authChange"));
+
+      // gọi hàm login của AuthContext để cập nhật thông tin người dùng và token vào context
+      login(user, token);
 
       setTimeout(() => {
         if (user.role_id === 1) {

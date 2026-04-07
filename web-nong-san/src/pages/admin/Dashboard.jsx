@@ -1,25 +1,22 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BarChart3,
   Bell,
-  Box,
   ChevronRight,
   KeyRound,
   CircleDollarSign,
   Leaf,
   ChevronDown,
   MoreVertical,
-  Package,
   Search,
-  Settings,
   ShoppingBag,
-  Store,
   TrendingUp,
   UserRound,
   Users,
   LogOut,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext.jsx";
 const kpis = [
   {
     label: "Tổng doanh thu",
@@ -139,9 +136,9 @@ const orders = [
 
 function Dashboard() {
   const [showAdminMenu, setShowAdminMenu] = useState(false);
-  const adminData = localStorage.getItem("accessToken");
   const navigate = useNavigate();
   const adminMenuRef = useRef(null);
+  const { currentUser, logout, loading } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -161,10 +158,11 @@ function Dashboard() {
   }, []);
 
   const handleLogoutAdmin = () => {
-    localStorage.removeItem("userDataLogin");
+    logout();
     setShowAdminMenu(false);
     navigate("/login");
   };
+  if (loading) return <p>Đang tải...</p>;
 
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8">
@@ -194,9 +192,9 @@ function Dashboard() {
               className="flex cursor-pointer items-center gap-3 rounded-2xl px-2 py-1 transition hover:bg-slate-50"
             >
               <div className="text-right">
-                {adminData ? (
+                {currentUser ? (
                   <p className="text-sm font-bold text-slate-900">
-                    {adminData.full_name}
+                    {currentUser.full_name}
                   </p>
                 ) : (
                   <p className="text-sm font-bold text-slate-900">Admin</p>

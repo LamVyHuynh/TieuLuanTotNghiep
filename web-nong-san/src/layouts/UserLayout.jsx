@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
@@ -8,13 +8,16 @@ import {
   UserRound,
   LogOut,
 } from "lucide-react";
+
+import { useAuth } from "../context/AuthContext";
 function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
+  const { currentUser, logout, loading } = useAuth();
   const userMenuRef = useRef(null);
   // tạo ra thêm 1 state để lưu thông tin người dùng hiện tại và ban đầu nó bằng null
-  const [currentUser, setCurrentUser] = useState(null);
+  // const [currentUser, setCurrentUser] = useState(null);
 
   // dùng useEffect để theo dõi token
   // hàm fechCurrentUser sẽ được gọi khi component được render lần đầu tiên và mỗi khi token thay đổi
@@ -22,54 +25,6 @@ function UserLayout() {
   // dùng useEffect để gọi hàm fetchCurrentUser khi component được render lần đầu tiên khi token thay đổi
   // để hiện lên thông tin người dùng khi lần đầu header vào hiện ra luôn thì cần phải tạo ra đánh dấu sự kiện thay đổi
   // dùng useEffect thứ 2, khi thấy nó thì nó sẽ gọi hàm fetchCurrentUser để cập nhật thông tin người dùng hiện tại
-
-  const fetchCurrentUser = async () => {
-    // Lấy dữ liệu đã được lưu trong localStorage ở key "accessToken"
-    const token = localStorage.getItem("accessToken");
-    console.log("Token từ localStorage:", token);
-
-    if (!token) {
-      setCurrentUser(null);
-      return;
-    }
-
-    try {
-      const response = await fetch("http://localhost:5000/auth/me", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        localStorage.removeItem("accessToken");
-        setCurrentUser(null);
-        return;
-      }
-      // Chuyển dữ liệu lấy về từ API auth/me thành JSON và lưu vào biến data
-      // Lý do chuyển thành dạng JSON là vì API trả về dạng JSON
-      const data = await response.json();
-
-      // cập nhật thông tin user vào state currentUser
-      setCurrentUser(data.user);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setCurrentUser(null);
-    }
-  };
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
-
-  // Tạo ra 1 useEffect để biết event có thay đổi bên login
-  useEffect(() => {
-    const handleAuthChange = () => {
-      fetchCurrentUser();
-    };
-    window.addEventListener("authChange", handleAuthChange);
-    return () => {
-      window.removeEventListener("authChange", handleAuthChange);
-    };
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -92,16 +47,22 @@ function UserLayout() {
 
   // Làm logout xoá dữ liệu được lưu trong Storage
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    setShowUserMenu(false);
-    //  Sau khi đã xoá dữ liệu đăng nhập lưu trong storage thì điều hướng về trang chủ
-    //  Nó sẽ check lại xem có dữ liệu ở accessToken hay không, nếu không có thì nó sẽ hiện nút đăng nhập và đăng kí
+    // localStorage.removeItem("accessToken");
+    // setShowUserMenu(false);
+    // //  Sau khi đã xoá dữ liệu đăng nhập lưu trong storage thì điều hướng về trang chủ
+    // //  Nó sẽ check lại xem có dữ liệu ở accessToken hay không, nếu không có thì nó sẽ hiện nút đăng nhập và đăng kí
 
-    setCurrentUser(null);
-    // Cho token về null
-    // setAccessToken(null);
+    // setCurrentUser(null);
+    // // Cho token về null
+    // // setAccessToken(null);
+    // Gọi hàm logout từ context để xoá token và cập nhật currentUser về null
+    // Đóng menu người dùng sau khi đăng xuất
+    logout();
+    setShowUserMenu(false);
     navigate("/");
   };
+
+  if (loading) return <p>Đang tải...</p>;
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f6fbf7_0%,#fdfdf8_45%,#f7faf8_100%)] text-slate-800">
