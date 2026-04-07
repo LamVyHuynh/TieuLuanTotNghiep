@@ -45,6 +45,7 @@ const AuthProvider = ({ children }) => {
   const login = (user, token) => {
     localStorage.setItem("accessToken", token);
     setCurrentUser(user);
+    setLoading(false);
   };
 
   //   Hàm logout  - Xóa token khỏi localStorage
