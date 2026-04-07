@@ -139,7 +139,7 @@ const orders = [
 
 function Dashboard() {
   const [showAdminMenu, setShowAdminMenu] = useState(false);
-  const adminData = JSON.parse(localStorage.getItem("userDataLogin"));
+  const adminData = localStorage.getItem("accessToken");
   const navigate = useNavigate();
   const adminMenuRef = useRef(null);
 

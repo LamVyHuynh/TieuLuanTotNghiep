@@ -33,6 +33,10 @@ function Login() {
       // Lưu dữ liệu của user đăng nhập vào localStorage để có thể sử dụng ở các trang khác
       // dùng response.data.token để lấy token từ response trả về của backend
       // const userData = response.data.data;
+      // lấy token và user là lấy riêng
+      // token dùng để gửi kèm trong header của các request sau này để backend xác thựct xem user đã đăng nhập chưa
+      // user dùng để lưu thông tin user đăng nhập vào localStorage để có thể dùng ở các trang khác
+      // user chuyển qua các trang khác
       const token = response.data.token;
       const user = response.data.user;
       // Lưu token vào localStorage để sử dụng cho các yêu cầu sau

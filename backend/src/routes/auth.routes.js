@@ -13,9 +13,8 @@ const router = express.Router();
 // Hiểu đơn giản:
 // - route không tự xử lý đăng ký
 // - route chỉ gọi hàm register của controller
-const { register } = require("../controllers/auth.controller");
-const { login } = require("../controllers/auth.controller");
-const { getMe } = require("../controllers/auth.controller");
+const { register, login, getMe } = require("../controllers/auth.controller");
+
 // - Khai báo 1 route dạng POST
 // - đường dẫn là /register (tức là http://localhost:5000/auth/register)
 // - khi client gửi request tới đây thì gọi hàm register

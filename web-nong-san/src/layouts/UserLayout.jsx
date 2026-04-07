@@ -13,17 +13,21 @@ function UserLayout() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
+  // tạo ra thêm 1 state để lưu thông tin người dùng hiện tại và ban đầu nó bằng null
   const [currentUser, setCurrentUser] = useState(null);
-  // const [accessToken, setAccessToken] = useState(null);
 
   // dùng useEffect để theo dõi token
+  // hàm fechCurrentUser sẽ được gọi khi component được render lần đầu tiên và mỗi khi token thay đổi
+  // nó sẽ gửi request đến server để lấy thông tin người dùng hiện tại dựa trên token và cập nhật state currentUser
+  // dùng useEffect để gọi hàm fetchCurrentUser khi component được render lần đầu tiên khi token thay đổi
+  // để hiện lên thông tin người dùng khi lần đầu header vào hiện ra luôn thì cần phải tạo ra đánh dấu sự kiện thay đổi
+  // dùng useEffect thứ 2, khi thấy nó thì nó sẽ gọi hàm fetchCurrentUser để cập nhật thông tin người dùng hiện tại
+
   const fetchCurrentUser = async () => {
-    // Lấy dữ liệu đã được luu trong localStorage ở key "userDataLogin" và parse nó thành object JavaScript
+    // Lấy dữ liệu đã được lưu trong localStorage ở key "accessToken"
     const token = localStorage.getItem("accessToken");
     console.log("Token từ localStorage:", token);
 
-    // Thêm token vào state để theo dõi sự thay đổi của nó
-    // setAccessToken(token);
     if (!token) {
       setCurrentUser(null);
       return;
@@ -41,7 +45,11 @@ function UserLayout() {
         setCurrentUser(null);
         return;
       }
+      // Chuyển dữ liệu lấy về từ API auth/me thành JSON và lưu vào biến data
+      // Lý do chuyển thành dạng JSON là vì API trả về dạng JSON
       const data = await response.json();
+
+      // cập nhật thông tin user vào state currentUser
       setCurrentUser(data.user);
     } catch (error) {
       console.error("Error fetching user data:", error);
