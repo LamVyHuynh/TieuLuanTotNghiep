@@ -6,6 +6,37 @@
       "lastActiveAt": "2026-03-31T08:38:10.171Z",
       "agent": "orchestrator",
       "sessionKind": "unknown"
+    },
+    {
+      "sessionId": "ses_2955e9430ffeFVGlvFCTjDJeo3",
+      "startedAt": "2026-04-15T03:54:29.456Z",
+      "lastActiveAt": "2026-04-15T04:25:58.976Z",
+      "agent": "orchestrator",
+      "sessionKind": "unknown"
+    },
+    {
+      "sessionId": "ses_2708f40daffe5401lVjsYgl94Q",
+      "startedAt": "2026-04-15T04:40:24.129Z",
+      "lastActiveAt": "2026-04-15T04:41:58.145Z",
+      "agent": "orchestrator",
+      "sessionKind": "unknown",
+      "baseAgent": "hive-master",
+      "directivePrompt": "hdhd]",
+      "replayDirectivePending": false
+    },
+    {
+      "sessionId": "ses_2fac213c5ffePPY1ulHNl5Ul7p",
+      "startedAt": "2026-04-24T09:53:37.511Z",
+      "lastActiveAt": "2026-04-24T10:16:22.619Z",
+      "agent": "orchestrator",
+      "sessionKind": "unknown"
+    },
+    {
+      "sessionId": "ses_241113e28ffeoAmsB52yzppafO",
+      "startedAt": "2026-04-24T10:00:11.492Z",
+      "lastActiveAt": "2026-04-24T10:00:11.492Z",
+      "agent": "explorer",
+      "sessionKind": "unknown"
     }
   ]
 }
