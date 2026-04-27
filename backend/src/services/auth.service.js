@@ -19,6 +19,9 @@ async function registerUser(userData) {
   //   userData
   // );
 
+  //làm sạch email bằng trim và tolowerCase
+  const cleanEmail = email.trim().toLowerCase();
+
   if (!full_name || !email || !password || !phone) {
     throw new Error("Thông tin đăng ký không đầy đủ");
   }
@@ -89,17 +92,17 @@ async function registerUser(userData) {
   }
   const role_id = roleRows[0].id;
 
-  console.log("Role ID của role 'customer': ", role_id);
-  // console.log("Password đã hash: ", hashedPassword);
-  // console.log("userData:", userData);
-  // console.log("Full Name:", full_name);
-  // console.log("Email:", email);
-  // console.log("Phone:", phone);
+  // // console.log("Role ID của role 'customer': ", role_id);
+  // // console.log("Password đã hash: ", hashedPassword);
+  // // console.log("userData:", userData);
+  // // console.log("Full Name:", full_name);
+  // // console.log("Email:", email);
+  // // console.log("Phone:", phone);
 
   // Inser user vào database
   const [insertResult] = await pool.query(
     "INSERT INTO users(full_name, email, phone, password_hash, role_id) VALUES (?,?,?,?,?)",
-    [full_name, email, cleanPhone, hashedPassword, role_id]
+    [full_name, cleanEmail, cleanPhone, hashedPassword, role_id],
   );
   return {
     id: insertResult.insertId,
@@ -115,9 +118,13 @@ async function loginUser(email, password) {
   if (!email || !password) {
     throw new Error("Email hoặc mật khẩu không được để trống");
   }
+
+  // THÊM DÒNG NÀY: Chuẩn hóa email trước khi tìm trong Database
+  const cleanEmail = email.trim().toLowerCase();
+
   // Kiểm tra email có tồn tại trong database không
   const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [
-    email,
+    cleanEmail,
   ]);
   if (rows.length === 0) {
     throw new Error("Email hoặc mật khẩu không đúng");
@@ -144,7 +151,7 @@ async function loginUser(email, password) {
 async function getCurrentUserById(userId) {
   const [rows] = await pool.query(
     "SELECT id, full_name, email,phone, role_id FROM users WHERE id = ?",
-    [userId]
+    [userId],
   );
   if (rows.length === 0) {
     throw new Error("User không tồn tại");
