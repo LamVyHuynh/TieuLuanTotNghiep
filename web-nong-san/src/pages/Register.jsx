@@ -31,6 +31,9 @@ function Register() {
   // Show password khi người dùng click vào icon mắt
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // Tạo state check định dạng email
+  const [isEmailValid, setIsEmailValid] = useState(true);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -38,6 +41,21 @@ function Register() {
     // Xóa cả lỗi lẫn thông báo thành công khi người dùng sửa dữ liệu
     if (errorMessage) setErrorMessage("");
     if (successMessage) setSuccessMessage("");
+  };
+  // Kiểm tra định dạng email khi người dùng nhập vào trường email
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Khi người dùng rời con trỏ chuột khỏi ô email thì sẽ kiểm tra định dạng email
+  const handleBlurEmail = () => {
+    if (formData.email.trim() !== "") {
+      const isValid = validateEmail(formData.email);
+      setIsEmailValid(isValid);
+    } else {
+      setIsEmailValid(true);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -184,10 +202,16 @@ function Register() {
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
+                  onBlur={handleBlurEmail}
                   placeholder="email@vi-du.com"
                   className="w-full rounded-lg border-none bg-[#e2e2e2] py-3.5 pl-12 pr-4 text-sm text-slate-800 outline-none transition-all placeholder:text-zinc-400 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
+              {!isEmailValid && (
+                <p className="mt-1 px-1 text-[11px] font-bold text-rose-500 uppercase tracking-wider">
+                  Định dạng email không hợp lệ !
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

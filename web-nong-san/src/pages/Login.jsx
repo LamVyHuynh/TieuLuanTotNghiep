@@ -14,6 +14,8 @@ function Login() {
   const [rememberLogin, setRememberLogin] = useState(false);
   // Hiện password khi click vào biểu tượng con mắt
   const [showPassword, setShowPassword] = useState(false);
+  // Tạo state check định dạng email
+  const [isEmailValid, setIsEmailValid] = useState(true);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +27,23 @@ function Login() {
     // Xóa cả lỗi lẫn thông báo thành công khi người dùng sửa dữ liệu
     if (errorMessage) setErrorMessage("");
     if (successMessage) setSuccessMessage("");
+  };
+
+  // Kiểm tra định dạng email bằng regex
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  // Khi người dùng rời con trỏ chuột khỏi ô email thì sẽ kiểm tra định dạng email
+  const handleBlurEmail = () => {
+    // Nếu ô email có chữ, thì mới check định dạng
+    if (frmDataLogin.email.trim() !== "") {
+      const isValid = validateEmail(frmDataLogin.email);
+      setIsEmailValid(isValid); // Cập nhật state check định dạng
+    } else {
+      setIsEmailValid(true); // Nếu trống thì thôi, để handleSubmit lo
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -145,10 +164,16 @@ function Login() {
                   type="email"
                   value={frmDataLogin.email}
                   onChange={handleChange}
+                  onBlur={handleBlurEmail}
                   placeholder="name@example.com"
                   className="w-full rounded-xl border-none bg-[#e2e2e2] py-4 pl-11 pr-4 text-sm font-semibold tracking-[-0.01em] text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
+              {!isEmailValid && (
+                <p className="mt-1 px-1 text-[11px] font-bold text-rose-500 uppercase tracking-wider">
+                  Định dạng email không hợp lệ !
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
