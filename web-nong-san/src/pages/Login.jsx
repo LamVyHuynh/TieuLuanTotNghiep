@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Leaf, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
@@ -92,6 +92,13 @@ function Login() {
       // gọi hàm login của AuthContext để cập nhật thông tin người dùng và token vào context
       login(user, token);
 
+      if (rememberLogin) {
+        // Nếu người dùng tích vào "Ghi nhớ", lưu email vào localStorage
+        localStorage.setItem("rememberEmail", frmDataLogin.email);
+      } else {
+        // Nếu người dùng không tích, phải xóa cái cũ đi (đề phòng trước đó họ từng lưu)
+        localStorage.removeItem("rememberEmail");
+      }
       setTimeout(() => {
         if (user.role_id === 1) {
           navigate("/admin");
@@ -114,6 +121,16 @@ function Login() {
       setIsLoading(false);
     }
   };
+
+  //rememeber login thì sẽ lưu token vào localStorage, nếu không thì lưu vào sessionStorage
+  useEffect(() => {
+    const rememberEmail = localStorage.getItem("rememberEmail");
+    if (rememberEmail) {
+      // Gán email đã lưu vào localStorage vào form đăng nhập để hiển thị cho người dùng
+      setFrmDataLogin((prev) => ({ ...prev, email: rememberEmail }));
+      setRememberLogin(true);
+    }
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#f9f9f9] p-4 text-slate-900 antialiased md:p-8">
