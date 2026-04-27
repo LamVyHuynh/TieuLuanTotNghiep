@@ -28,6 +28,11 @@ function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    // Thêm dòng này để xóa thông báo lỗi khi người dùng bắt đầu nhập lại thông tin đăng nhập
+    // Xóa cả lỗi lẫn thông báo thành công khi người dùng sửa dữ liệu
+    if (errorMessage) setErrorMessage("");
+    if (successMessage) setSuccessMessage("");
   };
 
   const handleSubmit = async (e) => {
@@ -37,13 +42,13 @@ function Register() {
 
     setErrorMessage("");
     setSuccessMessage("");
-    // Kiểm tra xem người dùng đã đồng ý với điều khoản chưa trước khi gửi request đăng ký
-    setIsLoading(true);
 
     if (!agreeTerms) {
       setErrorMessage("Bạn cần đồng ý điều khoản trước khi đăng ký.");
+      setIsLoading(false); // Thêm dòng này để mở khóa nút bấm
       return;
     }
+    setIsLoading(true); // Chỉ bắt đầu loading khi mọi thứ đã sẵn sàng gửi đi
 
     try {
       // Axios dùng để gọi API request (gửi request HTTP) giữa frontend và backend
