@@ -8,7 +8,7 @@ const express = require("express");
 // Hiểu đơn giản: router là 1 bộ các router con
 const router = express.Router();
 
-// Impoer register từ file auth.controller.js
+// Import register từ file auth.controller.js
 // Chỗ {register} có nghĩa là  auth.controller.js đang export object có key register
 // Hiểu đơn giản:
 // - route không tự xử lý đăng ký

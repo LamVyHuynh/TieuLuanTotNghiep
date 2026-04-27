@@ -25,7 +25,7 @@ function Register() {
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
+  const [isLoading, setIsLoading] = useState(false);
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -37,6 +37,8 @@ function Register() {
 
     setErrorMessage("");
     setSuccessMessage("");
+    // Kiểm tra xem người dùng đã đồng ý với điều khoản chưa trước khi gửi request đăng ký
+    setIsLoading(true);
 
     if (!agreeTerms) {
       setErrorMessage("Bạn cần đồng ý điều khoản trước khi đăng ký.");
@@ -54,7 +56,7 @@ function Register() {
       // Xoá dữ liệu (DELETE): xoá sản phẩm, xoá đơn hàng
       const response = await axios.post(
         "http://localhost:5000/auth/register",
-        formData
+        formData,
       );
 
       setSuccessMessage(response.data.message || "Đăng ký thành công");
@@ -74,8 +76,10 @@ function Register() {
       setErrorMessage(
         error.response?.data?.message ||
           error.response?.data?.error ||
-          "Đăng ký thất bại"
+          "Đăng ký thất bại",
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -258,10 +262,16 @@ function Register() {
 
             <button
               type="submit"
-              className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] py-4 text-base font-black tracking-[-0.02em] text-white shadow-lg shadow-emerald-700/20 transition-all hover:opacity-95 active:scale-[0.98]"
+              disabled={isLoading}
+              className={`mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl py-4 text-base font-black tracking-[-0.02em] text-white shadow-lg transition-all active:scale-[0.98] 
+    ${
+      isLoading
+        ? "bg-gray-400 cursor-not-allowed opacity-70"
+        : "bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] shadow-emerald-700/20 hover:opacity-95"
+    }`}
             >
-              Đăng ký tài khoản
-              <ArrowRight size={18} />
+              {isLoading ? "Đang xử lý..." : "Đăng ký tài khoản"}
+              {!isLoading && <ArrowRight size={18} />}
             </button>
           </form>
 

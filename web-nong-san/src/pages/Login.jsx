@@ -8,6 +8,7 @@ function Login() {
     email: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [rememberLogin, setRememberLogin] = useState(false);
@@ -23,10 +24,18 @@ function Login() {
     setErrorMessage("");
     setSuccessMessage("");
 
+    // Kiểm tra trống của email và password trước khi gửi request đăng nhập
+    if (!frmDataLogin.email || !frmDataLogin.password) {
+      setErrorMessage("Vui lòng nhập đầy đủ thông tin đăng nhập");
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+
     try {
       const response = await axios.post(
         "http://localhost:5000/auth/login",
-        frmDataLogin
+        frmDataLogin,
       );
 
       setSuccessMessage(response.data.message || "Đăng nhập thành công");
@@ -72,8 +81,10 @@ function Login() {
       setErrorMessage(
         error.response?.data?.message ||
           error.response?.data?.error ||
-          "Đăng nhập thất bại"
+          "Đăng nhập thất bại",
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -183,9 +194,18 @@ function Login() {
 
             <button
               type="submit"
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] py-4 text-base font-black tracking-[-0.02em] text-white shadow-lg shadow-emerald-700/20 transition-all hover:opacity-90 active:scale-[0.98]"
+              // disabled khi đang gửi request đăng nhập để tránh việc người
+              // Gửi nhiều request liên tiếp khi click nhiều lần vào nút đăng nhập
+              // Bấm liên tục vào nút đăng nhập khi đang gửi request
+              disabled={isLoading}
+              className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl py-4 text-base font-black tracking-[-0.02em] text-white shadow-lg transition-all active:scale-[0.98] 
+    ${
+      isLoading
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] shadow-emerald-700/20 hover:opacity-90"
+    }`}
             >
-              Đăng nhập ngay
+              {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
               <ArrowRight size={18} />
             </button>
 

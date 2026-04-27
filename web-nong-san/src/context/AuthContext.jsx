@@ -27,11 +27,12 @@ const AuthProvider = ({ children }) => {
       });
       const user = response.data.user;
       setCurrentUser(user);
-      setLoading(false);
     } catch (error) {
+      console.error("Lỗi xác thực token:", error);
       localStorage.removeItem("accessToken");
       setCurrentUser(null);
-      setLoading(false);
+    } finally {
+      setLoading(false); // cập nhật trạng thái loading sau khi hoàn thành việc lấy thông tin người dùng, bất kể thành công hay thất bại
     }
   };
 
