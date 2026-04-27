@@ -17,6 +17,11 @@ function Login() {
 
   const handleChange = (e) => {
     setFrmDataLogin({ ...frmDataLogin, [e.target.name]: e.target.value });
+
+    // Thêm dòng này để xóa thông báo lỗi khi người dùng bắt đầu nhập lại thông tin đăng nhập
+    // Xóa cả lỗi lẫn thông báo thành công khi người dùng sửa dữ liệu
+    if (errorMessage) setErrorMessage("");
+    if (successMessage) setSuccessMessage("");
   };
 
   const handleSubmit = async (e) => {
