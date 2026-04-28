@@ -2,6 +2,7 @@ const {
   registerUser,
   loginUser,
   getCurrentUserById,
+  recordLoginLog,
 } = require("../services/auth.service");
 
 // Thư viện jsonwebtoken có 3 mục đích chính:
@@ -69,13 +70,21 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
 
+  // Lấy ip và thông tin thiết bị
+  const ip =
+    req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+  const userAgent = req.headers["user-agent"];
   try {
     const result = await loginUser(email, password);
 
-    // Kiểm tra kết quả trả về từ service xem nó có undefined hay null không
-    if (!result) {
-      throw new Error("Kết quả trả về từ service không hợp lệ");
-    }
+    // ghi log thành công
+    await recordLoginLog({
+      user_id: result.id,
+      email: email,
+      status: "success",
+      ip,
+      userAgent,
+    });
 
     // Tạo token JWT với payload chứa id và role của người dùng,
     // secret key lấy từ biến môi trường JWT_SECRET,
@@ -91,6 +100,22 @@ const login = async (req, res) => {
       user: result,
     });
   } catch (error) {
+    // ghi log thất bại
+    await recordLoginLog({
+      user_id: null, // thường không có id là lỗi
+      email: email,
+      status: "failture",
+      ip,
+      userAgent,
+      reason: error.message,
+    });
+
+    if (error.message === "Email hoặc mật khẩu không đúng") {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+
     // 1. Bắt lỗi tài khoản bị khóa (MỚI THÊM)
     if (
       error.message ===
