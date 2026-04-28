@@ -91,14 +91,26 @@ const login = async (req, res) => {
       user: result,
     });
   } catch (error) {
+    // 1. Bắt lỗi tài khoản bị khóa (MỚI THÊM)
+    if (
+      error.message ===
+      "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để biết thêm chi tiết."
+    ) {
+      return res.status(403).json({
+        message: error.message,
+      });
+    }
+    // 2. Bắt lỗi sai thông tin đăng nhập
     if (error.message === "Email hoặc mật khẩu không đúng") {
       return res.status(401).json({
         message: error.message,
       });
     }
+    // 3. Bắt lỗi để trống thông tin
     if (error.message === "Email hoặc mật khẩu không được để trống") {
       return res.status(400).json({ message: error.message });
     }
+    // 4. Các lỗi server khác
     res.status(500).json({
       message: "Server error",
       error: error.message,
