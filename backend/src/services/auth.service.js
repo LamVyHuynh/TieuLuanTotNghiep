@@ -123,9 +123,10 @@ async function loginUser(email, password) {
   const cleanEmail = email.trim().toLowerCase();
 
   // Kiểm tra email có tồn tại trong database không
-  const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [
-    cleanEmail,
-  ]);
+  const [rows] = await pool.query(
+    "SELECT id, full_name, email, phone, password_hash, role_id FROM users WHERE email = ?",
+    [cleanEmail],
+  );
   if (rows.length === 0) {
     throw new Error("Email hoặc mật khẩu không đúng");
   }
@@ -133,7 +134,6 @@ async function loginUser(email, password) {
   // Kiểm tra password có khớp không dùng bcrypt.compare()
   //  lấy giá trị đầu tiên là id
   const user = rows[0];
-
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
   if (!isPasswordValid) {
     throw new Error("Email hoặc mật khẩu không đúng");
