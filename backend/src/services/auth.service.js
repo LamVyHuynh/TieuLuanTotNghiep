@@ -124,7 +124,7 @@ async function loginUser(email, password) {
 
   // Kiểm tra email có tồn tại trong database không
   const [rows] = await pool.query(
-    "SELECT id, full_name, email, phone, password_hash, role_id FROM users WHERE email = ?",
+    "SELECT id, full_name, email, phone, password_hash, role_id, is_active FROM users WHERE email = ?",
     [cleanEmail],
   );
   if (rows.length === 0) {
@@ -139,6 +139,12 @@ async function loginUser(email, password) {
     throw new Error("Email hoặc mật khẩu không đúng");
   }
 
+  // Kiểm tra xem tài khoản có đang hoạt động không
+  if (!user.is_active) {
+    throw new Error(
+      "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.",
+    );
+  }
   return {
     id: user.id,
     full_name: user.full_name,
