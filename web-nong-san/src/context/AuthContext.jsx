@@ -1,7 +1,6 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import axios from "axios";
 const AuthContext = createContext();
-
 const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -9,7 +8,7 @@ const AuthProvider = ({ children }) => {
   //   Hàm fetchCurrentUser sẽ được gọi khi ứng dụng khởi động để kiểm tra xem người dùng đã đăng nhập hay chưa?
   const fetchCurrentUser = async () => {
     // đọc token từ localStorage
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem("auth_token");
 
     if (!token) {
       setCurrentUser(null);
@@ -29,10 +28,12 @@ const AuthProvider = ({ children }) => {
       setCurrentUser(user);
     } catch (error) {
       console.error("Lỗi xác thực token:", error);
-      localStorage.removeItem("accessToken");
+      localStorage.removeItem("auth_token");
       setCurrentUser(null);
     } finally {
-      setLoading(false); // cập nhật trạng thái loading sau khi hoàn thành việc lấy thông tin người dùng, bất kể thành công hay thất bại
+      setTimeout(() => {
+        setLoading(false); // cập nhật trạng thái loading sau khi hoàn thành việc lấy thông tin người dùng, bất kể thành công hay thất bại
+      }, 2000); // Giả lập thời gian chờ để thấy được hiệu ứng loading
     }
   };
 
@@ -44,14 +45,14 @@ const AuthProvider = ({ children }) => {
   // Vì Login.jsx đã gọi API axios để lấy token và thông tin người dùng rồi,
   // nên ở đây chỉ cần lưu token vào localStorage và cập nhật currentUser là được
   const login = (user, token) => {
-    localStorage.setItem("accessToken", token);
+    localStorage.setItem("auth_token", token);
     setCurrentUser(user);
     setLoading(false);
   };
 
   //   Hàm logout  - Xóa token khỏi localStorage
   const logout = () => {
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem("auth_token");
     setCurrentUser(null);
   };
   return (
