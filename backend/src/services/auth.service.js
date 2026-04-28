@@ -170,4 +170,29 @@ async function getCurrentUserById(userId) {
     role_id: rows[0].role_id,
   };
 }
-module.exports = { registerUser, loginUser, getCurrentUserById };
+
+// Hàm ghi hoạt động
+async function recordLoginLog({
+  user_id,
+  email,
+  status,
+  ip,
+  userAgent,
+  reason = null,
+}) {
+  try {
+    await pool.query(
+      "INSERT INTO login_logs (user_id, email_attempted, status, ip_address, user_agent, reason) VALUES (?,?,?,?,?,?)",
+      [user_id, email, status, ip, userAgent, reason],
+    );
+  } catch (error) {
+    console.error("Lỗi ghi log đăng nhập: ", error);
+    // Không throw lỗi ở đây để tránh làm gián đoạn quá trình đăng nhập của user
+  }
+}
+module.exports = {
+  registerUser,
+  loginUser,
+  getCurrentUserById,
+  recordLoginLog,
+};
