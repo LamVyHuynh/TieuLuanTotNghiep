@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosClient from "../api/axiosClient";
 import { Leaf, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 function Login() {
@@ -60,10 +60,7 @@ function Login() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/auth/login",
-        frmDataLogin,
-      );
+      const response = await axiosClient.post("/auth/login", frmDataLogin);
 
       setSuccessMessage(response.data.message || "Đăng nhập thành công");
 
@@ -112,11 +109,16 @@ function Login() {
       setFrmDataLogin({ email: "", password: "" });
       console.log("Login successful:", response.data);
     } catch (error) {
-      setErrorMessage(
-        error.response?.data?.message ||
-          error.response?.data?.error ||
-          "Đăng nhập thất bại",
-      );
+      console.log("Full Error Object:", error.response); // Mạy log ra để soi cho kỹ
+
+      // Ưu tiên lấy message từ data trả về (đây là nơi chứa câu Rate Limit)
+      const serverMessage = error.response?.data?.message;
+
+      if (serverMessage) {
+        setErrorMessage(serverMessage);
+      } else {
+        setErrorMessage("Đăng nhập thất bại. Vui lòng thử lại sau.");
+      }
     } finally {
       setIsLoading(false);
     }
