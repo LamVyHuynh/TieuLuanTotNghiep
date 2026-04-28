@@ -7,18 +7,39 @@ function authenticateToken(req, res, next) {
   // Thường token nó sẽ có dịnh dạng Bearer + token, nên mình sẽ tách nó ra để lấy token thôi
   const token = authHeader && authHeader.split(" ")[1];
 
-  // Kiểm tra xem token có tồn tại không
+  // Bước 1: Kiểm tra xem có gửi token lên không
   if (!token) {
     return res.status(401).json({
-      message: "Token không tồn tại",
+      type: "TOKEN_MISSING",
+      message: "Không tìm thấy token, vui lòng đăng nhập lại.",
     });
   }
 
-  // Kiểm tra token có hợp lệ không? bằng jwt.vergify()
+  // Bước 2: Xác thực token
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
-      return res.status(401).json({
-        message: "Token không hợp lệ, truy cập bị từ chối",
+      // Bước 3: Phân loại lỗi dựa trên err.name của jsonwebtoken
+
+      // Trường hợp 1: Token hết hạn
+      if (err.name === "TokenExpiredError") {
+        return res.status(401).json({
+          type: "TOKEN_EXPIRED",
+          message: "Token đã hết hạn, vui lòng đăng nhập lại.",
+        });
+      }
+
+      // Trường hợp 2: Token sai chữ ký (bị sửa đổi) hoặc không hợp lệ
+      if (err.name === "JsonWebTokenError") {
+        return res.status(401).json({
+          type: "TOKEN_INVALID",
+          message: "Token không hợp lệ hoặc đã bị thay đổi.",
+        });
+      }
+
+      // Trường hợp 3: Các lỗi khác liên quan đến JWT
+      return res.status(403).json({
+        type: "TOKEN_ERROR",
+        message: "Xác thực token thất bại.",
       });
     }
     // Nếu token hợp lệ thì lưu thông tin người dùng vào req.user để các route handler sau này có thể dùng được
