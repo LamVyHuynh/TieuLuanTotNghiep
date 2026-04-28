@@ -15,6 +15,9 @@ const router = express.Router();
 // - route chỉ gọi hàm register của controller
 const { register, login, getMe } = require("../controllers/auth.controller");
 
+// IMPORT rate limit middleware vừa tạo
+const { loginRateLimiter } = require("../middlewares/rateLimit.middleware");
+
 // - Khai báo 1 route dạng POST
 // - đường dẫn là /register (tức là http://localhost:5000/auth/register)
 // - khi client gửi request tới đây thì gọi hàm register
@@ -24,7 +27,7 @@ router.post("/register", register);
 // Khi thấy route dạng POST
 //  đường dẫn là /login (tức là http://localhost:5000/auth/login)
 // khi client gửi request tới đây thì gọi hàm login
-router.post("/login", login);
+router.post("/login", loginRateLimiter, login);
 
 // Nối với middleware authMiddleware để kiểm tra token trước khi gọi hàm getMe
 // Phải nối với middleware authenticateToken trước vì nó sẽ kiểm tra token có hợp lệ không,
