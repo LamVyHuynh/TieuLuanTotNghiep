@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import axios from "axios";
 const AuthContext = createContext();
-const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -63,6 +63,5 @@ const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-const useAuth = () => useContext(AuthContext);
-
-export { AuthContext, AuthProvider, useAuth };
+// eslint-disable-next-line react-refresh/only-export-components
+export const useAuth = () => useContext(AuthContext);

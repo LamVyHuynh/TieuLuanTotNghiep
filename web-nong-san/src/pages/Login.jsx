@@ -48,13 +48,14 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // QUAN TRỌNG: Xóa sạch các thông báo cũ trước khi bắt đầu request mới
     setErrorMessage("");
     setSuccessMessage("");
 
     // Kiểm tra trống của email và password trước khi gửi request đăng nhập
     if (!frmDataLogin.email || !frmDataLogin.password) {
       setErrorMessage("Vui lòng nhập đầy đủ thông tin đăng nhập");
-      setIsLoading(false);
       return;
     }
     setIsLoading(true);
@@ -62,6 +63,7 @@ function Login() {
     try {
       const response = await axiosClient.post("/auth/login", frmDataLogin);
 
+      // Khi thành công, set success message để hiển thị cho người dùng
       setSuccessMessage(response.data.message || "Đăng nhập thành công");
 
       // Lưu dữ liệu của user đăng nhập vào localStorage để có thể sử dụng ở các trang khác
@@ -109,16 +111,13 @@ function Login() {
       setFrmDataLogin({ email: "", password: "" });
       console.log("Login successful:", response.data);
     } catch (error) {
+      // Nếu lỗi thì xóa message thành công (nếu có) và hiện lỗi
+      setSuccessMessage(""); // Xóa message thành công
       console.log("Full Error Object:", error.response); // Mạy log ra để soi cho kỹ
 
       // Ưu tiên lấy message từ data trả về (đây là nơi chứa câu Rate Limit)
       const serverMessage = error.response?.data?.message;
-
-      if (serverMessage) {
-        setErrorMessage(serverMessage);
-      } else {
-        setErrorMessage("Đăng nhập thất bại. Vui lòng thử lại sau.");
-      }
+      setErrorMessage(serverMessage || "Đăng nhập thất bại. Vui lòng thử lại."); // Nếu không có message từ server thì dùng message mặc định
     } finally {
       setIsLoading(false);
     }
@@ -153,18 +152,41 @@ function Login() {
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {errorMessage ? (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
-                {errorMessage}
+            {/* --- Nâng cấp Success Message --- */}
+            {successMessage && (
+              <div className="animate-in fade-in slide-in-from-top-4 duration-500 rounded-xl border border-emerald-200 bg-emerald-50 p-4 flex items-center gap-4 shadow-sm shadow-emerald-100/50">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  <Leaf size={20} fill="currentColor" fillOpacity={0.2} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-black tracking-tight text-emerald-900">
+                    Chào mừng trở lại!
+                  </h3>
+                  <p className="text-xs font-medium text-emerald-600/90">
+                    {successMessage}
+                  </p>
+                </div>
+                {/* Hiệu ứng một cái vòng xoay nhỏ báo hiệu đang chuyển trang */}
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
               </div>
-            ) : null}
-
-            {successMessage ? (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {successMessage}
+            )}
+            {/* Bạn có thể thêm đoạn này vào trong hàm return() của Login.jsx */}
+            {errorMessage && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 flex items-start gap-3">
+                <div className="mt-0.5 rounded-full bg-rose-100 p-1 text-rose-600">
+                  <Leaf size={14} className="rotate-180" />{" "}
+                  {/* Tận dụng icon sẵn có */}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-rose-800">
+                    Lỗi đăng nhập
+                  </p>
+                  <p className="text-xs text-rose-600 font-medium">
+                    {errorMessage}
+                  </p>
+                </div>
               </div>
-            ) : null}
-
+            )}
             <div className="space-y-2">
               <label
                 htmlFor="email"
@@ -194,7 +216,6 @@ function Login() {
                 </p>
               )}
             </div>
-
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-4">
                 <label
@@ -234,7 +255,6 @@ function Login() {
                 </button>
               </div>
             </div>
-
             <div className="flex items-center gap-3">
               <input
                 id="remember"
@@ -250,7 +270,6 @@ function Login() {
                 Ghi nhớ đăng nhập
               </label>
             </div>
-
             <button
               type="submit"
               // disabled khi đang gửi request đăng nhập để tránh việc người
@@ -267,7 +286,6 @@ function Login() {
               {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
               <ArrowRight size={18} />
             </button>
-
             <div className="relative py-2">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-300/40" />
@@ -278,7 +296,6 @@ function Login() {
                 </span>
               </div>
             </div>
-
             <button
               type="button"
               className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-slate-100 py-4 text-sm font-bold tracking-[-0.01em] text-slate-800 transition-all hover:bg-slate-200 active:scale-[0.98]"
