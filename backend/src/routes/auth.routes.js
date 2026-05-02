@@ -13,10 +13,17 @@ const router = express.Router();
 // Hiểu đơn giản:
 // - route không tự xử lý đăng ký
 // - route chỉ gọi hàm register của controller
-const { register, login, getMe } = require("../controllers/auth.controller");
+// 1. Import hàm từ CONTROLLER, đừng import từ Service
+const {
+  register,
+  login,
+  getMe,
+  fetchAllLogs,
+} = require("../controllers/auth.controller");
 
 // IMPORT rate limit middleware vừa tạo
 const { loginRateLimiter } = require("../middlewares/rateLimit.middleware");
+const { authenticateToken } = require("../middlewares/auth.middleware");
 
 // - Khai báo 1 route dạng POST
 // - đường dẫn là /register (tức là http://localhost:5000/auth/register)
@@ -35,6 +42,9 @@ router.post("/login", loginRateLimiter, login);
 router.use(require("../middlewares/auth.middleware").authenticateToken);
 // Lấy thông tin người dùng hiện tại
 router.get("/me", getMe);
+
+// Lấy tất cả log đăng nhập
+router.get("/logs", authenticateToken, fetchAllLogs);
 
 // export router ra ngoài để server.js có thể import và dùng
 module.exports = router;

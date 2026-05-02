@@ -190,9 +190,22 @@ async function recordLoginLog({
     // Không throw lỗi ở đây để tránh làm gián đoạn quá trình đăng nhập của user
   }
 }
+
+async function getAllLoginLogs() {
+  const [rows] = await pool.query(`SELECT 
+      l.*, 
+      u.full_name 
+    FROM login_logs l
+    LEFT JOIN users u ON l.user_id = u.id
+    ORDER BY l.created_at DESC
+    LIMIT 100 
+  `);
+  return rows;
+}
 module.exports = {
   registerUser,
   loginUser,
   getCurrentUserById,
   recordLoginLog,
+  getAllLoginLogs,
 };

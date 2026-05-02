@@ -12,6 +12,7 @@ import Products from "../pages/admin/Products";
 import Reports from "../pages/admin/Reports";
 import Orders from "../pages/admin/Orders";
 import Stores from "../pages/admin/Stores";
+import LogsPage from "../pages/admin/Logs";
 import UserLayout from "../layouts/UserLayout";
 import AdminLayout from "../layouts/AdminLayout";
 import ProtectedRoute from "./ProtectedRoute";
@@ -47,6 +48,7 @@ const publicRoutes = [
           { path: "stores", element: Stores },
           { path: "orders", element: Orders },
           { path: "reports", element: Reports },
+          { path: "logs", element: LogsPage },
         ],
       },
     ],

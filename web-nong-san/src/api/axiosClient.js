@@ -35,8 +35,8 @@ axiosClient.interceptors.response.use(
         console.warn("Phiên đăng nhập hết hạn, đang tự động logout...");
 
         // Xóa dữ liệu cũ
+        // localStorage.removeItem("auth_token");
         localStorage.removeItem("auth_token");
-        localStorage.removeItem("auth_user");
 
         // Chuyển hướng về trang login (Dùng window.location vì đây không phải React Component)
         window.location.href = "/login";

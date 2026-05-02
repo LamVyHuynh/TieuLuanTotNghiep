@@ -22,7 +22,14 @@ const app = express();
 
 // Middleware (phần mềm trung gian) để xử lý request trước khi đến route handler
 // Cho phép react gọi backend bằng cách giải quyết lỗi CORS
-app.use(cors());
+const corsOptions = {
+  origin: "http://localhost:5173", // Đích danh cổng Frontend của mạy
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  allowedHeaders: ["Content-Type", "Authorization"], // BẮT BUỘC phải có cái này
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 
 // Cho phép server đọc JSON từ request body
 // Đọc những gì mà client gửi lên (dữ liệu đăng ký, đăng nhập,...) và chuyển nó thành object JavaScript để server có thể xử lý

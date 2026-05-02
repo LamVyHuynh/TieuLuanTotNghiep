@@ -1,8 +1,10 @@
+const { success } = require("zod");
 const {
   registerUser,
   loginUser,
   getCurrentUserById,
   recordLoginLog,
+  getAllLoginLogs,
 } = require("../services/auth.service");
 
 // Thư viện jsonwebtoken có 3 mục đích chính:
@@ -74,6 +76,7 @@ const login = async (req, res) => {
   const ip =
     req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   const userAgent = req.headers["user-agent"];
+
   try {
     const result = await loginUser(email, password);
 
@@ -104,7 +107,7 @@ const login = async (req, res) => {
     await recordLoginLog({
       user_id: null, // thường không có id là lỗi
       email: email,
-      status: "failture",
+      status: "failure",
       ip,
       userAgent,
       reason: error.message,
@@ -173,4 +176,18 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe };
+const fetchAllLogs = async (req, res) => {
+  try {
+    const logs = await getAllLoginLogs();
+    res.status(200).json({
+      success: true,
+      data: logs,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Lỗi server khi lấy log",
+      error: error.message,
+    });
+  }
+};
+module.exports = { register, login, fetchAllLogs, getMe };

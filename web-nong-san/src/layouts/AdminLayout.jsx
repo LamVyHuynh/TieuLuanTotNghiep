@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   Store,
   Users,
+  History,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -18,6 +19,7 @@ const sidebarItems = [
   { label: "Cửa hàng", icon: Store, to: "/admin/stores" },
   { label: "Đơn hàng", icon: ShoppingBag, to: "/admin/orders" },
   { label: "Báo cáo", icon: ClipboardList, to: "/admin/reports" },
+  { label: "Nhật ký hoạt động", icon: History, to: "/admin/logs" },
 ];
 
 const bottomSidebarItems = [
