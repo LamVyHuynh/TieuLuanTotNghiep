@@ -66,6 +66,13 @@ function LogsPage() {
   //  Công thức: Tổng số logs (ví dụ: 23) chia cho số logs mỗi trang (5) = 4.6 → làm tròn lên thành 5 trang.
   //  mỗi trang thì tối đa 5 log thì chỉ cần lấy tổng chia 5 là ra được số trang cần thiết để hiển thị hết tất cả logs.
   const totalPages = Math.ceil(logs.length / logsPerPage);
+
+  // Hiển thị danh sách các trang trong log
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
+  }
+
   return (
     <div className="min-h-screen bg-[#f9f9f9] text-[#1a1c1c] antialiased font-sans">
       <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-10">
@@ -223,9 +230,20 @@ function LogsPage() {
               >
                 <ChevronLeft size={18} />
               </button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#006e1c] to-[#4caf50] text-white font-bold text-sm shadow-md">
-                {currentPage}
-              </button>
+              {pageNumbers.map((number) => (
+                <button
+                  key={number}
+                  className={`w-10 h-10 flex items-center justify-center rounded-xl ${
+                    currentPage === number
+                      ? "bg-gradient-to-br from-[#006e1c] to-[#4caf50] text-white font-bold text-sm shadow-md"
+                      : "border border-[#1a1c1c]/10 text-[#3f4a3c] hover:bg-white transition-all"
+                  }`}
+                  onClick={() => setCurrentPage(number)}
+                >
+                  {number}
+                </button>
+              ))}
+
               <button
                 className="cursor-pointer w-10 h-10 flex items-center justify-center rounded-xl border border-[#1a1c1c]/10 text-[#3f4a3c] hover:bg-white transition-all"
                 onClick={() =>
