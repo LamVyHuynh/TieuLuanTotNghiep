@@ -73,6 +73,25 @@ function LogsPage() {
     pageNumbers.push(i);
   }
 
+  // Hiển thị số lượng trang nhưng trong trường hợp quá nhiều trang phải dùng dấu ... để ẩn bớt đi
+  const maxVisiblePages = 3; // Số lượng trang hiển thị tối đa
+
+  //  Tính toán
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+
+  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+  // Điều chỉnh lại nếu pages chạm tới cột mốc cuối cùng
+  //  Lùi lại để đảm bảo luôn hiển thị đủ số lượng trang tối đa 5 trang
+  if (endPage - startPage + 1 < maxVisiblePages) {
+    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+  }
+
+  //  Tạo mảng các trang hiển thị dựa trên startPage và endPage
+  const visiblePageNumbers = [];
+  for (let i = startPage; i <= endPage; i++) {
+    visiblePageNumbers.push(i);
+  }
   return (
     <div className="min-h-screen bg-[#f9f9f9] text-[#1a1c1c] antialiased font-sans">
       <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-10">
@@ -230,19 +249,48 @@ function LogsPage() {
               >
                 <ChevronLeft size={18} />
               </button>
-              {pageNumbers.map((number) => (
-                <button
-                  key={number}
-                  className={`w-10 h-10 flex items-center justify-center rounded-xl ${
-                    currentPage === number
-                      ? "bg-gradient-to-br from-[#006e1c] to-[#4caf50] text-white font-bold text-sm shadow-md"
-                      : "border border-[#1a1c1c]/10 text-[#3f4a3c] hover:bg-white transition-all"
-                  }`}
-                  onClick={() => setCurrentPage(number)}
-                >
-                  {number}
-                </button>
-              ))}
+              <div className="flex items-center gap-1">
+                {/* Hiện dấu ... đầu tiên nếu trang 1 bị khuất */}
+                {startPage > 1 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentPage(1)}
+                      className="cursor-pointer w-10 h-10 border border-[#1a1c1c]/10 rounded-xl hover:bg-white"
+                    >
+                      1
+                    </button>
+                    <span className="px-2 text-slate-400">...</span>
+                  </>
+                )}
+
+                {/* Danh sách các trang trong "cửa sổ" hiện tại */}
+                {visiblePageNumbers.map((number) => (
+                  <button
+                    key={number}
+                    onClick={() => setCurrentPage(number)}
+                    className={`cursor-pointer w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all ${
+                      currentPage === number
+                        ? "bg-gradient-to-br from-[#006e1c] to-[#4caf50] text-white shadow-md"
+                        : "border border-[#1a1c1c]/10 text-[#3f4a3c] hover:bg-white cursor-pointer"
+                    }`}
+                  >
+                    {number}
+                  </button>
+                ))}
+
+                {/* Hiện dấu ... cuối cùng nếu trang cuối bị khuất */}
+                {endPage < totalPages && (
+                  <>
+                    <span className="px-2 text-slate-400">...</span>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className=" cursor-pointer w-10 h-10 border border-[#1a1c1c]/10 rounded-xl hover:bg-white"
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+              </div>
 
               <button
                 className="cursor-pointer w-10 h-10 flex items-center justify-center rounded-xl border border-[#1a1c1c]/10 text-[#3f4a3c] hover:bg-white transition-all"
