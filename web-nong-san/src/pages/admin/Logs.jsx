@@ -8,12 +8,20 @@ import {
   ShieldAlert,
   CheckCircle2,
   AlertTriangle,
+  Logs,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
 function LogsPage() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Phân trang dữ liệu
+  // Cái gì cũng bắt đầu từng trang 1, mỗi trang sẽ có 5 bảng ghi nhật kí hoạt động
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Số lượng logs hiển thị trên mỗi trang, có thể điều chỉnh tùy ý
+  const [logsPerPage] = useState(5);
 
   const fetchLogs = async () => {
     try {
@@ -41,6 +49,23 @@ function LogsPage() {
     critical: logs.filter((l) => l.reason && l.reason.includes("khóa")).length, // Ví dụ: tài khoản bị khóa là nghiêm trọng
   };
 
+  // Tính toán logs hiển thị trên trang hiện tại
+  // Xác định vị trí log cuối cùng của trang hiện tại
+  // Công thức: 2 (trang hiện tại)×5 (mỗi trang)=10
+  // // Ý nghĩa: Ở trang 2, cái log cuối cùng mạy nhìn thấy sẽ là cái thứ 10 trong danh sách tổng.
+  const indexOfLastLog = currentPage * logsPerPage;
+
+  // Dòng này để xác định: "Điểm bắt đầu của trang này là từ đâu?"
+  // Công thức: 10 (vừa tıˊnh ở treˆn)−5 (mỗi trang)=5.
+  // Ý nghĩa: Mạy muốn bắt đầu lấy dữ liệu từ sau cái log thứ 5 (tức là từ cái thứ 6 trở đi).
+  const indexOffirstLog = indexOfLastLog - logsPerPage;
+
+  const curretLogs = logs.slice(indexOffirstLog, indexOfLastLog);
+
+  // Tính tổng số trang dựa trên tổng số logs và số logs mỗi trang
+  //  Công thức: Tổng số logs (ví dụ: 23) chia cho số logs mỗi trang (5) = 4.6 → làm tròn lên thành 5 trang.
+  //  mỗi trang thì tối đa 5 log thì chỉ cần lấy tổng chia 5 là ra được số trang cần thiết để hiển thị hết tất cả logs.
+  const totalPages = Math.ceil(logs.length / logsPerPage);
   return (
     <div className="min-h-screen bg-[#f9f9f9] text-[#1a1c1c] antialiased font-sans">
       <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-10">
@@ -112,7 +137,7 @@ function LogsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1a1c1c]/5">
-                {logs.map((log) => (
+                {curretLogs.map((log) => (
                   <tr
                     key={log.id}
                     className="hover:bg-[#f3f3f3]/30 transition-colors group"
@@ -191,13 +216,23 @@ function LogsPage() {
               Hiển thị {logs.length} hoạt động gần nhất
             </span>
             <div className="flex items-center gap-2">
-              <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-[#1a1c1c]/10 text-[#3f4a3c] hover:bg-white transition-all">
+              <button
+                className="cursor-pointer w-10 h-10 flex items-center justify-center rounded-xl border border-[#1a1c1c]/10 text-[#3f4a3c] hover:bg-white transition-all"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
                 <ChevronLeft size={18} />
               </button>
               <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#006e1c] to-[#4caf50] text-white font-bold text-sm shadow-md">
-                1
+                {currentPage}
               </button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-[#1a1c1c]/10 text-[#3f4a3c] hover:bg-white transition-all">
+              <button
+                className="cursor-pointer w-10 h-10 flex items-center justify-center rounded-xl border border-[#1a1c1c]/10 text-[#3f4a3c] hover:bg-white transition-all"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+              >
                 <ChevronRight size={18} />
               </button>
             </div>
