@@ -9,7 +9,7 @@ const {
 
 // Thư viện jsonwebtoken có 3 mục đích chính:
 //  1. Tạo token:  jsonwebtoken.sign() tạo ra token mới dựa trên payload (thông tin người dùng) và secret key (để đảm bảo tính bảo mật của token).
-//  Vào còn thêm 1 chỉ số nữa là expiresIn để xác định thời gian hết hạn của token
+//  Và còn thêm 1 chỉ số nữa là expiresIn để xác định thời gian hết hạn của token
 //  Khi đăng nhập thành công sẽ tạo ra jwt
 // 2. Xác thực token: jsonwebtoken.verify() được dùng để xác thực token đã tạo ra trước đó, xem nó có hợp lệ không?
 // backend nhận token từ client gửi lên từ frontend,
@@ -70,6 +70,7 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
+  // Lấy dữ liệu đăng nhập từ request body (email và password)
   const { email, password } = req.body;
 
   // Lấy ip và thông tin thiết bị

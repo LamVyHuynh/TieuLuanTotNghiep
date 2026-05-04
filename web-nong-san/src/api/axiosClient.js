@@ -2,7 +2,7 @@ import axios from "axios";
 
 // 1. Tạo instance của axios
 const axiosClient = axios.create({
-  baseURL: "http://localhost:5000", // URL của backend
+  baseURL: import.meta.env.VITE_API_URL, // URL của backend
   headers: {
     "Content-Type": "application/json",
   },
@@ -39,7 +39,10 @@ axiosClient.interceptors.response.use(
         localStorage.removeItem("auth_token");
 
         // Chuyển hướng về trang login (Dùng window.location vì đây không phải React Component)
-        window.location.href = "/login";
+        // window.location.href = "/login";
+
+        // Cải thện: Thay vì chuyển hướng ngay, có thể gọi
+        window.dispatchEvent(new Event("auth-expired")); // Phát ra sự kiện để các component khác lắng nghe và xử lý logout
       }
     }
     return Promise.reject(error);

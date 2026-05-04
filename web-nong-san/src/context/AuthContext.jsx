@@ -1,11 +1,11 @@
 import { useState, useEffect, createContext, useContext } from "react";
-import axios from "axios";
+import axiosClient from "../api/axiosClient";
 const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  //   Hàm fetchCurrentUser sẽ được gọi khi ứng dụng khởi động để kiểm tra xem người dùng đã đăng nhập hay chưa?
+  // Hàm fetchCurrentUser sẽ được gọi khi ứng dụng khởi động để kiểm tra xem người dùng đã đăng nhập hay chưa?
   const fetchCurrentUser = async () => {
     // đọc token từ localStorage
     const token = localStorage.getItem("auth_token");
@@ -19,11 +19,7 @@ export const AuthProvider = ({ children }) => {
       // Nếu thành công thì sẽ trả về thông tin người dùng
       // Gửi request tới backend để lấy thông tin người dùng hiện tại
       //   - URL là /auth/me vì route này đã được định nghĩa trong backend để trả về thông tin người dùng hiện tại
-      const response = await axios.get("http://localhost:5000/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosClient.get("/auth/me");
       const user = response.data.user;
       setCurrentUser(user);
     } catch (error) {
@@ -38,7 +34,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    const handleAuthExpired = () => {
+      setCurrentUser(null);
+      // Chuyển hướng về trang login khi token hết hạn
+      window.location.href = "/login";
+    };
+    // Lắng nghe sự kiện "auth-expired" để xử lý logout khi token hết hạn
+    window.addEventListener("auth-expired", handleAuthExpired);
+
+    // Gọi hàm fetchCurrentUser khi component AuthProvider được mount để kiểm tra trạng thái đăng nhập
     fetchCurrentUser();
+
+    // dọn dẹp sự kiện khi component unmount
+    return () => {
+      window.removeEventListener("auth-expired", handleAuthExpired);
+    };
   }, []);
 
   //   Hàm login tại sao không gọi API axios

@@ -92,12 +92,12 @@ async function registerUser(userData) {
   }
   const role_id = roleRows[0].id;
 
-  // // console.log("Role ID của role 'customer': ", role_id);
-  // // console.log("Password đã hash: ", hashedPassword);
-  // // console.log("userData:", userData);
-  // // console.log("Full Name:", full_name);
-  // // console.log("Email:", email);
-  // // console.log("Phone:", phone);
+  // console.log("Role ID của role 'customer': ", role_id);
+  // console.log("Password đã hash: ", hashedPassword);
+  // console.log("userData:", userData);
+  // console.log("Full Name:", full_name);
+  // console.log("Email:", email);
+  // console.log("Phone:", phone);
 
   // Inser user vào database
   const [insertResult] = await pool.query(
