@@ -179,12 +179,20 @@ const getMe = async (req, res) => {
 
 const fetchAllLogs = async (req, res) => {
   try {
-    const logs = await getAllLoginLogs();
+    // Hứng param từ URL(ví dụ: /auth/login?page=2&limit=5).Nếu không có thì lấy mặt định là 1 và 5
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 5;
+
+    // Truyền xuống service để lấy log với phân trang
+    const result = await getAllLoginLogs(page, limit);
     res.status(200).json({
       success: true,
-      data: logs,
+      data: result.data, // chứa mảng 5 cái log
+      total: result.total, // tổng số log trong database
+      stats: result.stats, // thống kê trạng thái (success, failure, critical)
     });
   } catch (error) {
+    // Nếu sập, nó sẽ lọt vào đây và trả về 500 kèm chi tiết lỗi
     res.status(500).json({
       message: "Lỗi server khi lấy log",
       error: error.message,

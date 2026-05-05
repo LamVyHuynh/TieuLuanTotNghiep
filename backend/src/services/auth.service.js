@@ -6,6 +6,7 @@ const { z } = require("zod");
 
 // Thư viện hash password
 const bcrypt = require("bcrypt");
+const { ca } = require("zod/v4/locales");
 
 async function registerUser(userData) {
   if (!userData) {
@@ -191,16 +192,57 @@ async function recordLoginLog({
   }
 }
 
-async function getAllLoginLogs() {
-  const [rows] = await pool.query(`SELECT 
-      l.*, 
-      u.full_name 
-    FROM login_logs l
-    LEFT JOIN users u ON l.user_id = u.id
-    ORDER BY l.created_at DESC
-    LIMIT 100 
-  `);
-  return rows;
+async function getAllLoginLogs(page = 1, limit = 5) {
+  //Ép nó về kiểu nguyên để tránh lỗi SQL khi truyền tham số
+  const pageNum = parseInt(page, 10) || 1; // Nếu page không phải số hợp lệ thì mặc định là 1
+  const limitNum = parseInt(limit, 10) || 5; // Nếu limit không phải số hợp lệ thì mặc định là 5
+
+  // Tính điểm bắt đầu cắt dữ liệu
+  const offset = (pageNum - 1) * limitNum;
+  try {
+    // KỸ THUẬT SONG SONG: Chạy cả 2 câu truy vấn cùng một lúc để tiết kiệm 50% thời gian
+    const [rowsResult, totalResult, statsResult] = await Promise.all([
+      // Truy vấn 1: Lấy đúng 5 dòng của trang hiện tại
+      pool.query(
+        `SELECT l.*, u.full_name 
+         FROM login_logs l
+         LEFT JOIN users u ON l.user_id = u.id
+         ORDER BY l.created_at DESC
+         LIMIT ? OFFSET ?`,
+        [limitNum, offset],
+      ),
+      // Truy vấn 2: Đếm tổng số dòng (MySQL sẽ tự tối ưu quét qua Index primary key)
+      pool.query("SELECT COUNT(*) as total FROM login_logs"),
+
+      //// Truy vấn 3 (CÁI MẠY ĐANG THIẾU NÈ): Đếm thống kê trên TOÀN BỘ database
+      pool.query(`
+        SELECT 
+          SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as successCount,
+          SUM(CASE WHEN status = 'failure' THEN 1 ELSE 0 END) as failureCount,
+          SUM(CASE WHEN reason LIKE '%khóa%' THEN 1 ELSE 0 END) as criticalCount
+        FROM login_logs
+      `),
+    ]);
+
+    // Giải nén kết quả từ Promise.all
+    const rows = rowsResult[0];
+    const total = totalResult[0][0].total;
+    // Ép kiểu về số vì kết quả hàm SUM() trong SQL thường trả về chuỗi (String)
+    const stats = {
+      success: parseInt(statsResult[0][0].successCount) || 0,
+      failure: parseInt(statsResult[0][0].failureCount) || 0,
+      critical: parseInt(statsResult[0][0].criticalCount) || 0,
+    };
+
+    return {
+      data: rows,
+      total: total,
+      stats: stats,
+    };
+  } catch (error) {
+    console.error("Lỗi tối ưu truy vấn logs: ", error);
+    throw error; // Ném lỗi lên controller để trả về phản hồi lỗi cho client
+  }
 }
 module.exports = {
   registerUser,

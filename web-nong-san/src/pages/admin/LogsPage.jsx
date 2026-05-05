@@ -11,10 +11,19 @@ import {
   Logs,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
+import { useCallback } from "react";
 
 function LogsPage() {
   const [logs, setLogs] = useState([]);
+  const [totalLogs, setTotalLogs] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // Trạng thái logs
+  const [stats, setStats] = useState({
+    success: 0,
+    failure: 0,
+    critical: 0,
+  });
 
   // Phân trang dữ liệu
   // Cái gì cũng bắt đầu từng trang 1, mỗi trang sẽ có 5 bảng ghi nhật kí hoạt động
@@ -23,49 +32,56 @@ function LogsPage() {
   // Số lượng logs hiển thị trên mỗi trang, có thể điều chỉnh tùy ý
   const [logsPerPage] = useState(5);
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axiosClient.get("/auth/logs");
-      // Dữ liệu từ Backend trả về mảng phẳng: [{id, user_id, email_attempted, status, reason, created_at, full_name}, ...]
+      const response = await axiosClient.get(
+        `/auth/logs?page=${currentPage}&limit=${logsPerPage}`,
+      );
+      // chỉ lưu 5 cái log của trang hiện tại vào state để hiển thị, còn tổng số log thì lưu vào totalLogs để tính toán phân trang
       setLogs(response.data.data);
+      // Lưu tổng số log để tính toán phân trang
+      setTotalLogs(response.data.total);
+
+      // thống kê trạng thái dựa trên dữ liệu thật từ server
+      setStats(response.data.stats);
     } catch (error) {
       console.error("Error fetching logs:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, logsPerPage]);
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [fetchLogs]); // Mỗi khi currentPage thay đổi thì sẽ gọi lại fetchLogs để lấy log của trang đó
 
   // Tính toán thống kê dựa trên mảng logs thật
-  const status = {
-    success: logs.filter((l) => l.status === "success").length,
-    failure: logs.filter(
-      (l) => l.status === "failure" || l.status === "failure",
-    ).length,
-    critical: logs.filter((l) => l.reason && l.reason.includes("khóa")).length, // Ví dụ: tài khoản bị khóa là nghiêm trọng
-  };
+  // const status = {
+  //   success: logs.filter((l) => l.status === "success").length,
+  //   failure: logs.filter(
+  //     (l) => l.status === "failure" || l.status === "failure",
+  //   ).length,
+  //   critical: logs.filter((l) => l.reason && l.reason.includes("khóa")).length, // Ví dụ: tài khoản bị khóa là nghiêm trọng
+  // };
 
   // Tính toán logs hiển thị trên trang hiện tại
   // Xác định vị trí log cuối cùng của trang hiện tại
   // Công thức: 2 (trang hiện tại)×5 (mỗi trang)=10
   // // Ý nghĩa: Ở trang 2, cái log cuối cùng mạy nhìn thấy sẽ là cái thứ 10 trong danh sách tổng.
-  const indexOfLastLog = currentPage * logsPerPage;
+  // const indexOfLastLog = currentPage * logsPerPage;
 
   // Dòng này để xác định: "Điểm bắt đầu của trang này là từ đâu?"
   // Công thức: 10 (vừa tıˊnh ở treˆn)−5 (mỗi trang)=5.
   // Ý nghĩa: Mạy muốn bắt đầu lấy dữ liệu từ sau cái log thứ 5 (tức là từ cái thứ 6 trở đi).
-  const indexOffirstLog = indexOfLastLog - logsPerPage;
+  // const indexOffirstLog = indexOfLastLog - logsPerPage;
 
-  const curretLogs = logs.slice(indexOffirstLog, indexOfLastLog);
+  // const curretLogs = logs.slice(indexOffirstLog, indexOfLastLog);
 
   // Tính tổng số trang dựa trên tổng số logs và số logs mỗi trang
   //  Công thức: Tổng số logs (ví dụ: 23) chia cho số logs mỗi trang (5) = 4.6 → làm tròn lên thành 5 trang.
   //  mỗi trang thì tối đa 5 log thì chỉ cần lấy tổng chia 5 là ra được số trang cần thiết để hiển thị hết tất cả logs.
-  const totalPages = Math.ceil(logs.length / logsPerPage);
+  const totalPages = Math.ceil(totalLogs / logsPerPage);
 
   // Hiển thị danh sách các trang trong log
   const pageNumbers = [];
@@ -107,9 +123,6 @@ function LogsPage() {
             </p>
           </div>
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-[#1a1c1c]/5 text-[#1a1c1c] rounded-xl font-semibold text-sm hover:bg-[#f3f3f3] transition-all shadow-sm">
-              <Download size={18} /> Xuất báo cáo
-            </button>
             <button
               onClick={fetchLogs}
               disabled={loading}
@@ -163,7 +176,7 @@ function LogsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1a1c1c]/5">
-                {curretLogs.map((log) => (
+                {logs.map((log) => (
                   <tr
                     key={log.id}
                     className="hover:bg-[#f3f3f3]/30 transition-colors group"
@@ -239,7 +252,7 @@ function LogsPage() {
           {/* Pagination */}
           <div className="px-8 py-6 bg-[#f3f3f3]/20 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#1a1c1c]/5">
             <span className="text-xs text-[#3f4a3c] font-semibold">
-              Hiển thị {logs.length} hoạt động gần nhất
+              Hiển thị {totalLogs} hoạt động gần nhất
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -316,7 +329,7 @@ function LogsPage() {
               Thành công
             </p>
             <h3 className="text-5xl font-extrabold text-[#1a1c1c] tracking-tighter">
-              {status.success}
+              {stats.success}
             </h3>
             <p className="text-[#3f4a3c]/60 text-xs mt-3 flex items-center gap-1 font-medium">
               Lượt truy cập an toàn
@@ -332,7 +345,7 @@ function LogsPage() {
               Cảnh báo
             </p>
             <h3 className="text-5xl font-extrabold text-[#1a1c1c] tracking-tighter">
-              {status.failure}
+              {stats.failure}
             </h3>
             <p className="text-[#3f4a3c]/60 text-xs mt-3">
               Lượt đăng nhập thất bại
@@ -348,7 +361,7 @@ function LogsPage() {
               Nghiêm trọng
             </p>
             <h3 className="text-5xl font-extrabold text-[#1a1c1c] tracking-tighter">
-              {status.critical}
+              {stats.critical}
             </h3>
             <p className="text-red-600 font-bold text-xs mt-3 underline italic">
               Tài khoản bị khóa/xâm nhập
