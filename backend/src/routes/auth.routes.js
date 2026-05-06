@@ -17,6 +17,7 @@ const router = express.Router();
 const {
   register,
   login,
+  logout,
   getMe,
   fetchAllLogs,
   refreshToken,
@@ -39,6 +40,9 @@ router.post("/login", loginRateLimiter, login);
 
 // refresh token
 router.post("/refresh-token", refreshToken);
+
+// logout
+router.post("/logout", logout);
 
 router.use(authenticateToken); // Áp dụng middleware authenticateToken cho tất cả route sau dòng này
 

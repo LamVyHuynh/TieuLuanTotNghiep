@@ -61,9 +61,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   //   Hàm logout  - Xóa token khỏi localStorage
-  const logout = () => {
-    localStorage.removeItem("auth_token");
-    setCurrentUser(null);
+  const logout = async () => {
+    try {
+      // GỌI THÊM DÒNG NÀY: Để backend clear cái Cookie refreshToken
+      await axiosClient.post("/auth/logout");
+    } catch (error) {
+      console.error("Lỗi khi gọi API logout:", error);
+    } finally {
+      // Dù API có lỗi hay không thì vẫn xóa ở máy mình
+      localStorage.removeItem("auth_token");
+      setCurrentUser(null);
+    }
   };
   return (
     <AuthContext.Provider

@@ -58,7 +58,7 @@ async function registerUser(userData) {
 
   // safeParse() là một phương thức của Zod để kiểm tra xem dữ liệu có hợp lệ theo schema đã định nghĩa hay không.
   // safeParse() sẽ trả về một đối tượng có dạng { success: boolean, data?: T, error?: ZodError }
-  const emailValidation = emailSchema.safeParse(email);
+  const emailValidation = emailSchema.safeParse(cleanEmail);
   if (!emailValidation.success) {
     throw new Error("Email không hợp lệ");
   }
@@ -72,7 +72,7 @@ async function registerUser(userData) {
   //  Đứng chờ kết quả
   // Kết quả trả về rồi gán cho biến rows
   const [rows] = await pool.query("SELECT id FROM users WHERE email = ?", [
-    email,
+    cleanEmail,
   ]);
   if (rows.length > 0) {
     throw new Error("Email đã tồn tại");

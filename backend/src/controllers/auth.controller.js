@@ -112,7 +112,7 @@ const login = async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true, // Ngăn chặn JS truy cập (tránh hacker dùng XSS để đánh cắp token)
       secure: false, // set thành true khi chạy https thật(production), để chỉ gửi cookie qua kết nối an toàn
-      samSite: "lax", // Đảm bảo trình duyệt tự động đính kèm cookie khi gọi API domain
+      sameSite: "lax", // Đảm bảo trình duyệt tự động đính kèm cookie khi gọi API domain
       maxAge: 7 * 24 * 60 * 60 * 1000, // Thời gian sống của cookie (7 ngày)
     });
     res.status(200).json({
@@ -159,6 +159,26 @@ const login = async (req, res) => {
     // 4. Các lỗi server khác
     res.status(500).json({
       message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    // Xóa cookie refresh token ở client bằng cách gửi cookie rỗng với maxAge = 0
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false, // Để true nếu dùng https
+      sameSite: "lax",
+    });
+
+    res
+      .status(200)
+      .json({ message: "Đăng xuất thành công (Phiên làm việc đã kết thúc)" });
+  } catch (error) {
+    res.status(500).json({
+      message: "Lỗi server khi logout",
       error: error.message,
     });
   }
@@ -234,7 +254,7 @@ const refreshToken = async (req, res) => {
       (err, decoded) => {
         if (err) {
           // Nếu refresh token hết hạn hoặc giả mạo thì đuổi cổ cho đăng
-          res.status(403).json({
+          return res.status(403).json({
             message:
               "Phiên đăng nhập đã hết hạn vui lòng đăng nhập lại (Invalid Refresh Token)",
           });
@@ -262,4 +282,4 @@ const refreshToken = async (req, res) => {
     });
   }
 };
-module.exports = { register, login, fetchAllLogs, getMe, refreshToken };
+module.exports = { register, login, logout, fetchAllLogs, getMe, refreshToken };

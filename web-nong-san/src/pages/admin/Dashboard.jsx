@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  BarChart3,
   Bell,
   ChevronRight,
   KeyRound,
@@ -263,14 +262,14 @@ function Dashboard() {
               item.accent === "emerald"
                 ? "bg-emerald-100 text-emerald-700"
                 : item.accent === "amber"
-                ? "bg-amber-100 text-amber-700"
-                : "bg-lime-100 text-lime-700";
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-lime-100 text-lime-700";
             const barClass =
               item.accent === "emerald"
                 ? "bg-emerald-600"
                 : item.accent === "amber"
-                ? "bg-amber-500"
-                : "bg-lime-600";
+                  ? "bg-amber-500"
+                  : "bg-lime-600";
 
             return (
               <article

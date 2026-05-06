@@ -11,6 +11,8 @@ import {
   Users,
   History,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const sidebarItems = [
   { label: "Tổng quan", icon: BarChart3, to: "/admin", end: true },
@@ -28,6 +30,12 @@ const bottomSidebarItems = [
 ];
 
 function AdminLayout() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
   return (
     <div className="min-h-screen bg-[#f7f8f5] text-slate-900 lg:flex">
       <aside className="border-b border-slate-200 bg-[#f1f2ee] p-4 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:w-64 lg:border-b-0 lg:border-r">
@@ -72,6 +80,7 @@ function AdminLayout() {
               <button
                 key={item.label}
                 className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-500 transition hover:bg-slate-200 hover:text-slate-900"
+                onClick={item.label === "Đăng xuất" ? handleLogout : undefined}
               >
                 <Icon size={18} />
                 <span>{item.label}</span>
