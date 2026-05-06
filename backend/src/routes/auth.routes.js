@@ -19,6 +19,7 @@ const {
   login,
   getMe,
   fetchAllLogs,
+  refreshToken,
 } = require("../controllers/auth.controller");
 
 // IMPORT rate limit middleware vừa tạo
@@ -36,15 +37,16 @@ router.post("/register", register);
 // khi client gửi request tới đây thì gọi hàm login
 router.post("/login", loginRateLimiter, login);
 
-// Nối với middleware authMiddleware để kiểm tra token trước khi gọi hàm getMe
-// Phải nối với middleware authenticateToken trước vì nó sẽ kiểm tra token có hợp lệ không,
-//  nếu không hợp lệ thì sẽ trả về lỗi và không gọi hàm getMe nữa
-router.use(require("../middlewares/auth.middleware").authenticateToken);
+// refresh token
+router.post("/refresh-token", refreshToken);
+
+router.use(authenticateToken); // Áp dụng middleware authenticateToken cho tất cả route sau dòng này
+
 // Lấy thông tin người dùng hiện tại
 router.get("/me", getMe);
 
 // Lấy tất cả log đăng nhập
-router.get("/logs", authenticateToken, fetchAllLogs);
+router.get("/logs", fetchAllLogs);
 
 // export router ra ngoài để server.js có thể import và dùng
 module.exports = router;
