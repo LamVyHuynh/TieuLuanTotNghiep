@@ -15,6 +15,9 @@ const pool = require("./config/db");
 // Impor routes
 const authRoutes = require("./routes/auth.routes");
 
+// Import cookie-parser để đọc cookie từ request header
+const cookieParser = require("cookie-parser");
+
 // Tạo ứng dụng express
 // Hiểu đơn giản app = server
 // Sau này có thể dùng: app.get, app.post, app.listen,... để tạo API, xử lý request/response
@@ -29,7 +32,11 @@ const corsOptions = {
   credentials: true,
 };
 
+// Sử dụng middleware CORS với các tùy chọn đã định nghĩa
 app.use(cors(corsOptions));
+
+// Sử dụng cookie-parser để đọc cookie từ request header
+app.use(cookieParser());
 
 // Cho phép server đọc JSON từ request body
 // Đọc những gì mà client gửi lên (dữ liệu đăng ký, đăng nhập,...) và chuyển nó thành object JavaScript để server có thể xử lý

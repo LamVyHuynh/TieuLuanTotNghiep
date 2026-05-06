@@ -92,15 +92,32 @@ const login = async (req, res) => {
 
     // Tạo token JWT với payload chứa id và role của người dùng,
     // secret key lấy từ biến môi trường JWT_SECRET,
-    //  và thời gian hết hạn là 1 giờ
-    const token = jwt.sign(
+    //  Số ngắn 15 phút để tăng tính bảo mật (nếu token bị đánh cắp thì kẻ xấu chỉ có thể sử dụng trong 15 phút)
+    const accessToken = jwt.sign(
       { id: result.id, role: result.role_id },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn: "15m" },
     );
+
+    // Tạo refresh toke với sống dài 7 ngày
+    const refreshToken = jwt.sign(
+      {
+        id: result.id,
+        role: result.role_id,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true, // Ngăn chặn JS truy cập (tránh hacker dùng XSS để đánh cắp token)
+      secure: false, // set thành true khi chạy https thật(production), để chỉ gửi cookie qua kết nối an toàn
+      samSite: "lax", // Đảm bảo trình duyệt tự động đính kèm cookie khi gọi API domain
+      maxAge: 7 * 24 * 60 * 60 * 1000, // Thời gian sống của cookie (7 ngày)
+    });
     res.status(200).json({
       message: "Login successful",
-      token: token,
+      token: accessToken, // Gửu accessToken cho frontend để lưu vào bộ nhớ tạm thời (ví dụ: localStorage, sessionStorage) và đính kèm vào header của những request sau này để xác thực
       user: result,
     });
   } catch (error) {
@@ -199,4 +216,50 @@ const fetchAllLogs = async (req, res) => {
     });
   }
 };
-module.exports = { register, login, fetchAllLogs, getMe };
+
+const refreshToken = async (req, res) => {
+  try {
+    // 1. Đọc refresh token từ cookie gửi lên
+    const refreshToken = req.cookies.refreshToken; // Lấy refresh token từ cookie
+    if (!refreshToken) {
+      return res.status(401).json({
+        message: "Không tìm thấy phiên đăng nhập cũ (Refresh Token missing)",
+      });
+    }
+
+    // 2. Xác thực refresh token
+    jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET || "CaiNayLaSecretKhoaRefreshNheMay",
+      (err, decoded) => {
+        if (err) {
+          // Nếu refresh token hết hạn hoặc giả mạo thì đuổi cổ cho đăng
+          res.status(403).json({
+            message:
+              "Phiên đăng nhập đã hết hạn vui lòng đăng nhập lại (Invalid Refresh Token)",
+          });
+        }
+
+        const newAccessToken = jwt.sign(
+          {
+            id: decoded.id,
+            role: decoded.role,
+          },
+          process.env.JWT_SECRET,
+          { expiresIn: "15m" },
+        );
+
+        res.status(200).json({
+          message: "Token mới đã được tạo",
+          token: newAccessToken,
+        });
+      },
+    );
+  } catch (error) {
+    res.status(500).json({
+      message: "Lỗi hệ thống khi refresh token",
+      error: error.message,
+    });
+  }
+};
+module.exports = { register, login, fetchAllLogs, getMe, refreshToken };
