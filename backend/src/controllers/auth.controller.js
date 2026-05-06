@@ -105,7 +105,7 @@ const login = async (req, res) => {
         id: result.id,
         role: result.role_id,
       },
-      process.env.JWT_SECRET,
+      process.env.JWT_REFRESH_SECRET || "CaiNayLaSecretKhoaRefreshNheMay",
       { expiresIn: "7d" },
     );
 
