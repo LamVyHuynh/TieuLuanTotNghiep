@@ -249,7 +249,7 @@ async function getAllLoginLogs(page = 1, limit = 5) {
 async function getAllUsers() {
   try {
     const [rows] = await pool.query(
-      "SELECT id, full_name, email, phone, role_id, is_active FROM users",
+      "SELECT id, full_name, email, phone, role_id, is_active, created_at FROM users",
     );
     return rows;
   } catch (error) {

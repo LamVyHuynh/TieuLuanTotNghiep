@@ -9,6 +9,8 @@ import {
   Search,
   UserPlus,
   Users,
+  Store,
+  Lock,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient.js";
 
@@ -19,6 +21,8 @@ const getRoleInfo = (role_id) => {
     return { name: "Quản trị", color: "bg-amber-100 text-amber-700" };
   if (role_id === 2)
     return { name: "Khách hàng", color: "bg-lime-100 text-lime-700" };
+  if (role_id === 3)
+    return { name: "Chủ cửa hàng", color: "bg-blue-100 text-blue-700" };
   return { name: "Chưa rõ", color: "bg-slate-100 text-slate-700" };
 };
 
@@ -41,28 +45,6 @@ const getAvatarUrl = (name) => {
     name || "User",
   )}&background=eef2eb&color=047857`;
 };
-
-// --- DỮ LIỆU THỐNG KÊ (Giữ nguyên tạm thời) ---
-const stats = [
-  {
-    label: "Tổng người dùng",
-    value: "...", // Có thể lấy từ API sau
-    icon: Users,
-    iconClass: "bg-emerald-100 text-emerald-700",
-  },
-  {
-    label: "Quản trị viên",
-    value: "...",
-    icon: UserPlus,
-    iconClass: "bg-amber-100 text-amber-700",
-  },
-  {
-    label: "Chờ tạm khóa",
-    value: "...",
-    icon: Plus,
-    iconClass: "bg-lime-100 text-lime-700",
-  },
-];
 
 // ==========================================
 // COMPONENT CHÍNH
@@ -91,6 +73,45 @@ function UsersPage() {
     fetchUsers();
   }, []);
 
+  // TÍNH TOÁN THỐNG KÊ
+  const totalUsers = userList.length;
+  const totalCustomers = userList.filter((user) => user.role_id === 2).length;
+  const totalAdmins = userList.filter((user) => user.role_id === 1).length;
+  const totalStoreOwners = userList.filter((user) => user.role_id === 3).length;
+  const totalLocked = userList.filter((user) => user.is_active === 0).length;
+
+  const dynamicStats = [
+    {
+      label: "Tổng người dùng",
+      value: totalUsers,
+      icon: Users,
+      iconClass: "bg-emerald-100 text-emerald-700",
+    },
+    {
+      label: "Khách hàng",
+      value: totalCustomers,
+      icon: Users,
+      iconClass: "bg-lime-100 text-lime-700",
+    },
+    {
+      label: "Chủ cửa hàng",
+      value: totalStoreOwners,
+      icon: Store,
+      iconClass: "bg-blue-100 text-blue-700",
+    },
+    {
+      label: "Quản trị viên",
+      value: totalAdmins,
+      icon: UserPlus,
+      iconClass: "bg-amber-100 text-amber-700",
+    },
+    {
+      label: "Tạm ngưng",
+      value: totalLocked,
+      icon: Lock,
+      iconClass: "bg-rose-100 text-rose-700",
+    },
+  ];
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8">
       <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -248,23 +269,23 @@ function UsersPage() {
           </div>
         </div>
       </section>
-
-      <section className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-        {stats.map((stat) => {
+      {/* Cập nhật lại Grid để chứa 5 cột cho đẹp */}
+      <section className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+        {dynamicStats.map((stat) => {
           const Icon = stat.icon;
           return (
             <article
               key={stat.label}
-              className="flex items-center gap-4 rounded-2xl bg-[#eef2eb] p-6"
+              className="flex items-center gap-4 rounded-2xl bg-[#eef2eb] p-5 shadow-sm"
             >
               <div className={`rounded-xl p-3 ${stat.iconClass}`}>
-                <Icon size={28} />
+                <Icon size={24} />
               </div>
               <div>
-                <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                <p className="mb-0.5 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
                   {stat.label}
                 </p>
-                <h4 className="text-2xl font-black tracking-[-0.03em] text-slate-900">
+                <h4 className="text-xl font-black tracking-[-0.03em] text-slate-900">
                   {stat.value}
                 </h4>
               </div>
