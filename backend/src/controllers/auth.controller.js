@@ -287,10 +287,14 @@ const refreshToken = async (req, res) => {
 // Lấy danh sách tất cả người dùng (MỚI THÊM)
 const fetchAllUsers = async (req, res) => {
   try {
-    const users = await getAllUsers();
+    const page = req.query.page || 1;
+    const limit = 10; // Giới hạn số người dùng trả về mỗi trang
+    const result = await getAllUsers(page, limit);
     res.status(200).json({
       message: "Lấy danh sách người dùng thành công",
-      data: users,
+      data: result.data,
+      total: result.total,
+      stats: result.stats,
     });
   } catch (error) {
     res.status(500).json({

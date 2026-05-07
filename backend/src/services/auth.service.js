@@ -246,12 +246,43 @@ async function getAllLoginLogs(page = 1, limit = 5) {
 }
 
 // Lấy thông tin user từ database bằng userId (được lấy từ token sau khi xác thực thành công)
-async function getAllUsers() {
+async function getAllUsers(page = 1, limit = 10) {
+  // Ép kiểu số để tránh lỗi SQL khi truyền tham số
+  const pageNum = parseInt(page, 10) || 1; // Nếu page không phải số hợp lệ thì mặc định là 1
+  const limitNum = parseInt(limit, 10) || 10; // Nếu limit không phải số hợp lệ thì mặc định là 10
+
+  // Tính điểm bắt đầu cắt dữ liệu
+  const offset = (pageNum - 1) * limitNum;
   try {
-    const [rows] = await pool.query(
-      "SELECT id, full_name, email, phone, role_id, is_active, created_at FROM users",
-    );
-    return rows;
+    const [rowsResult, totalResult, statsResult] = await Promise.all([
+      pool.query(
+        `SELECT id, full_name, email, phone, role_id, is_active, created_at
+          FROM users
+          ORDER BY created_at DESC
+          LIMIT ? OFFSET ?`,
+        [limitNum, offset],
+      ),
+      pool.query("SELECT COUNT(*) as total FROM users"),
+      pool.query(`
+        SELECT 
+          SUM(CASE WHEN role_id = 1 THEN 1 ELSE 0 END) as adminCount,
+          SUM(CASE WHEN role_id = 2 THEN 1 ELSE 0 END) as customerCount,
+          SUM(CASE WHEN role_id = 3 THEN 1 ELSE 0 END) as storeOwnerCount,
+          SUM(CASE WHEN is_active = 0 OR is_active = false THEN 1 ELSE 0 END) as lockedCount
+        FROM users
+       `),
+    ]);
+
+    return {
+      data: rowsResult[0],
+      total: totalResult[0][0].total,
+      stats: {
+        admins: parseInt(statsResult[0][0].adminCount) || 0,
+        customers: parseInt(statsResult[0][0].customerCount) || 0,
+        storeOwners: parseInt(statsResult[0][0].storeOwnerCount) || 0,
+        locked: parseInt(statsResult[0][0].lockedCount) || 0,
+      },
+    };
   } catch (error) {
     console.error("Lỗi khi lấy tất cả người dùng: ", error);
     throw error; // Ném lỗi lên controller để trả về phản hồi lỗi cho client

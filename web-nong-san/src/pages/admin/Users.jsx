@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   ChevronLeft,
   ChevronRight,
   Download,
   Filter,
   MoreVertical,
-  Plus,
   Search,
   UserPlus,
   Users,
@@ -15,7 +14,6 @@ import {
 import axiosClient from "../../api/axiosClient.js";
 
 // --- HÀM CHẾ BIẾN DỮ LIỆU ---
-// Biến role_id thành Tên và Màu sắc
 const getRoleInfo = (role_id) => {
   if (role_id === 1)
     return { name: "Quản trị", color: "bg-amber-100 text-amber-700" };
@@ -26,60 +24,96 @@ const getRoleInfo = (role_id) => {
   return { name: "Chưa rõ", color: "bg-slate-100 text-slate-700" };
 };
 
-// Biến is_active thành Trạng thái và Màu chấm tròn
 const getStatusInfo = (is_active) => {
-  if (is_active === 1) return { name: "Hoạt động", color: "bg-emerald-500" };
+  if (is_active === 1 || is_active === true)
+    return { name: "Hoạt động", color: "bg-emerald-500" };
   return { name: "Tạm khóa", color: "bg-rose-500" };
 };
 
-// Định dạng ngày tháng
 const formatDate = (dateString) => {
   if (!dateString) return "Không xác định";
   const date = new Date(dateString);
   return `Tham gia ${date.toLocaleDateString("vi-VN")}`;
 };
 
-// Tạo Avatar ảo từ tên người dùng
 const getAvatarUrl = (name) => {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    name || "User",
-  )}&background=eef2eb&color=047857`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=eef2eb&color=047857`;
 };
 
 // ==========================================
 // COMPONENT CHÍNH
 // ==========================================
 function UsersPage() {
-  // LƯU Ý QUAN TRỌNG: useState và useEffect PHẢI NẰM TRONG HÀM NÀY
   const [userList, setUserList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setIsLoading(true);
-        // Nhớ đảm bảo Backend có route "/auth/list-users" này rồi nha mạy
-        const response = await axiosClient.get("/auth/list-users");
+  // --- STATE TÌM KIẾM ---
+  const [searchTerm, setSearchTerm] = useState("");
 
-        // Thường data thực tế sẽ nằm trong response.data.data
-        setUserList(response.data.data || []);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách user:", error);
-      } finally {
-        setIsLoading(false);
+  // --- STATE PHÂN TRANG & THỐNG KÊ TỪ SERVER ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [usersPerPage] = useState(10);
+  // Tạo state để hứng stats từ Backend
+  const [stats, setStats] = useState({
+    admins: 0,
+    customers: 0,
+    storeOwners: 0,
+    locked: 0,
+  });
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await axiosClient.get(
+        `/auth/list-users?page=${currentPage}&limit=${usersPerPage}`,
+      );
+
+      setUserList(response.data.data || []);
+      setTotalUsers(response.data.total || 0);
+
+      // Hứng cục stats từ Backend gán vào State
+      if (response.data.stats) {
+        setStats(response.data.stats);
       }
-    };
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách user:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, usersPerPage]);
 
+  useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
-  // TÍNH TOÁN THỐNG KÊ
-  const totalUsers = userList.length;
-  const totalCustomers = userList.filter((user) => user.role_id === 2).length;
-  const totalAdmins = userList.filter((user) => user.role_id === 1).length;
-  const totalStoreOwners = userList.filter((user) => user.role_id === 3).length;
-  const totalLocked = userList.filter((user) => user.is_active === 0).length;
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
+  const filteredUsers = userList.filter((user) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (user.full_name && user.full_name.toLowerCase().includes(term)) ||
+      (user.email && user.email.toLowerCase().includes(term))
+    );
+  });
+
+  const totalPages = Math.ceil(totalUsers / usersPerPage);
+  const maxVisiblePages = 3;
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+  if (endPage - startPage + 1 < maxVisiblePages) {
+    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+  }
+
+  const visiblePageNumbers = [];
+  for (let i = startPage; i <= endPage; i++) {
+    visiblePageNumbers.push(i);
+  }
+
+  // Khai báo mảng hiển thị dựa vào cục 'stats' lấy từ Backend (chuẩn 100% không bị ảnh hưởng bởi trang)
   const dynamicStats = [
     {
       label: "Tổng người dùng",
@@ -89,29 +123,30 @@ function UsersPage() {
     },
     {
       label: "Khách hàng",
-      value: totalCustomers,
+      value: stats.customers,
       icon: Users,
       iconClass: "bg-lime-100 text-lime-700",
     },
     {
       label: "Chủ cửa hàng",
-      value: totalStoreOwners,
+      value: stats.storeOwners,
       icon: Store,
       iconClass: "bg-blue-100 text-blue-700",
     },
     {
       label: "Quản trị viên",
-      value: totalAdmins,
+      value: stats.admins,
       icon: UserPlus,
       iconClass: "bg-amber-100 text-amber-700",
     },
     {
       label: "Tạm ngưng",
-      value: totalLocked,
+      value: stats.locked,
       icon: Lock,
       iconClass: "bg-rose-100 text-rose-700",
     },
   ];
+
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8">
       <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -139,7 +174,9 @@ function UsersPage() {
           />
           <input
             type="text"
-            placeholder="Tìm theo tên, email hoặc vai trò..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Tìm theo tên hoặc email..."
             className="w-full rounded-lg border-none bg-white py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none ring-0 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.10)]"
           />
         </div>
@@ -171,19 +208,18 @@ function UsersPage() {
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="py-10 text-center text-slate-500">
+                  <td colSpan="5" className="py-10 text-center text-slate-500">
                     Đang tải dữ liệu...
                   </td>
                 </tr>
-              ) : userList.length === 0 ? (
+              ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="py-10 text-center text-slate-500">
+                  <td colSpan="5" className="py-10 text-center text-slate-500">
                     Không tìm thấy người dùng nào.
                   </td>
                 </tr>
               ) : (
-                userList.map((user, index) => {
-                  // Chế biến data trước khi render
+                filteredUsers.map((user, index) => {
                   const role = getRoleInfo(user.role_id);
                   const status = getStatusInfo(user.is_active);
 
@@ -229,7 +265,6 @@ function UsersPage() {
                           {status.name}
                         </div>
                       </td>
-
                       <td className="px-6 py-5 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 transition group-hover:opacity-100">
                           <button className="cursor-pointer rounded-lg p-2 text-emerald-700 transition hover:bg-emerald-50">
@@ -245,31 +280,79 @@ function UsersPage() {
           </table>
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-slate-100 bg-[#f7faf6] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-xs font-medium text-slate-500">
-            Hiển thị {userList.length > 0 ? 1 : 0} đến {userList.length} trong
-            tổng số người dùng
-          </span>
-          <div className="flex gap-2">
-            <button
-              className="rounded-lg bg-slate-200 p-2 text-slate-500 opacity-50"
-              disabled
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button className="cursor-pointer rounded-lg bg-emerald-700 px-3 py-1 text-sm font-bold text-white">
-              1
-            </button>
-            <button
-              className="rounded-lg bg-slate-200 p-2 text-slate-500 opacity-50"
-              disabled
-            >
-              <ChevronRight size={18} />
-            </button>
+        {totalUsers > 0 && (
+          <div className="flex flex-col gap-4 border-t border-slate-100 bg-[#f7faf6] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-xs font-medium text-slate-500">
+              Hiển thị{" "}
+              {Math.min((currentPage - 1) * usersPerPage + 1, totalUsers)} đến{" "}
+              {Math.min(currentPage * usersPerPage, totalUsers)} trong tổng số{" "}
+              {totalUsers} người dùng
+            </span>
+
+            <div className="flex items-center gap-2">
+              <button
+                className="cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <div className="flex items-center gap-1">
+                {startPage > 1 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentPage(1)}
+                      className="cursor-pointer w-8 h-8 border border-slate-200 rounded-lg hover:bg-white text-sm"
+                    >
+                      1
+                    </button>
+                    <span className="px-1 text-slate-400">...</span>
+                  </>
+                )}
+
+                {visiblePageNumbers.map((number) => (
+                  <button
+                    key={number}
+                    onClick={() => setCurrentPage(number)}
+                    className={`cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg font-bold text-sm transition-all ${
+                      currentPage === number
+                        ? "bg-emerald-700 text-white shadow-md"
+                        : "border border-slate-200 text-slate-600 hover:bg-white"
+                    }`}
+                  >
+                    {number}
+                  </button>
+                ))}
+
+                {endPage < totalPages && (
+                  <>
+                    <span className="px-1 text-slate-400">...</span>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className="cursor-pointer w-8 h-8 border border-slate-200 rounded-lg hover:bg-white text-sm"
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <button
+                className="cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </section>
-      {/* Cập nhật lại Grid để chứa 5 cột cho đẹp */}
+
+      {/* THỐNG KÊ */}
       <section className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
         {dynamicStats.map((stat) => {
           const Icon = stat.icon;
