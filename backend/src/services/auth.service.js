@@ -244,10 +244,24 @@ async function getAllLoginLogs(page = 1, limit = 5) {
     throw error; // Ném lỗi lên controller để trả về phản hồi lỗi cho client
   }
 }
+
+// Lấy thông tin user từ database bằng userId (được lấy từ token sau khi xác thực thành công)
+async function getAllUsers() {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, full_name, email, phone, role_id, is_active FROM users",
+    );
+    return rows;
+  } catch (error) {
+    console.error("Lỗi khi lấy tất cả người dùng: ", error);
+    throw error; // Ném lỗi lên controller để trả về phản hồi lỗi cho client
+  }
+}
 module.exports = {
   registerUser,
   loginUser,
   getCurrentUserById,
   recordLoginLog,
   getAllLoginLogs,
+  getAllUsers,
 };

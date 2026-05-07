@@ -21,11 +21,13 @@ const {
   getMe,
   fetchAllLogs,
   refreshToken,
+  fetchAllUsers,
 } = require("../controllers/auth.controller");
 
 // IMPORT rate limit middleware vừa tạo
 const { loginRateLimiter } = require("../middlewares/rateLimit.middleware");
 const { authenticateToken } = require("../middlewares/auth.middleware");
+const { getAllUsers } = require("../services/auth.service");
 
 // - Khai báo 1 route dạng POST
 // - đường dẫn là /register (tức là http://localhost:5000/auth/register)
@@ -51,6 +53,9 @@ router.get("/me", getMe);
 
 // Lấy tất cả log đăng nhập
 router.get("/logs", fetchAllLogs);
+
+// Lấy tất cả người dùng (dành cho admin)
+router.get("/list-users", fetchAllUsers);
 
 // export router ra ngoài để server.js có thể import và dùng
 module.exports = router;

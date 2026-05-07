@@ -5,6 +5,7 @@ const {
   getCurrentUserById,
   recordLoginLog,
   getAllLoginLogs,
+  getAllUsers,
 } = require("../services/auth.service");
 
 // Thư viện jsonwebtoken có 3 mục đích chính:
@@ -282,4 +283,28 @@ const refreshToken = async (req, res) => {
     });
   }
 };
-module.exports = { register, login, logout, fetchAllLogs, getMe, refreshToken };
+
+// Lấy danh sách tất cả người dùng (MỚI THÊM)
+const fetchAllUsers = async (req, res) => {
+  try {
+    const users = await getAllUsers();
+    res.status(200).json({
+      message: "Lấy danh sách người dùng thành công",
+      data: users,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Lỗi server khi lấy danh sách người dùng",
+      error: error.message,
+    });
+  }
+};
+module.exports = {
+  register,
+  login,
+  logout,
+  fetchAllLogs,
+  getMe,
+  refreshToken,
+  fetchAllUsers,
+};

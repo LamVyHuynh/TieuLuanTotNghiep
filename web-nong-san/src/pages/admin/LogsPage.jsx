@@ -2,13 +2,11 @@ import React, { useEffect, useState } from "react";
 import {
   Search,
   RefreshCw,
-  Download,
   ChevronLeft,
   ChevronRight,
   ShieldAlert,
   CheckCircle2,
   AlertTriangle,
-  Logs,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 import { useCallback } from "react";
