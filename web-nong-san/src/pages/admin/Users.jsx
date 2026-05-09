@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -10,6 +10,8 @@ import {
   Users,
   Store,
   Lock,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient.js";
 
@@ -61,6 +63,18 @@ function UsersPage() {
     storeOwners: 0,
     locked: 0,
   });
+
+  // làm cái dropdown của từng user
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+
+  const totalDropDown = (userId) => {
+    // Nếu dropdown đang mở là của user hiện tại, bấm thêm lần nữa sẽ đóng lại
+    if (openDropdownId === userId) {
+      setOpenDropdownId(null);
+    } else {
+      setOpenDropdownId(userId); // Bấm thằng khác sẽ mở dropdown của thằng đó và đóng thằng trước
+    }
+  };
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -146,6 +160,30 @@ function UsersPage() {
       iconClass: "bg-rose-100 text-rose-700",
     },
   ];
+
+  // tạo ref để bắt sự kiện click ra ngoài đóng dropdown
+  const tableRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Nếu menu ĐANG MỞ và cái chỗ click chuột KHÔNG NẰM TRONG cái bảng (tableRef)
+      if (
+        openDropdownId !== null &&
+        tableRef.current &&
+        !tableRef.current.contains(event.target)
+      ) {
+        setOpenDropdownId(null); // thì đóng dropdown lại
+      }
+    };
+
+    // Gắn tai nghe vào Document để bắt tất cả click
+    // dù bấm bất cứ đầu thì handleClickOutside cũng chạy kiểm tra xem có cần đóng dropdown không
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Rút tai nghe khi component unmount - nếu không rút ra nó vẫn chạy ngầm làm lag trang
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openDropdownId]);
 
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8">
@@ -265,11 +303,45 @@ function UsersPage() {
                           {status.name}
                         </div>
                       </td>
+                      {/* Bỏ thẻ <td ref={tableRef}...> đi, chỉ giữ thẻ <td> bình thường */}
                       <td className="px-6 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 transition group-hover:opacity-100">
-                          <button className="cursor-pointer rounded-lg p-2 text-emerald-700 transition hover:bg-emerald-50">
+                        {/* Thêm một cái div bọc cả nút và menu, gắn ref vào div này */}
+                        <div
+                          className="relative inline-block"
+                          ref={openDropdownId === user.id ? tableRef : null}
+                        >
+                          {/* Nút 3 chấm */}
+                          <button
+                            onClick={() => totalDropDown(user.id)}
+                            className="cursor-pointer rounded-lg p-2 text-emerald-700 transition hover:bg-emerald-50"
+                          >
                             <MoreVertical size={18} />
                           </button>
+
+                          {/* Cái Menu thả xuống */}
+                          {openDropdownId === user.id && (
+                            <div className="absolute right-0 top-10 z-10 w-36 rounded-xl bg-white p-2 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100">
+                              <button
+                                className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+                                onClick={() => {
+                                  console.log("SỬA user:", user.id);
+                                  setOpenDropdownId(null);
+                                }}
+                              >
+                                <Edit size={16} /> Chỉnh sửa
+                              </button>
+
+                              <button
+                                className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                                onClick={() => {
+                                  console.log("XÓA user:", user.id);
+                                  setOpenDropdownId(null);
+                                }}
+                              >
+                                <Trash2 size={16} /> Xóa user
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
