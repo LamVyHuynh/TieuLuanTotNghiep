@@ -12,6 +12,7 @@ import {
   Lock,
   Edit,
   Trash2,
+  Unlock,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient.js";
 
@@ -320,9 +321,13 @@ function UsersPage() {
 
                           {/* Cái Menu thả xuống */}
                           {openDropdownId === user.id && (
-                            <div className="absolute right-0 top-10 z-10 w-36 rounded-xl bg-white p-2 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100">
+                            <div
+                              ref={tableRef}
+                              className="absolute right-0 top-10 z-10 w-44 rounded-xl bg-white p-1.5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100"
+                            >
+                              {/* Nút Chỉnh sửa */}
                               <button
-                                className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+                                className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
                                 onClick={() => {
                                   console.log("SỬA user:", user.id);
                                   setOpenDropdownId(null);
@@ -331,8 +336,42 @@ function UsersPage() {
                                 <Edit size={16} /> Chỉnh sửa
                               </button>
 
+                              {/* Nút Khóa / Mở khóa (Động theo trạng thái user) */}
                               <button
-                                className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                                className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                                  user.is_active === 1 ||
+                                  user.is_active === true
+                                    ? "text-amber-600 hover:bg-amber-50"
+                                    : "text-emerald-600 hover:bg-emerald-50"
+                                }`}
+                                onClick={() => {
+                                  console.log(
+                                    user.is_active
+                                      ? "KHÓA user:"
+                                      : "MỞ KHÓA user:",
+                                    user.id,
+                                  );
+                                  setOpenDropdownId(null);
+                                }}
+                              >
+                                {user.is_active === 1 ||
+                                user.is_active === true ? (
+                                  <>
+                                    <Lock size={16} /> Khóa tài khoản
+                                  </>
+                                ) : (
+                                  <>
+                                    <Unlock size={16} /> Mở khóa tài khoản
+                                  </>
+                                )}
+                              </button>
+
+                              {/* Đường gạch ngang phân cách hành động nguy hiểm */}
+                              <div className="my-1 h-px w-full bg-slate-100" />
+
+                              {/* Nút Xóa */}
+                              <button
+                                className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                                 onClick={() => {
                                   console.log("XÓA user:", user.id);
                                   setOpenDropdownId(null);
