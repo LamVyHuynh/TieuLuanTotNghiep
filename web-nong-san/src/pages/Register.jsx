@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import axiosClient from "../api/axiosClient";
 import {
   ArrowRight,
   CheckCircle2,
@@ -82,10 +82,7 @@ function Register() {
       // Lấy dữ liệu (GET): lấy thông tin người dùng, danh sách sản phẩm và đơn hàng
       // Cập nhật dữ liệu (PUT/PATCH): cập nhật thông tin người dùng, trạng thái đơn hàng
       // Xoá dữ liệu (DELETE): xoá sản phẩm, xoá đơn hàng
-      const response = await axios.post(
-        "http://localhost:5000/auth/register",
-        formData,
-      );
+      const response = await axiosClient.post("/auth/register", formData);
 
       setSuccessMessage(response.data.message || "Đăng ký thành công");
       setFormData({
