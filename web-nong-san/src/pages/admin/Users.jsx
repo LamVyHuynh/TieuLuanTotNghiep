@@ -113,6 +113,26 @@ function UsersPage() {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  // đóng mở hoạt động tài khoản
+  const handleToggleLockStatus = async (userId) => {
+    if (
+      !window.confirm(
+        "Bạn có chắc muốn thay đổi trạng thái hoạt động của người dùng này?",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await axiosClient.post(`/auth/users/${userId}/toggle-status`);
+
+      // Thành công thì chỉ cần gọi lại fetchUsers() để nó tải lại bảng là xanh mượt!
+      fetchUsers();
+    } catch (error) {
+      console.error("Lỗi khi thay đổi trạng thái người dùng:", error);
+    }
+  };
+
   const filteredUsers = userList.filter((user) => {
     const term = searchTerm.toLowerCase();
     return (
@@ -545,6 +565,7 @@ function UsersPage() {
                                 <Edit size={16} /> Chỉnh sửa
                               </button>
 
+                              {/* Nút Khóa / Mở khóa (Động theo trạng thái user) */}
                               <button
                                 className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
                                   user.is_active === 1 ||
@@ -553,13 +574,9 @@ function UsersPage() {
                                     : "text-emerald-600 hover:bg-emerald-50"
                                 }`}
                                 onClick={() => {
-                                  console.log(
-                                    user.is_active
-                                      ? "KHÓA user:"
-                                      : "MỞ KHÓA user:",
-                                    user.id,
-                                  );
-                                  setOpenDropdownId(null);
+                                  // GỌI HÀM VÀ TRUYỀN ID CỦA THẰNG USER VÀO
+                                  handleToggleLockStatus(user.id);
+                                  setOpenDropdownId(null); // Đóng cái menu lại
                                 }}
                               >
                                 {user.is_active === 1 ||

@@ -288,6 +288,29 @@ async function getAllUsers(page = 1, limit = 10) {
     throw error; // Ném lỗi lên controller để trả về phản hồi lỗi cho client
   }
 }
+// ĐÓNG/MỞ HOẠT ĐỘNG USER - CẬP NHẬT TRẠNG THÁI IS_ACTIVE
+async function toggleUserActiveStatus(userId) {
+  // Kiểm tra user có tồn tại hay chưa
+  const [rows] = await pool.query("SELECT is_active FROM users WHERE id = ?", [
+    userId,
+  ]);
+  if (rows.length === 0) {
+    throw new Error("Không tìm thấy người dùng");
+  }
+
+  const currentStatus = rows[0].is_active;
+
+  // Đảo ngược trạng thái is_active: Đang 0 thì 1, đang 1 thì 0
+  const newStats = currentStatus === 1 || currentStatus === true ? 0 : 1;
+
+  // Cập nhật vào DB
+  await pool.query("UPDATE users SET is_active = ? WHERE id = ?", [
+    newStats,
+    userId,
+  ]);
+
+  return newStats; // Trả về trạng thái mới sau khi cập nhật
+}
 module.exports = {
   registerUser,
   loginUser,
@@ -295,4 +318,5 @@ module.exports = {
   recordLoginLog,
   getAllLoginLogs,
   getAllUsers,
+  toggleUserActiveStatus,
 };

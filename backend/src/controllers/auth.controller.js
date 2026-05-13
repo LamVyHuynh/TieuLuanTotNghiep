@@ -6,6 +6,7 @@ const {
   recordLoginLog,
   getAllLoginLogs,
   getAllUsers,
+  toggleUserActiveStatus,
 } = require("../services/auth.service");
 
 // Thư viện jsonwebtoken có 3 mục đích chính:
@@ -303,6 +304,31 @@ const fetchAllUsers = async (req, res) => {
     });
   }
 };
+
+//Cập nhật trạng thái hoạt động của người dùng (MỚI THÊM)
+const toggleUserLock = async (req, res) => {
+  try {
+    // Lấy userId từ params (ví dụ: /auth/users/:id/toggle-lock)
+    const userId = req.params.id;
+    const newStats = await toggleUserActiveStatus(userId);
+    res.status(200).json({
+      message: "Trạng thái người dùng đã được cập nhật",
+      status: newStats,
+    });
+  } catch (error) {
+    if (error.message === "Không tìm thấy người dùng") {
+      {
+        return res.status(404).json({
+          message: error.message,
+        });
+      }
+    }
+    res.status(500).json({
+      message: "Lỗi server khi cập nhật trạng thái người dùng",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   register,
   login,
@@ -311,4 +337,5 @@ module.exports = {
   getMe,
   refreshToken,
   fetchAllUsers,
+  toggleUserLock,
 };

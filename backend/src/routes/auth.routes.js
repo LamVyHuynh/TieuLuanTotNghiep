@@ -22,6 +22,7 @@ const {
   fetchAllLogs,
   refreshToken,
   fetchAllUsers,
+  toggleUserLock,
 } = require("../controllers/auth.controller");
 
 // IMPORT rate limit middleware vừa tạo
@@ -56,6 +57,9 @@ router.get("/logs", fetchAllLogs);
 
 // Lấy tất cả người dùng (dành cho admin)
 router.get("/list-users", fetchAllUsers);
+
+// Khóa/Mở khóa người dùng (dành cho admin)
+router.post("/users/:id/toggle-status", toggleUserLock);
 
 // export router ra ngoài để server.js có thể import và dùng
 module.exports = router;
