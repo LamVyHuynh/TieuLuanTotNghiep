@@ -13,6 +13,14 @@ import {
   Edit,
   Trash2,
   Unlock,
+  // Thêm mấy cái icon này vào để form nó khỏi báo lỗi
+  X,
+  User,
+  Mail,
+  Phone,
+  Eye,
+  EyeOff,
+  Eraser,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient.js";
 
@@ -40,7 +48,9 @@ const formatDate = (dateString) => {
 };
 
 const getAvatarUrl = (name) => {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=eef2eb&color=047857`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name || "User",
+  )}&background=eef2eb&color=047857`;
 };
 
 // ==========================================
@@ -57,7 +67,6 @@ function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
   const [usersPerPage] = useState(10);
-  // Tạo state để hứng stats từ Backend
   const [stats, setStats] = useState({
     admins: 0,
     customers: 0,
@@ -69,11 +78,10 @@ function UsersPage() {
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
   const totalDropDown = (userId) => {
-    // Nếu dropdown đang mở là của user hiện tại, bấm thêm lần nữa sẽ đóng lại
     if (openDropdownId === userId) {
       setOpenDropdownId(null);
     } else {
-      setOpenDropdownId(userId); // Bấm thằng khác sẽ mở dropdown của thằng đó và đóng thằng trước
+      setOpenDropdownId(userId);
     }
   };
 
@@ -87,7 +95,6 @@ function UsersPage() {
       setUserList(response.data.data || []);
       setTotalUsers(response.data.total || 0);
 
-      // Hứng cục stats từ Backend gán vào State
       if (response.data.stats) {
         setStats(response.data.stats);
       }
@@ -128,7 +135,6 @@ function UsersPage() {
     visiblePageNumbers.push(i);
   }
 
-  // Khai báo mảng hiển thị dựa vào cục 'stats' lấy từ Backend (chuẩn 100% không bị ảnh hưởng bởi trang)
   const dynamicStats = [
     {
       label: "Tổng người dùng",
@@ -166,25 +172,68 @@ function UsersPage() {
   const tableRef = useRef(null);
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Nếu menu ĐANG MỞ và cái chỗ click chuột KHÔNG NẰM TRONG cái bảng (tableRef)
       if (
         openDropdownId !== null &&
         tableRef.current &&
         !tableRef.current.contains(event.target)
       ) {
-        setOpenDropdownId(null); // thì đóng dropdown lại
+        setOpenDropdownId(null);
       }
     };
-
-    // Gắn tai nghe vào Document để bắt tất cả click
-    // dù bấm bất cứ đầu thì handleClickOutside cũng chạy kiểm tra xem có cần đóng dropdown không
     document.addEventListener("mousedown", handleClickOutside);
-
-    // Rút tai nghe khi component unmount - nếu không rút ra nó vẫn chạy ngầm làm lag trang
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [openDropdownId]);
+
+  // ========================================================
+  // KHÚC NÀY LÀ LOGIC CỦA FORM THÊM USER MÀ MÀY BỎ QUÊN NÈ
+  // ========================================================
+  const [isAddUserFormOpen, setIsAddUserFormOpen] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [showAddPassword, setShowAddPassword] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  const [addFormData, setAddFormData] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
+
+  const handleAddChange = (e) => {
+    setAddFormData({ ...addFormData, [e.target.name]: e.target.value });
+    if (addError) setAddError(""); // Tự xóa thông báo lỗi khi gõ lại
+  };
+
+  const handleClearForm = () => {
+    setAddFormData({ full_name: "", email: "", phone: "", password: "" });
+    setAddError("");
+  };
+
+  const handleAddUserSubmit = async (e) => {
+    e.preventDefault();
+    setAddError("");
+    setIsAdding(true);
+
+    try {
+      // Bắn API
+      await axiosClient.post("/auth/register", addFormData);
+
+      // Thành công thì đóng form, xóa form, tải lại bảng
+      setIsAddUserFormOpen(false);
+      handleClearForm();
+      fetchUsers();
+    } catch (error) {
+      setAddError(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Lỗi hệ thống khi thêm người dùng",
+      );
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8">
@@ -199,12 +248,178 @@ function UsersPage() {
           </p>
         </div>
 
-        <button className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:scale-[1.01]">
+        <button
+          onClick={() => setIsAddUserFormOpen(true)}
+          className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:scale-[1.01]"
+        >
           <UserPlus size={18} />
           Thêm người dùng
         </button>
       </header>
 
+      {/* ================= MODAL THÊM USER ================= */}
+      {isAddUserFormOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
+          <div className="animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
+            {/* Header Modal */}
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+              <h3 className="text-lg font-bold text-slate-800">
+                Thêm người dùng mới
+              </h3>
+              <button
+                onClick={() => setIsAddUserFormOpen(false)}
+                className="cursor-pointer rounded-full p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Body Modal (Form) */}
+            <div className="p-6">
+              {addError && (
+                <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
+                  {addError}
+                </div>
+              )}
+
+              <form
+                id="addUserForm"
+                onSubmit={handleAddUserSubmit}
+                className="space-y-4"
+              >
+                <div className="space-y-1.5">
+                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Họ và tên
+                  </label>
+                  <div className="relative">
+                    <User
+                      size={18}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      name="full_name"
+                      type="text"
+                      required
+                      value={addFormData.full_name}
+                      onChange={handleAddChange}
+                      placeholder="Nguyễn Văn A"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail
+                      size={18}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      value={addFormData.email}
+                      onChange={handleAddChange}
+                      placeholder="admin@healthygo.vn"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Số điện thoại
+                  </label>
+                  <div className="relative">
+                    <Phone
+                      size={18}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      name="phone"
+                      type="text"
+                      required
+                      value={addFormData.phone}
+                      onChange={handleAddChange}
+                      placeholder="0901234567"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Mật khẩu
+                  </label>
+                  <div className="relative">
+                    <Lock
+                      size={18}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      name="password"
+                      required
+                      type={showAddPassword ? "text" : "password"}
+                      value={addFormData.password}
+                      onChange={handleAddChange}
+                      placeholder="••••••••"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-10 text-sm outline-none transition hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAddPassword(!showAddPassword)}
+                      className="absolute cursor-pointer right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showAddPassword ? (
+                        <EyeOff size={18} />
+                      ) : (
+                        <Eye size={18} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            {/* Footer Modal */}
+            <div className="flex items-center gap-3 bg-slate-50/50 px-6 py-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={handleClearForm}
+                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-200 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-300 active:scale-[0.98]"
+              >
+                <Eraser size={16} />
+                Xóa thông tin
+              </button>
+
+              <button
+                type="submit"
+                form="addUserForm"
+                disabled={isAdding}
+                className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white shadow-md transition active:scale-[0.98] ${
+                  isAdding
+                    ? "bg-slate-400 cursor-not-allowed"
+                    : "bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700"
+                }`}
+              >
+                {isAdding ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <>
+                    <UserPlus size={16} />
+                    Xác nhận thêm
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- PHẦN TÌM KIẾM VÀ BỘ LỌC --- */}
       <section className="mb-6 flex flex-wrap items-center gap-4 rounded-xl bg-[#eef2eb] p-4">
         <div className="relative max-w-md flex-1 min-w-[260px]">
           <Search
@@ -232,6 +447,7 @@ function UsersPage() {
         </div>
       </section>
 
+      {/* --- BẢNG NGƯỜI DÙNG --- */}
       <section className="overflow-hidden rounded-2xl bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)]">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] border-collapse text-left">
@@ -304,14 +520,12 @@ function UsersPage() {
                           {status.name}
                         </div>
                       </td>
-                      {/* Bỏ thẻ <td ref={tableRef}...> đi, chỉ giữ thẻ <td> bình thường */}
+
                       <td className="px-6 py-5 text-right">
-                        {/* Thêm một cái div bọc cả nút và menu, gắn ref vào div này */}
                         <div
                           className="relative inline-block"
                           ref={openDropdownId === user.id ? tableRef : null}
                         >
-                          {/* Nút 3 chấm */}
                           <button
                             onClick={() => totalDropDown(user.id)}
                             className="cursor-pointer rounded-lg p-2 text-emerald-700 transition hover:bg-emerald-50"
@@ -319,13 +533,8 @@ function UsersPage() {
                             <MoreVertical size={18} />
                           </button>
 
-                          {/* Cái Menu thả xuống */}
                           {openDropdownId === user.id && (
-                            <div
-                              ref={tableRef}
-                              className="absolute right-0 top-10 z-10 w-44 rounded-xl bg-white p-1.5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100"
-                            >
-                              {/* Nút Chỉnh sửa */}
+                            <div className="absolute right-0 top-10 z-10 w-44 rounded-xl bg-white p-1.5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100">
                               <button
                                 className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
                                 onClick={() => {
@@ -336,7 +545,6 @@ function UsersPage() {
                                 <Edit size={16} /> Chỉnh sửa
                               </button>
 
-                              {/* Nút Khóa / Mở khóa (Động theo trạng thái user) */}
                               <button
                                 className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
                                   user.is_active === 1 ||
@@ -366,10 +574,8 @@ function UsersPage() {
                                 )}
                               </button>
 
-                              {/* Đường gạch ngang phân cách hành động nguy hiểm */}
                               <div className="my-1 h-px w-full bg-slate-100" />
 
-                              {/* Nút Xóa */}
                               <button
                                 className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                                 onClick={() => {
@@ -391,6 +597,7 @@ function UsersPage() {
           </table>
         </div>
 
+        {/* --- PHÂN TRANG --- */}
         {totalUsers > 0 && (
           <div className="flex flex-col gap-4 border-t border-slate-100 bg-[#f7faf6] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-xs font-medium text-slate-500">
@@ -463,7 +670,7 @@ function UsersPage() {
         )}
       </section>
 
-      {/* THỐNG KÊ */}
+      {/* --- THỐNG KÊ --- */}
       <section className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
         {dynamicStats.map((stat) => {
           const Icon = stat.icon;
