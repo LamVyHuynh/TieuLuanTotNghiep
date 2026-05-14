@@ -9,6 +9,7 @@ const {
   toggleUserActiveStatus,
   deleteUserById,
   updateUserById,
+  updateUserPassword,
 } = require("../services/auth.service");
 
 // Thư viện jsonwebtoken có 3 mục đích chính:
@@ -375,6 +376,47 @@ const updateUser = async (req, res) => {
     });
   }
 };
+
+// Cập nhật mật khẩu người dùng (MỚI THÊM)
+const changePassword = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { new_password } = req.body;
+
+    if (!new_password || new_password.length < 8) {
+      return res.status(400).json({
+        message: "Mật khẩu mới phải có ít nhất 8 ký tự",
+      });
+    }
+
+    // Gọi hàm service để cập nhật mật khẩu người dùng
+    await updateUserPassword(userId, new_password);
+    res.status(200).json({
+      message: "Mật khẩu đã được cập nhật thành công",
+    });
+  } catch (error) {
+    if (error.message === "Không tìm thấy người dùng") {
+      {
+        return res.status(404).json({
+          message: error.message,
+        });
+      }
+    }
+    if (error.message === "Mật khẩu hiện tại không đúng") {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+    if (error.message === "Mật khẩu mới phải có ít nhất 8 ký tự") {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+    res.status(500).json({
+      message: "Lỗi server khi cập nhật mật khẩu người dùng",
+    });
+  }
+};
 module.exports = {
   register,
   login,
@@ -386,4 +428,5 @@ module.exports = {
   toggleUserLock,
   deleteUser,
   updateUser,
+  changePassword,
 };

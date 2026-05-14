@@ -345,6 +345,26 @@ async function updateUserById(userId, updateData) {
   return true; // Trả về true nếu cập nhật thành công
 }
 
+// Cập nhật mật khẩu người dùng
+async function updateUserPassword(userId, newPassword) {
+  // Kiểm tra xem người dùng có tồn tại chưa
+  const [rows] = await pool.query("SELECT id FROM users WHERE id=?", [userId]);
+  if (rows.length === 0) {
+    throw new Error("Người dùng không tồn tại");
+  }
+
+  // Hash mật khẩu mới trước khi lưu vào database
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // Cập nhật mật khẩu mới vào database
+  await pool.query("UPDATE users SET password_hash=? WHERE id=?", [
+    hashedPassword,
+    userId,
+  ]);
+
+  return true; // Trả về true nếu cập nhật thành công
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -355,4 +375,5 @@ module.exports = {
   toggleUserActiveStatus,
   deleteUserById,
   updateUserById,
+  updateUserPassword,
 };

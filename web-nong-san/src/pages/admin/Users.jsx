@@ -20,8 +20,9 @@ import {
   Eye,
   EyeOff,
   Eraser,
-  Save, // Add thêm icon Save cho nút Lưu
-  Shield, // Thêm icon Shield cho chỗ chọn quyền
+  Save,
+  Shield,
+  Key, // Thêm icon Key cho nút Đổi mật khẩu
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient.js";
 
@@ -49,7 +50,9 @@ const formatDate = (dateString) => {
 };
 
 const getAvatarUrl = (name) => {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=eef2eb&color=047857`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name || "User",
+  )}&background=eef2eb&color=047857`;
 };
 
 // ==========================================
@@ -253,22 +256,20 @@ function UsersPage() {
   };
 
   // ========================================================
-  // FORM SỬA USER (MỚI KENG)
+  // FORM SỬA USER
   // ========================================================
   const [isEditUserFormOpen, setIsEditUserFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editError, setEditError] = useState("");
 
-  // State chứa thông tin thằng cần sửa
   const [editFormData, setEditFormData] = useState({
     id: "",
     full_name: "",
     email: "",
     phone: "",
-    role_id: 2, // Mặc định Role
+    role_id: 2,
   });
 
-  // Khi bấm nút "Chỉnh sửa" ở Dropdown thì mạy gọi hàm này để đổ data vào form
   const openEditModal = (user) => {
     setEditFormData({
       id: user.id,
@@ -279,7 +280,7 @@ function UsersPage() {
     });
     setEditError("");
     setIsEditUserFormOpen(true);
-    setOpenDropdownId(null); // Đóng cái dropdown
+    setOpenDropdownId(null);
   };
 
   const handleEditChange = (e) => {
@@ -293,13 +294,10 @@ function UsersPage() {
     setIsEditing(true);
 
     try {
-      // Bắn API Update (PUT)
       await axiosClient.put(
         `/auth/users/${editFormData.id}/update-user`,
         editFormData,
       );
-
-      // Thành công thì đóng form và tải lại bảng
       setIsEditUserFormOpen(false);
       fetchUsers();
     } catch (error) {
@@ -308,6 +306,48 @@ function UsersPage() {
       );
     } finally {
       setIsEditing(false);
+    }
+  };
+
+  // ========================================================
+  // FORM ĐỔI MẬT KHẨU (NEW)
+  // ========================================================
+  const [isChangePwdFormOpen, setIsChangePwdFormOpen] = useState(false);
+  const [isChangingPwd, setIsChangingPwd] = useState(false);
+  const [showChangePwd, setShowChangePwd] = useState(false);
+  const [changePwdError, setChangePwdError] = useState("");
+
+  const [changePwdData, setChangePwdData] = useState({
+    id: "",
+    new_password: "",
+  });
+
+  const openChangePwdModal = (user) => {
+    setChangePwdData({ id: user.id, new_password: "" });
+    setChangePwdError("");
+    setShowChangePwd(false); // Reset trạng thái ẩn hiện mật khẩu
+    setIsChangePwdFormOpen(true);
+    setOpenDropdownId(null);
+  };
+
+  const handleChangePwdSubmit = async (e) => {
+    e.preventDefault();
+    setChangePwdError("");
+    setIsChangingPwd(true);
+
+    try {
+      await axiosClient.put(`/auth/users/${changePwdData.id}/change-password`, {
+        new_password: changePwdData.new_password,
+      });
+
+      setIsChangePwdFormOpen(false);
+      alert("Đổi mật khẩu thành công!"); // Có thể thay bằng thư viện Toast cho đẹp
+    } catch (error) {
+      setChangePwdError(
+        error.response?.data?.message || "Lỗi hệ thống khi đổi mật khẩu",
+      );
+    } finally {
+      setIsChangingPwd(false);
     }
   };
 
@@ -380,6 +420,7 @@ function UsersPage() {
                     />
                   </div>
                 </div>
+
                 <div className="space-y-1.5">
                   <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Email
@@ -400,6 +441,7 @@ function UsersPage() {
                     />
                   </div>
                 </div>
+
                 <div className="space-y-1.5">
                   <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Số điện thoại
@@ -420,6 +462,7 @@ function UsersPage() {
                     />
                   </div>
                 </div>
+
                 <div className="space-y-1.5">
                   <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Mật khẩu
@@ -453,6 +496,7 @@ function UsersPage() {
                 </div>
               </form>
             </div>
+
             <div className="flex items-center gap-3 bg-slate-50/50 px-6 py-4 border-t border-slate-100">
               <button
                 type="button"
@@ -461,11 +505,16 @@ function UsersPage() {
               >
                 <Eraser size={16} /> Xóa thông tin
               </button>
+
               <button
                 type="submit"
                 form="addUserForm"
                 disabled={isAdding}
-                className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white shadow-md transition active:scale-[0.98] ${isAdding ? "bg-slate-400 cursor-not-allowed" : "bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700"}`}
+                className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white shadow-md transition active:scale-[0.98] ${
+                  isAdding
+                    ? "bg-slate-400 cursor-not-allowed"
+                    : "bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700"
+                }`}
               >
                 {isAdding ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -480,11 +529,10 @@ function UsersPage() {
         </div>
       )}
 
-      {/* ================= MODAL SỬA USER (NEW) ================= */}
+      {/* ================= MODAL SỬA USER ================= */}
       {isEditUserFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
           <div className="animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
-            {/* Header Modal */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
               <h3 className="text-lg font-bold text-slate-800">
                 Chỉnh sửa thông tin
@@ -497,7 +545,6 @@ function UsersPage() {
               </button>
             </div>
 
-            {/* Body Modal */}
             <div className="p-6">
               {editError && (
                 <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
@@ -505,7 +552,6 @@ function UsersPage() {
                 </div>
               )}
 
-              {/* Form chỉnh sửa người dùng */}
               <form
                 id="editUserForm"
                 onSubmit={handleEditUserSubmit}
@@ -598,7 +644,6 @@ function UsersPage() {
               </form>
             </div>
 
-            {/* Footer Modal */}
             <div className="flex items-center justify-end gap-3 bg-slate-50/50 px-6 py-4 border-t border-slate-100">
               <button
                 type="button"
@@ -631,6 +676,104 @@ function UsersPage() {
         </div>
       )}
 
+      {/* ================= MODAL ĐỔI MẬT KHẨU (NEW) ================= */}
+      {isChangePwdFormOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
+          <div className="animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+              <h3 className="text-lg font-bold text-slate-800">
+                Cấp lại mật khẩu
+              </h3>
+              <button
+                onClick={() => setIsChangePwdFormOpen(false)}
+                className="cursor-pointer rounded-full p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {changePwdError && (
+                <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
+                  {changePwdError}
+                </div>
+              )}
+
+              <form
+                id="changePwdForm"
+                onSubmit={handleChangePwdSubmit}
+                className="space-y-4"
+              >
+                <div className="space-y-1.5">
+                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Mật khẩu mới
+                  </label>
+                  <div className="relative">
+                    <Key
+                      size={18}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      name="new_password"
+                      required
+                      type={showChangePwd ? "text" : "password"}
+                      value={changePwdData.new_password}
+                      onChange={(e) =>
+                        setChangePwdData({
+                          ...changePwdData,
+                          new_password: e.target.value,
+                        })
+                      }
+                      placeholder="Nhập mật khẩu mới..."
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-10 text-sm outline-none transition hover:bg-white focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowChangePwd(!showChangePwd)}
+                      className="absolute cursor-pointer right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showChangePwd ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-[11px] text-slate-500">
+                    * Mật khẩu phải chứa ít nhất 8 ký tự.
+                  </p>
+                </div>
+              </form>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 bg-slate-50/50 px-6 py-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsChangePwdFormOpen(false)}
+                className="cursor-pointer rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-200 active:scale-[0.98]"
+              >
+                Hủy bỏ
+              </button>
+
+              <button
+                type="submit"
+                form="changePwdForm"
+                disabled={isChangingPwd}
+                className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-md transition active:scale-[0.98] ${
+                  isChangingPwd
+                    ? "bg-slate-400 cursor-not-allowed"
+                    : "bg-indigo-600 shadow-indigo-600/20 hover:bg-indigo-700"
+                }`}
+              >
+                {isChangingPwd ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <>
+                    <Save size={16} /> Lưu mật khẩu
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* --- PHẦN TÌM KIẾM VÀ BỘ LỌC --- */}
       <section className="mb-6 flex flex-wrap items-center gap-4 rounded-xl bg-[#eef2eb] p-4">
         <div className="relative max-w-md flex-1 min-w-[260px]">
@@ -646,6 +789,7 @@ function UsersPage() {
             className="w-full rounded-lg border-none bg-white py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none ring-0 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.10)]"
           />
         </div>
+
         <div className="ml-auto flex items-center gap-2">
           <button className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
             <Filter size={16} /> Bộ lọc
@@ -741,12 +885,19 @@ function UsersPage() {
 
                           {openDropdownId === user.id && (
                             <div className="absolute right-0 top-10 z-10 w-44 rounded-xl bg-white p-1.5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100">
-                              {/* RÁP HÀM openEditModal VÀO NÚT CHỈNH SỬA */}
                               <button
                                 className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
                                 onClick={() => openEditModal(user)}
                               >
                                 <Edit size={16} /> Chỉnh sửa
+                              </button>
+
+                              {/* --- NÚT ĐỔI MẬT KHẨU NÈ MẠY --- */}
+                              <button
+                                className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-50"
+                                onClick={() => openChangePwdModal(user)}
+                              >
+                                <Key size={16} /> Đổi mật khẩu
                               </button>
 
                               <button
@@ -772,7 +923,9 @@ function UsersPage() {
                                   </>
                                 )}
                               </button>
+
                               <div className="my-1 h-px w-full bg-slate-100" />
+
                               <button
                                 className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                                 onClick={() => {
@@ -827,7 +980,11 @@ function UsersPage() {
                   <button
                     key={number}
                     onClick={() => setCurrentPage(number)}
-                    className={`cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg font-bold text-sm transition-all ${currentPage === number ? "bg-emerald-700 text-white shadow-md" : "border border-slate-200 text-slate-600 hover:bg-white"}`}
+                    className={`cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg font-bold text-sm transition-all ${
+                      currentPage === number
+                        ? "bg-emerald-700 text-white shadow-md"
+                        : "border border-slate-200 text-slate-600 hover:bg-white"
+                    }`}
                   >
                     {number}
                   </button>
