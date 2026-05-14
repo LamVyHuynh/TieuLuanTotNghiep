@@ -207,7 +207,7 @@ function UsersPage() {
   }, [openDropdownId]);
 
   // ========================================================
-  // KHÚC NÀY LÀ LOGIC CỦA FORM THÊM USER MÀ MÀY BỎ QUÊN NÈ
+  // KHÚC NÀY LÀ LOGIC CỦA FORM THÊM USER
   // ========================================================
   const [isAddUserFormOpen, setIsAddUserFormOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -237,6 +237,8 @@ function UsersPage() {
     setIsAdding(true);
 
     try {
+      // Test thử cái loading
+      await new Promise((resolve) => setTimeout(resolve, 200));
       // Bắn API
       await axiosClient.post("/auth/register", addFormData);
 
@@ -362,7 +364,7 @@ function UsersPage() {
                       required
                       value={addFormData.email}
                       onChange={handleAddChange}
-                      placeholder="admin@healthygo.vn"
+                      placeholder="nguyenvana@healthygo.vn"
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
                     />
                   </div>
