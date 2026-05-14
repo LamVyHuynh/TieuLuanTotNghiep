@@ -24,6 +24,7 @@ const {
   fetchAllUsers,
   toggleUserLock,
   deleteUser,
+  updateUser,
 } = require("../controllers/auth.controller");
 
 // IMPORT rate limit middleware vừa tạo
@@ -64,6 +65,9 @@ router.post("/users/:id/toggle-status", toggleUserLock);
 
 // Admin xoá user
 router.delete("/users/:id/delete-user", deleteUser);
+
+// Cập nhật thông tin người dùng (dành cho admin)
+router.put("/users/:id/update-user", updateUser);
 
 // export router ra ngoài để server.js có thể import và dùng
 module.exports = router;

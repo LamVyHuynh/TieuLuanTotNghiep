@@ -326,6 +326,25 @@ async function deleteUserById(userId) {
   return true; // Trả về true nếu xoá thành công
 }
 
+// CẬP NHẬT THÔNG TIN USER, CHO PHÉP CẬP NHẬT tất cả thông tin trừ password
+async function updateUserById(userId, updateData) {
+  const { full_name, email, phone, role_id } = updateData;
+
+  // Kiểu tra xem người dùng có tồn tại chưa
+  const [rows] = await pool.query("SELECT id FROM users WHERE id=?", [userId]);
+  if (rows.length === 0) {
+    throw new Error("Người dùng không tồn tại");
+  }
+
+  // Cập nhật thông tin người dùng
+  await pool.query(
+    "UPDATE users SET full_name=?, email=?, phone=?, role_id=? WHERE id=?",
+    [full_name, email, phone, role_id, userId],
+  );
+
+  return true; // Trả về true nếu cập nhật thành công
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -335,4 +354,5 @@ module.exports = {
   getAllUsers,
   toggleUserActiveStatus,
   deleteUserById,
+  updateUserById,
 };

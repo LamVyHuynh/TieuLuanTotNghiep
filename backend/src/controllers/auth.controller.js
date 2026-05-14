@@ -8,6 +8,7 @@ const {
   getAllUsers,
   toggleUserActiveStatus,
   deleteUserById,
+  updateUserById,
 } = require("../services/auth.service");
 
 // Thư viện jsonwebtoken có 3 mục đích chính:
@@ -349,6 +350,31 @@ const deleteUser = async (req, res) => {
     }
   }
 };
+
+// Cập nhật thông tin người dùng (MỚI THÊM)
+const updateUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const updateData = req.body; // Dữ liệu cập nhật được gửi từ client
+
+    const updateddUser = await updateUserById(userId, updateData);
+    res.status(200).json({
+      message: "Thông tin người dùng đã được cập nhật thành công",
+      user: updateddUser,
+    });
+  } catch (error) {
+    if (error.message === "Không tìm thấy người dùng") {
+      {
+        return res.status(404).json({
+          message: error.message,
+        });
+      }
+    }
+    res.status(500).json({
+      message: "Lỗi server khi cập nhật thông tin người dùng",
+    });
+  }
+};
 module.exports = {
   register,
   login,
@@ -359,4 +385,5 @@ module.exports = {
   fetchAllUsers,
   toggleUserLock,
   deleteUser,
+  updateUser,
 };
