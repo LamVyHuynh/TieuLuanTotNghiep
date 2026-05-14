@@ -255,6 +255,25 @@ function UsersPage() {
     }
   };
 
+  // Xoá tài khoản user bên admin
+  const hanedleDeleteUser = async (userId) => {
+    if (
+      !window.confirm(
+        "Bạn có chắc muốn xoá người dùng này? Hành động này không thể hoàn tác!",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await axiosClient.delete(`/auth/users/${userId}/delete-user`);
+      fetchUsers();
+    } catch (error) {
+      console.error("Lỗi khi xoá người dùng:", error);
+      alert("Đã có lỗi xảy ra khi xoá người dùng. Vui lòng thử lại sau.");
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8">
       <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -586,7 +605,7 @@ function UsersPage() {
                                   </>
                                 ) : (
                                   <>
-                                    <Unlock size={16} /> Mở khóa tài khoản
+                                    <Unlock size={16} /> Mở khoá
                                   </>
                                 )}
                               </button>
@@ -596,7 +615,7 @@ function UsersPage() {
                               <button
                                 className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                                 onClick={() => {
-                                  console.log("XÓA user:", user.id);
+                                  hanedleDeleteUser(user.id);
                                   setOpenDropdownId(null);
                                 }}
                               >

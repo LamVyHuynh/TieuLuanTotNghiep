@@ -311,6 +311,21 @@ async function toggleUserActiveStatus(userId) {
 
   return newStats; // Trả về trạng thái mới sau khi cập nhật
 }
+
+// XOÁ USER TRONG ADMIN DỰA TRÊN USERID
+async function deleteUserById(userId) {
+  // Kiểm tra user có tồn tại hay chưa
+  const [rows] = await pool.query("SELECT id FROM users WHERE id=?", [userId]);
+  if (rows.length === 0) {
+    throw new Error("Người dùng không tồn tại");
+  }
+
+  // thực hiện xoá người dùng
+  await pool.query("DELETE FROM users WHERE id=?", [userId]);
+
+  return true; // Trả về true nếu xoá thành công
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -319,4 +334,5 @@ module.exports = {
   getAllLoginLogs,
   getAllUsers,
   toggleUserActiveStatus,
+  deleteUserById,
 };

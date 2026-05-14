@@ -7,6 +7,7 @@ const {
   getAllLoginLogs,
   getAllUsers,
   toggleUserActiveStatus,
+  deleteUserById,
 } = require("../services/auth.service");
 
 // Thư viện jsonwebtoken có 3 mục đích chính:
@@ -329,6 +330,25 @@ const toggleUserLock = async (req, res) => {
     });
   }
 };
+
+// xoá user trong trang admin
+const deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    await deleteUserById(userId);
+    res.status(200).json({
+      message: "Người dùng đã được xoán thành công",
+    });
+  } catch (error) {
+    if (error.message === "Không tìm thấy người dùng") {
+      {
+        return res.status(404).json({
+          message: error.message,
+        });
+      }
+    }
+  }
+};
 module.exports = {
   register,
   login,
@@ -338,4 +358,5 @@ module.exports = {
   refreshToken,
   fetchAllUsers,
   toggleUserLock,
+  deleteUser,
 };
