@@ -256,7 +256,7 @@ function UsersPage() {
   };
 
   // Xoá tài khoản user bên admin
-  const hanedleDeleteUser = async (userId) => {
+  const handleDeleteUser = async (userId) => {
     if (
       !window.confirm(
         "Bạn có chắc muốn xoá người dùng này? Hành động này không thể hoàn tác!",
@@ -615,7 +615,7 @@ function UsersPage() {
                               <button
                                 className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                                 onClick={() => {
-                                  hanedleDeleteUser(user.id);
+                                  handleDeleteUser(user.id);
                                   setOpenDropdownId(null);
                                 }}
                               >

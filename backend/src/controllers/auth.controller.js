@@ -337,7 +337,7 @@ const deleteUser = async (req, res) => {
     const userId = req.params.id;
     await deleteUserById(userId);
     res.status(200).json({
-      message: "Người dùng đã được xoán thành công",
+      message: "Người dùng đã được xoá thành công",
     });
   } catch (error) {
     if (error.message === "Không tìm thấy người dùng") {
