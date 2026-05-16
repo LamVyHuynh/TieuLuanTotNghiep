@@ -26,6 +26,7 @@ const {
   deleteUser,
   updateUser,
   changePassword,
+  updateProfileUser,
 } = require("../controllers/auth.controller");
 
 // IMPORT rate limit middleware vừa tạo
@@ -72,6 +73,9 @@ router.put("/users/:id/update-user", updateUser);
 
 // Cập nhật mật khẩu người dùng (dành cho admin)
 router.put("/users/:id/change-password", changePassword);
+
+// Cập nhật thông tin người dùng (dành cho user)
+router.put("/update-profile", updateProfileUser);
 
 // export router ra ngoài để server.js có thể import và dùng
 module.exports = router;

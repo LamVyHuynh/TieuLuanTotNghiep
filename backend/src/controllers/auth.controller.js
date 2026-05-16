@@ -417,6 +417,31 @@ const changePassword = async (req, res) => {
     });
   }
 };
+
+// Cập nhật thông tin người dùng cá nhân user
+const updateProfileUser = async (req, res) => {
+  try {
+    const userId = req.user.id; // Lấy userId từ token đã xác thực
+    const updateData = req.body; // Dữ liệu cập nhật được gửi từ client
+
+    const updatedUser = await updateUserById(userId, updateData);
+
+    res.status(200).json({
+      message: "Thông tin cá nhân đã được cập nhật thành công",
+      user: updatedUser,
+    });
+  } catch (error) {
+    if (error.message === "Không tìm thấy người dùng") {
+      return res.status(404).json({
+        message: error.message,
+      });
+    }
+    res.status(500).json({
+      message: "Lỗi server khi cập nhật thông tin cá nhân",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   register,
   login,
@@ -429,4 +454,5 @@ module.exports = {
   deleteUser,
   updateUser,
   changePassword,
+  updateProfileUser,
 };

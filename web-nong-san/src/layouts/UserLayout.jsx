@@ -121,13 +121,14 @@ function UserLayout() {
                       : "pointer-events-none -translate-y-2 scale-95 opacity-0"
                   }`}
                 >
-                  <button
-                    type="button"
+                  <Link
+                    to="/profile" // Nhớ đăng ký Route này trong App.js nhé
+                    onClick={() => setShowUserMenu(false)}
                     className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                   >
                     <UserRound size={16} className="text-slate-400" />
                     Cập nhật thông tin
-                  </button>
+                  </Link>
                   <button
                     type="button"
                     className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
