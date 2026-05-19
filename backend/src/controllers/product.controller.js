@@ -2,6 +2,7 @@ const {
   createProduct,
   getAllProducts,
   deleteProduct,
+  updateProduct,
 } = require("../services/product.service");
 
 const addProduct = async (req, res) => {
@@ -73,7 +74,10 @@ const deleteSanPham = async (req, res) => {
     const productId = req.params.id;
     const success = await deleteProduct(productId);
     if (success) {
-      res.status(200).json({ message: "Xoá sản phẩm thành công!" });
+      res.status(200).json({
+        message: "Xoá sản phẩm thành công!",
+        deletedProductId: productId, // Trả về ID của sản phẩm đã xoá để frontend có thể cập nhật UI
+      });
     } else {
       res.status(404).json({ message: "Không tìm thấy sản phẩm để xoá!" });
     }
@@ -84,8 +88,32 @@ const deleteSanPham = async (req, res) => {
   }
 };
 
+const updateInfoProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const productData = req.body;
+
+    // Validate dữ liệu nếu cần thiết (tương tự như createProduct)
+    const success = await updateProduct(productId, productData);
+    if (success) {
+      res.status(200).json({
+        message: "Cập nhật sản phẩm thành công!",
+        data: { id_product: productId, ...productData },
+      });
+    } else {
+      res.status(404).json({ message: "Không tìm thấy sản phẩm để cập nhật!" });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: "Lỗi server khi cập nhật sản phẩm!",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addProduct,
   getProducts,
   deleteSanPham,
+  updateInfoProduct,
 };

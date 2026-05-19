@@ -5,6 +5,7 @@ const {
   addProduct,
   getProducts,
   deleteSanPham,
+  updateInfoProduct,
 } = require("../controllers/product.controller");
 const { authenticateToken } = require("../middlewares/auth.middleware");
 
@@ -19,5 +20,8 @@ router.get("/", getProducts);
 
 // Route để xoá sản phẩm (nếu cần thiết)
 router.delete("/:id", deleteSanPham);
+
+// Route để cập nhật thông tin sản phẩm
+router.put("/:id", updateInfoProduct);
 
 module.exports = router;
