@@ -50,6 +50,15 @@ async function createProduct(productData) {
   return result.insertId;
 }
 
+// Lấy danh sách sản phẩm
+async function getAllProducts() {
+  const [rows] = await pool.query(
+    "SELECT * FROM product ORDER BY created_at DESC",
+  );
+  return rows;
+}
+
 module.exports = {
   createProduct,
+  getAllProducts,
 };

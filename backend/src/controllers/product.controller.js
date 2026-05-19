@@ -1,4 +1,7 @@
-const { createProduct } = require("../services/product.service");
+const {
+  createProduct,
+  getAllProducts,
+} = require("../services/product.service");
 
 const addProduct = async (req, res) => {
   try {
@@ -49,6 +52,21 @@ const addProduct = async (req, res) => {
   }
 };
 
+const getProducts = async (req, res) => {
+  try {
+    const products = await getAllProducts();
+    res.status(200).json({
+      message: "Lấy danh sách sản phẩm thành công!",
+      products,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Lỗi lấy danh sách món!", error: error.message });
+  }
+};
+
 module.exports = {
   addProduct,
+  getProducts,
 };
