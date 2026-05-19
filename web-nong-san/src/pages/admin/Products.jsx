@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Plus, X, Save, Activity, Box, Edit, Trash2 } from "lucide-react";
+import {
+  Plus,
+  X,
+  Save,
+  Activity,
+  Box,
+  Edit,
+  Trash2,
+  Smile, // Icon mặt cười
+  Frown, // Icon mặt buồn
+} from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
 function ProductsPage() {
@@ -11,6 +21,13 @@ function ProductsPage() {
   // --- PHẦN LOGIC SỬA SẢN PHẨM MỚI THÊM ---
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentProductId, setCurrentProductId] = useState(null);
+
+  // --- STATE CHO THÔNG BÁO Ở GIỮA ---
+  const [toast, setToast] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
 
   const [formData, setFormData] = useState({
     id_Store: 1,
@@ -27,6 +44,15 @@ function ProductsPage() {
     fat: "",
     image_url: "",
   });
+
+  // --- HÀM HIỂN THỊ THÔNG BÁO XỊN XÒ CHÍNH GIỮA ---
+  const showToast = (type, message) => {
+    setToast({ show: true, type, message });
+    // Tự động tắt sau 2.5 giây cho người dùng đọc kịp
+    setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 2500);
+  };
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -53,7 +79,6 @@ function ProductsPage() {
     }));
   };
 
-  // --- HÀM MỞ FORM ĐỂ SỬA ---
   const openEditModal = (product) => {
     setFormData({
       id_Store: product.id_Store,
@@ -75,7 +100,6 @@ function ProductsPage() {
     setIsModalOpen(true);
   };
 
-  // --- HÀM MỞ FORM ĐỂ THÊM MỚI (Reset lại form) ---
   const openAddModal = () => {
     setFormData({
       id_Store: 1,
@@ -101,18 +125,17 @@ function ProductsPage() {
     setIsSubmitting(true);
     try {
       if (isEditMode) {
-        // NẾU ĐANG SỬA THÌ GỌI API CẬP NHẬT
         await axiosClient.put(`products/${currentProductId}`, formData);
-        alert("Cập nhật món ăn thành công! 🎉");
+        showToast("success", "Bạn đã cập nhật thông tin thành công!");
       } else {
-        // NẾU THÊM MỚI
         await axiosClient.post("products/add-product", formData);
-        alert("Thêm món ăn thành công bạn ơi! 🎉");
+        showToast("success", "Bạn đã thêm món ăn thành công!");
       }
       setIsModalOpen(false);
       fetchProducts();
     } catch (error) {
-      alert(
+      showToast(
+        "error",
         "Lỗi: " + (error.response?.data?.message || "Kiểm tra lại Backend!"),
       );
     } finally {
@@ -121,24 +144,29 @@ function ProductsPage() {
   };
 
   const handleDeleteProduct = async (productId) => {
-    if (!window.confirm("Bạn có chắc muốn xoá món này không?")) return;
+    if (
+      !window.confirm(
+        "Bạn có chắc muốn xoá món này không? Hành động này không thể hoàn tác!",
+      )
+    )
+      return;
     try {
       await axiosClient.delete(`products/${productId}`);
-      alert("Xoá món ăn thành công!");
+      showToast("success", "Bạn đã xoá món ăn thành công!");
       fetchProducts();
     } catch (error) {
-      alert("Lỗi khi xoá món ăn!");
+      showToast("error", "Lỗi khi xoá món ăn!");
       console.log("Lỗi xoá sản phẩm:", error);
     }
   };
 
   return (
-    <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 relative bg-slate-50/50">
+    <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 relative bg-slate-50/50 overflow-hidden">
       {/* MODAL THÊM / SỬA DÙNG CHUNG */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-slate-900/40"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             onClick={() => setIsModalOpen(false)}
           ></div>
           <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] bg-white shadow-2xl">
@@ -171,30 +199,38 @@ function ProductsPage() {
                       className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
                     />
                   </div>
-                  <input
-                    name="price"
-                    type="number"
-                    required
-                    value={formData.price}
-                    onChange={handleChange}
-                    className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
-                    placeholder="Giá gốc"
-                  />
-                  <input
-                    name="discount_price"
-                    type="number"
-                    value={formData.discount_price}
-                    onChange={handleChange}
-                    className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
-                    placeholder="Giá giảm"
-                  />
+                  <div className="sm:col-span-1">
+                    <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
+                      Giá gốc ($)
+                    </label>
+                    <input
+                      name="price"
+                      type="number"
+                      required
+                      value={formData.price}
+                      onChange={handleChange}
+                      className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                    />
+                  </div>
+                  <div className="sm:col-span-1">
+                    <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
+                      Giá giảm ($)
+                    </label>
+                    <input
+                      name="discount_price"
+                      type="number"
+                      value={formData.discount_price}
+                      onChange={handleChange}
+                      className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                    />
+                  </div>
                   <div className="sm:col-span-2">
                     <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
                       Đơn vị tính
                     </label>
                     <input
                       name="unit"
-                      type="string"
+                      type="text"
                       required
                       value={formData.unit}
                       onChange={handleChange}
@@ -221,63 +257,82 @@ function ProductsPage() {
                   <Activity size={18} /> Dinh dưỡng
                 </div>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  <input
-                    name="calories"
-                    type="number"
-                    value={formData.calories}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
-                    placeholder="Calo"
-                  />
-                  <input
-                    name="protein"
-                    type="number"
-                    step="0.1"
-                    value={formData.protein}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
-                    placeholder="Đạm"
-                  />
-                  <input
-                    name="carbs"
-                    type="number"
-                    step="0.1"
-                    value={formData.carbs}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
-                    placeholder="Carbs"
-                  />
-                  <input
-                    name="fat"
-                    type="number"
-                    step="0.1"
-                    value={formData.fat}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
-                    placeholder="Béo"
-                  />
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                      Calo
+                    </label>
+                    <input
+                      name="calories"
+                      type="number"
+                      value={formData.calories}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                      Đạm
+                    </label>
+                    <input
+                      name="protein"
+                      type="number"
+                      step="0.1"
+                      value={formData.protein}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                      Carbs
+                    </label>
+                    <input
+                      name="carbs"
+                      type="number"
+                      step="0.1"
+                      value={formData.carbs}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                      Béo
+                    </label>
+                    <input
+                      name="fat"
+                      type="number"
+                      step="0.1"
+                      value={formData.fat}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
+                    />
+                  </div>
                 </div>
               </div>
               <div className="space-y-4 pt-4 border-t border-slate-50">
+                <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
+                  Link ảnh sản phẩm
+                </label>
                 <input
                   name="image_url"
                   value={formData.image_url}
                   onChange={handleChange}
                   className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
-                  placeholder="Link ảnh..."
+                  placeholder="https://..."
                 />
               </div>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full mt-4 flex items-center justify-center gap-3 py-5 bg-[#2e7d32] hover:bg-[#1b5e20] active:scale-[0.98] text-white font-black rounded-[1.5rem] shadow-xl shadow-green-100 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-4 flex items-center justify-center gap-3 py-5 bg-[#2e7d32] hover:bg-[#1b5e20] active:scale-[0.98] text-white font-bold rounded-[1.5rem] shadow-xl shadow-green-100 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <div className="h-6 w-6 animate-spin border-2 border-white border-t-transparent rounded-full" />
                 ) : (
                   <>
                     <Save size={24} />
-                    <span className="text-lg font-black">
+                    <span className="text-lg">
                       {isEditMode ? "Lưu thông tin" : "Thêm vào kho"}
                     </span>
                   </>
@@ -300,18 +355,17 @@ function ProductsPage() {
         </div>
         <button
           onClick={openAddModal}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] px-8 py-4 text-base font-bold text-white shadow-lg transition hover:scale-105 active:scale-95"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:bg-[#1b5e20] active:scale-95"
         >
-          <Plus size={22} /> {/* Tao cho icon to lên tí cho cân */}
-          <span className="text-base">Thêm món mới</span>{" "}
-          {/* Đổi từ text-xs sang text-base */}
+          <Plus size={22} />
+          <span className="text-base">Thêm món mới</span>
         </button>
       </header>
 
       {/* BẢNG HIỂN THỊ */}
       {isLoading ? (
         <div className="flex justify-center p-20">
-          <div className="h-10 w-10 animate-spin border-4 border-emerald-600 border-t-transparent rounded-full" />
+          <div className="h-10 w-10 animate-spin border-4 border-[#2e7d32] border-t-transparent rounded-full" />
         </div>
       ) : productList.length > 0 ? (
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
@@ -370,12 +424,11 @@ function ProductsPage() {
                     <td className="p-5 font-black text-slate-700">
                       {product.stock_quantity}
                     </td>
-                    <td className="p-5 text-sm font-black text-emerald-700">
+                    <td className="p-5 text-sm font-black text-[#2e7d32]">
                       {Number(product.price).toLocaleString("vi-VN")}đ
                     </td>
                     <td className="p-5 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {/* NÚT EDIT GỌI openEditModal */}
                         <button
                           onClick={() => openEditModal(product)}
                           className="p-2.5 text-slate-400 hover:text-emerald-600 cursor-pointer"
@@ -405,6 +458,55 @@ function ProductsPage() {
             Chưa có món ăn nào
           </h3>
         </section>
+      )}
+
+      {/* ================= KHUNG THÔNG BÁO CHÍNH GIỮA (CÓ NÚT CLOSE) ================= */}
+      {toast.show && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          {/* Lớp nền mờ - bấm vô là đóng */}
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer"
+            onClick={() => setToast({ ...toast, show: false })}
+          ></div>
+
+          {/* Khung thông báo */}
+          <div
+            className={`relative w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl flex flex-col bg-white border-2 ${
+              toast.type === "success" ? "border-[#2e7d32]" : "border-rose-600"
+            }`}
+          >
+            {/* Header: Màu xanh/đỏ + Nút Close */}
+            <div
+              className={`px-6 py-4 flex flex-col items-center justify-center gap-2 text-white relative ${
+                toast.type === "success" ? "bg-[#2e7d32]" : "bg-rose-600"
+              }`}
+            >
+              {/* NÚT CLOSE XỊN XÒ */}
+              <button
+                onClick={() => setToast({ ...toast, show: false })}
+                className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/20 transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+
+              {toast.type === "success" ? (
+                <Smile size={48} />
+              ) : (
+                <Frown size={48} />
+              )}
+              <span className="font-black text-xl tracking-widest uppercase">
+                {toast.type === "success" ? "Thành công" : "Thất bại"}
+              </span>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-8 text-center">
+              <p className="text-slate-700 font-bold text-lg leading-relaxed">
+                {toast.message}
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
