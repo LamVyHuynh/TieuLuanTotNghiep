@@ -12,8 +12,11 @@ dotenv.config();
 // Pool kết nối database
 const pool = require("./config/db");
 
-// Impor routes
+// Impor authroutes
 const authRoutes = require("./routes/auth.routes");
+
+// Import product routes
+const productRoutes = require("./routes/product.routes");
 
 // Import cookie-parser để đọc cookie từ request header
 const cookieParser = require("cookie-parser");
@@ -45,6 +48,9 @@ app.use(express.json());
 // Mount routes (gắn route)
 // Gắn route vào server
 app.use("/auth", authRoutes);
+
+// Gắn route sản phẩm
+app.use("/products", productRoutes);
 
 // gắn router login
 // app.use("/login", authRoutes);
