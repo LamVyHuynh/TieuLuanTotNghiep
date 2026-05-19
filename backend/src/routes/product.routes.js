@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   addProduct,
   getProducts,
+  deleteSanPham,
 } = require("../controllers/product.controller");
 const { authenticateToken } = require("../middlewares/auth.middleware");
 
@@ -15,5 +16,8 @@ router.post("/add-product", addProduct);
 
 // Route để lấy danh sách sản phẩm
 router.get("/", getProducts);
+
+// Route để xoá sản phẩm (nếu cần thiết)
+router.delete("/:id", deleteSanPham);
 
 module.exports = router;

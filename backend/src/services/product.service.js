@@ -58,7 +58,17 @@ async function getAllProducts() {
   return rows;
 }
 
+// Xoá sản phẩm (nếu cần thiết)
+async function deleteProduct(productId) {
+  const [result] = await pool.query(
+    "DELETE FROM product WHERE id_product = ?",
+    [productId],
+  );
+  return result.affectedRows > 0; // Trả về true nếu xoá thành công
+}
+
 module.exports = {
   createProduct,
   getAllProducts,
+  deleteProduct,
 };

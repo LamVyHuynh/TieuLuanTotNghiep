@@ -81,6 +81,26 @@ function ProductsPage() {
     }
   };
 
+  // Xoá sản phẩm (nếu cần thiết)
+  const handleDeleteProduct = async (productId) => {
+    if (
+      !window.confirm(
+        "Bạn có chắc muốn xoá món này không? Hành động này không thể hoàn tác!",
+      )
+    ) {
+      return;
+    }
+    try {
+      await axiosClient.delete(`products/${productId}`);
+      alert("Xoá món ăn thành công!");
+      console.log("Sản phẩm đã xoá:", productId);
+      fetchProducts();
+    } catch (error) {
+      alert("Lỗi khi xoá món ăn!");
+      console.log("Lỗi xoá sản phẩm:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 relative bg-slate-50/50">
       {/* MODAL THÊM SẢN PHẨM (GIỮ NGUYÊN) */}
@@ -333,7 +353,12 @@ function ProductsPage() {
                         <button className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer">
                           <Edit size={18} />
                         </button>
-                        <button className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer">
+                        <button
+                          onClick={() =>
+                            handleDeleteProduct(product.id_product)
+                          }
+                          className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
+                        >
                           <Trash2 size={18} />
                         </button>
                       </div>

@@ -1,6 +1,7 @@
 const {
   createProduct,
   getAllProducts,
+  deleteProduct,
 } = require("../services/product.service");
 
 const addProduct = async (req, res) => {
@@ -66,7 +67,25 @@ const getProducts = async (req, res) => {
   }
 };
 
+// Xoá sản phẩm (nếu cần thiết)
+const deleteSanPham = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const success = await deleteProduct(productId);
+    if (success) {
+      res.status(200).json({ message: "Xoá sản phẩm thành công!" });
+    } else {
+      res.status(404).json({ message: "Không tìm thấy sản phẩm để xoá!" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Lỗi server khi xoá sản phẩm!", error: error.message });
+  }
+};
+
 module.exports = {
   addProduct,
   getProducts,
+  deleteSanPham,
 };
