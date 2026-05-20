@@ -12,16 +12,16 @@ import {
 import axiosClient from "../../api/axiosClient";
 
 function ProductsPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [productList, setProductList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- STATE CHO MODAL THÊM / SỬA ---
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // --- PHẦN LOGIC SỬA SẢN PHẨM MỚI THÊM ---
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentProductId, setCurrentProductId] = useState(null);
 
-  // --- STATE CHO MODAL XÁC NHẬN XOÁ (DÙNG THAY THẾ ALERT) ---
+  // --- STATE CHO MODAL XÁC NHẬN XOÁ ---
   const [deleteConfirm, setDeleteConfirm] = useState({
     show: false,
     productId: null,
@@ -35,6 +35,7 @@ function ProductsPage() {
     message: "",
   });
 
+  // Ref dùng để quản lý timer của thông báo (Fix warning)
   const toastTimerRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -53,10 +54,11 @@ function ProductsPage() {
     image_url: "",
   });
 
-  // --- HÀM THÔNG BÁO ---
+  // --- HÀM THÔNG BÁO XỊN XÒ CHÍNH GIỮA (Có fix tự tắt an toàn) ---
   const showToast = (type, message) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ show: true, type, message });
+    // Tự động tắt sau 2.5 giây cho người dùng đọc kịp
     toastTimerRef.current = setTimeout(() => {
       setToast((prev) => ({ ...prev, show: false }));
     }, 2500);
@@ -71,7 +73,8 @@ function ProductsPage() {
     setIsLoading(true);
     try {
       const response = await axiosClient.get("products");
-      setProductList(response.data.products || []);
+      const products = response.data.products;
+      setProductList(products);
     } catch (error) {
       console.error("Lỗi load sản phẩm:", error);
     } finally {
@@ -81,6 +84,7 @@ function ProductsPage() {
 
   useEffect(() => {
     fetchProducts();
+    // Dọn dẹp timer khi thoát trang để tránh warning memory leak
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     };
@@ -167,10 +171,11 @@ function ProductsPage() {
     setDeleteConfirm((prev) => ({ ...prev, isDeleting: true }));
     try {
       await axiosClient.delete(`products/${deleteConfirm.productId}`);
-      showToast("success", "Món ăn đã được xoá thành công 🥰");
+      showToast("success", "Bạn đã xoá món ăn thành công!");
       fetchProducts();
     } catch (error) {
-      showToast("error", "Xoá món ăn không được rồi 😥", error);
+      showToast("error", "Lỗi khi xoá món ăn!");
+      console.log("Lỗi xoá sản phẩm:", error);
     } finally {
       setDeleteConfirm({ show: false, productId: null, isDeleting: false });
     }
@@ -178,7 +183,7 @@ function ProductsPage() {
 
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 relative bg-slate-50/50 overflow-hidden">
-      {/* MODAL THÊM / SỬA */}
+      {/* MODAL THÊM / SỬA DÙNG CHUNG */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
@@ -198,7 +203,6 @@ function ProductsPage() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-8">
-              {/* Form inputs giống cũ... */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm uppercase tracking-widest">
                   <Box size={18} /> Thông tin
@@ -241,19 +245,20 @@ function ProductsPage() {
                       className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
                     />
                   </div>
-                  <div className="sm:col-span-1">
+                  <div className="sm:col-span-2">
                     <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
-                      Đơn vị
+                      Đơn vị tính
                     </label>
                     <input
                       name="unit"
+                      type="text"
                       required
                       value={formData.unit}
                       onChange={handleChange}
                       className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
                     />
                   </div>
-                  <div className="sm:col-span-1">
+                  <div className="sm:col-span-2">
                     <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
                       Số lượng kho
                     </label>
@@ -268,16 +273,86 @@ function ProductsPage() {
                   </div>
                 </div>
               </div>
+              <div className="space-y-4 pt-4 border-t border-slate-50">
+                <div className="flex items-center gap-2 text-amber-600 font-bold text-sm uppercase tracking-widest">
+                  <Activity size={18} /> Dinh dưỡng
+                </div>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                      Calo
+                    </label>
+                    <input
+                      name="calories"
+                      type="number"
+                      value={formData.calories}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                      Đạm
+                    </label>
+                    <input
+                      name="protein"
+                      type="number"
+                      step="0.1"
+                      value={formData.protein}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                      Carbs
+                    </label>
+                    <input
+                      name="carbs"
+                      type="number"
+                      step="0.1"
+                      value={formData.carbs}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                      Béo
+                    </label>
+                    <input
+                      name="fat"
+                      type="number"
+                      step="0.1"
+                      value={formData.fat}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4 pt-4 border-t border-slate-50">
+                <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
+                  Link ảnh sản phẩm
+                </label>
+                <input
+                  name="image_url"
+                  value={formData.image_url}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                  placeholder="https://..."
+                />
+              </div>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full mt-4 flex items-center justify-center gap-3 py-5 bg-[#2e7d32] hover:bg-[#1b5e20] active:scale-[0.98] text-white font-bold rounded-[1.5rem] shadow-xl transition-all cursor-pointer"
+                className="w-full mt-4 flex items-center justify-center gap-3 py-5 bg-[#2e7d32] hover:bg-[#1b5e20] active:scale-[0.98] text-white font-bold rounded-[1.5rem] shadow-xl transition-all cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <div className="h-6 w-6 animate-spin border-2 border-white border-t-transparent rounded-full" />
                 ) : (
                   <>
-                    <Save size={24} />{" "}
+                    <Save size={24} />
                     <span className="text-lg">
                       {isEditMode ? "Lưu thông tin" : "Thêm vào kho"}
                     </span>
@@ -289,10 +364,10 @@ function ProductsPage() {
         </div>
       )}
 
-      {/* HEADER */}
+      {/* HEADER TRANG CHÍNH */}
       <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between px-2">
         <div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tighter">
+          <h2 className="text-4xl font-black tracking-tighter text-slate-900">
             Quản lý sản phẩm
           </h2>
           <p className="mt-1 text-slate-500 font-medium italic">
@@ -301,19 +376,19 @@ function ProductsPage() {
         </div>
         <button
           onClick={openAddModal}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 active:scale-95"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:bg-[#1b5e20] active:scale-95"
         >
           <Plus size={22} />
           <span className="text-base">Thêm món mới</span>
         </button>
       </header>
 
-      {/* TABLE */}
+      {/* BẢNG HIỂN THỊ */}
       {isLoading ? (
         <div className="flex justify-center p-20">
           <div className="h-10 w-10 animate-spin border-4 border-[#2e7d32] border-t-transparent rounded-full" />
         </div>
-      ) : (
+      ) : productList.length > 0 ? (
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -360,7 +435,6 @@ function ProductsPage() {
                         >
                           <Edit size={18} />
                         </button>
-                        {/* NÚT XOÁ MỚI */}
                         <button
                           onClick={() => openDeleteConfirm(product.id_product)}
                           className="p-2.5 text-slate-400 hover:text-rose-600 cursor-pointer"
@@ -375,13 +449,20 @@ function ProductsPage() {
             </table>
           </div>
         </div>
+      ) : (
+        <section className="rounded-[3rem] border border-slate-100 bg-white p-24 text-center">
+          <Box size={48} className="mx-auto text-slate-200 mb-4" />
+          <h3 className="text-xl font-black text-slate-800">
+            Chưa có món ăn nào
+          </h3>
+        </section>
       )}
 
       {/* ================= MODAL XÁC NHẬN XOÁ (UI MỚI CỰC XỊN) ================= */}
       {deleteConfirm.show && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer"
             onClick={() => setDeleteConfirm({ ...deleteConfirm, show: false })}
           ></div>
           <div className="relative w-full max-w-sm rounded-[2.5rem] bg-white overflow-hidden shadow-2xl border-2 border-rose-100">
@@ -430,10 +511,16 @@ function ProductsPage() {
             onClick={closeToast}
           ></div>
           <div
-            className={`relative w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl flex flex-col bg-white border-2 ${toast.type === "success" ? "border-emerald-500" : "border-rose-400"}`}
+            className={`relative w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl flex flex-col bg-white border-2 ${
+              toast.type === "success"
+                ? "border-emerald-500"
+                : "border-rose-400"
+            }`}
           >
             <div
-              className={`px-6 py-5 flex flex-col items-center justify-center gap-2 text-white relative ${toast.type === "success" ? "bg-emerald-500" : "bg-rose-400"}`}
+              className={`px-6 py-5 flex flex-col items-center justify-center gap-2 text-white relative ${
+                toast.type === "success" ? "bg-emerald-500" : "bg-rose-400"
+              }`}
             >
               <button
                 onClick={closeToast}
