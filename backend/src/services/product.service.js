@@ -58,7 +58,76 @@ async function getAllProducts() {
   return rows;
 }
 
+// Xoá sản phẩm (nếu cần thiết)
+async function deleteProduct(productId) {
+  const [result] = await pool.query(
+    "DELETE FROM product WHERE id_product = ?",
+    [productId],
+  );
+  return result.affectedRows > 0; // Trả về true nếu xoá thành công
+}
+
+// Cập nhật thông tin sản phẩm
+async function updateProduct(productId, productData) {
+  const {
+    id_Store,
+    id_Category,
+    name,
+    description,
+    price,
+    discount_price,
+    unit,
+    stock_quantity,
+    calories,
+    protein,
+    carbs,
+    fat,
+    image_url,
+    status, // Nếu mạy muốn truyền status từ ngoài vào
+  } = productData;
+
+  const [result] = await pool.query(
+    `UPDATE product SET 
+    id_Store = ?, 
+    id_Category = ?, 
+    name = ?, 
+    description = ?, 
+    price = ?, 
+    discount_price = ?, 
+    unit = ?, 
+    stock_quantity = ?, 
+    calories = ?, 
+    protein = ?, 
+    carbs = ?, 
+    fat = ?, 
+    image_url = ?, 
+    status = ?, 
+    updated_at = NOW()
+  WHERE id_product = ?`,
+    [
+      id_Store,
+      id_Category,
+      name,
+      description,
+      price,
+      discount_price || null,
+      unit,
+      stock_quantity || 0,
+      calories || 0,
+      protein || 0,
+      carbs || 0,
+      fat || 0,
+      image_url,
+      status || "active",
+      productId,
+    ],
+  );
+  return result.affectedRows > 0;
+}
+
 module.exports = {
   createProduct,
   getAllProducts,
+  deleteProduct,
+  updateProduct,
 };

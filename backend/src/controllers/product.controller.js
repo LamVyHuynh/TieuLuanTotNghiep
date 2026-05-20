@@ -1,6 +1,8 @@
 const {
   createProduct,
   getAllProducts,
+  deleteProduct,
+  updateProduct,
 } = require("../services/product.service");
 
 const addProduct = async (req, res) => {
@@ -66,7 +68,44 @@ const getProducts = async (req, res) => {
   }
 };
 
+const deleteSanPham = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const success = await deleteProduct(productId);
+    if (success) {
+      res.status(200).json({ message: "Xoá sản phẩm thành công!" });
+    } else {
+      res.status(404).json({ message: "Không tìm thấy sản phẩm để xoá!" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Lỗi server khi xoá sản phẩm!", error: error.message });
+  }
+};
+
+const updateInfoProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const productData = req.body;
+
+    // Validate dữ liệu nếu cần thiết (tương tự như addProduct
+    const success = await updateProduct(productId, productData);
+    if (success) {
+      res.status(200).json({ message: "Cập nhật sản phẩm thành công!" });
+    } else {
+      res.status(404).json({ message: "Không tìm thấy sản phẩm để cập nhật!" });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: "Lỗi server khi cập nhật sản phẩm!",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   addProduct,
   getProducts,
+  deleteSanPham,
+  updateInfoProduct,
 };
