@@ -12,12 +12,12 @@ import {
 import axiosClient from "../../api/axiosClient";
 
 function ProductsPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [productList, setProductList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- PHẦN LOGIC SỬA SẢN PHẨM MỚI THÊM ---
+  // --- STATE CHO MODAL THÊM / SỬA ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentProductId, setCurrentProductId] = useState(null);
 
@@ -35,7 +35,6 @@ function ProductsPage() {
     message: "",
   });
 
-  // Ref dùng để quản lý timer của thông báo (Fix warning)
   const toastTimerRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -54,11 +53,9 @@ function ProductsPage() {
     image_url: "",
   });
 
-  // --- HÀM THÔNG BÁO XỊN XÒ CHÍNH GIỮA (Có fix tự tắt an toàn) ---
   const showToast = (type, message) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ show: true, type, message });
-    // Tự động tắt sau 2.5 giây cho người dùng đọc kịp
     toastTimerRef.current = setTimeout(() => {
       setToast((prev) => ({ ...prev, show: false }));
     }, 2500);
@@ -73,8 +70,7 @@ function ProductsPage() {
     setIsLoading(true);
     try {
       const response = await axiosClient.get("products");
-      const products = response.data.products;
-      setProductList(products);
+      setProductList(response.data.products || []);
     } catch (error) {
       console.error("Lỗi load sản phẩm:", error);
     } finally {
@@ -84,7 +80,6 @@ function ProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-    // Dọn dẹp timer khi thoát trang để tránh warning memory leak
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     };
@@ -162,7 +157,6 @@ function ProductsPage() {
     }
   };
 
-  // --- LOGIC XOÁ MỚI (Mở modal xác nhận trước) ---
   const openDeleteConfirm = (id) => {
     setDeleteConfirm({ show: true, productId: id, isDeleting: false });
   };
@@ -171,11 +165,10 @@ function ProductsPage() {
     setDeleteConfirm((prev) => ({ ...prev, isDeleting: true }));
     try {
       await axiosClient.delete(`products/${deleteConfirm.productId}`);
-      showToast("success", "Bạn đã xoá món ăn thành công!");
+      showToast("success", "Món ăn đã được xoá thành công 🥰");
       fetchProducts();
     } catch (error) {
-      showToast("error", "Lỗi khi xoá món ăn!");
-      console.log("Lỗi xoá sản phẩm:", error);
+      showToast("error", "Xoá món ăn không được rồi 😥", error);
     } finally {
       setDeleteConfirm({ show: false, productId: null, isDeleting: false });
     }
@@ -183,11 +176,11 @@ function ProductsPage() {
 
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 relative bg-slate-50/50 overflow-hidden">
-      {/* MODAL THÊM / SỬA DÙNG CHUNG */}
+      {/* MODAL THÊM / SỬA */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer"
             onClick={() => setIsModalOpen(false)}
           ></div>
           <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] bg-white shadow-2xl">
@@ -245,20 +238,19 @@ function ProductsPage() {
                       className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
                     />
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-1">
                     <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
-                      Đơn vị tính
+                      Đơn vị
                     </label>
                     <input
                       name="unit"
-                      type="text"
                       required
                       value={formData.unit}
                       onChange={handleChange}
                       className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
                     />
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-1">
                     <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
                       Số lượng kho
                     </label>
@@ -367,7 +359,7 @@ function ProductsPage() {
       {/* HEADER TRANG CHÍNH */}
       <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between px-2">
         <div>
-          <h2 className="text-4xl font-black tracking-tighter text-slate-900">
+          <h2 className="text-4xl font-black text-slate-900 tracking-tighter">
             Quản lý sản phẩm
           </h2>
           <p className="mt-1 text-slate-500 font-medium italic">
@@ -376,14 +368,14 @@ function ProductsPage() {
         </div>
         <button
           onClick={openAddModal}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:bg-[#1b5e20] active:scale-95"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 active:scale-95"
         >
           <Plus size={22} />
           <span className="text-base">Thêm món mới</span>
         </button>
       </header>
 
-      {/* BẢNG HIỂN THỊ */}
+      {/* TABLE BẢNG HIỂN THỊ ĐÃ KHÔI PHỤC ĐẦY ĐỦ */}
       {isLoading ? (
         <div className="flex justify-center p-20">
           <div className="h-10 w-10 animate-spin border-4 border-[#2e7d32] border-t-transparent rounded-full" />
@@ -397,6 +389,15 @@ function ProductsPage() {
                   <th className="p-5 text-[11px] font-black uppercase text-slate-400">
                     Món ăn
                   </th>
+                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-center">
+                    Dinh dưỡng (P-C-F)
+                  </th>
+                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-center">
+                    Tồn kho
+                  </th>
+                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-center">
+                    Giá bán
+                  </th>
                   <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-right">
                     Thao tác
                   </th>
@@ -406,8 +407,9 @@ function ProductsPage() {
                 {productList.map((product) => (
                   <tr
                     key={product.id_product}
-                    className="group hover:bg-emerald-50/30"
+                    className="group hover:bg-emerald-50/30 transition-all"
                   >
+                    {/* Cột Tên & Ảnh */}
                     <td className="p-5">
                       <div className="flex items-center gap-4">
                         <img
@@ -415,7 +417,8 @@ function ProductsPage() {
                             product.image_url ||
                             "https://via.placeholder.com/150"
                           }
-                          className="h-14 w-14 rounded-2xl object-cover"
+                          alt=""
+                          className="h-14 w-14 rounded-2xl object-cover shadow-sm"
                         />
                         <div>
                           <p className="font-black text-slate-800 leading-none mb-1">
@@ -427,17 +430,57 @@ function ProductsPage() {
                         </div>
                       </div>
                     </td>
+                    {/* Cột Dinh dưỡng */}
+                    <td className="p-5 text-center">
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg mb-1">
+                          {product.calories} kcal
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400">
+                          P:{product.protein} C:{product.carbs} F:{product.fat}
+                        </span>
+                      </div>
+                    </td>
+                    {/* Cột Tồn kho */}
+                    <td className="p-5 text-center">
+                      <span
+                        className={`font-black text-sm ${product.stock_quantity <= 5 ? "text-rose-500" : "text-slate-600"}`}
+                      >
+                        {product.stock_quantity}
+                      </span>
+                    </td>
+                    {/* Cột Giá */}
+                    <td className="p-5 text-center font-black text-[#2e7d32]">
+                      {product.discount_price ? (
+                        <div className="flex flex-col items-center">
+                          <span className="text-slate-300 line-through text-[10px]">
+                            {Number(product.price).toLocaleString("vi-VN")}đ
+                          </span>
+                          <span>
+                            {Number(product.discount_price).toLocaleString(
+                              "vi-VN",
+                            )}
+                            đ
+                          </span>
+                        </div>
+                      ) : (
+                        <span>
+                          {Number(product.price).toLocaleString("vi-VN")}đ
+                        </span>
+                      )}
+                    </td>
+                    {/* Cột Nút bấm thao tác */}
                     <td className="p-5 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => openEditModal(product)}
-                          className="p-2.5 text-slate-400 hover:text-emerald-600 cursor-pointer"
+                          className="p-2.5 text-slate-400 hover:text-emerald-600 cursor-pointer transition-colors"
                         >
                           <Edit size={18} />
                         </button>
                         <button
                           onClick={() => openDeleteConfirm(product.id_product)}
-                          className="p-2.5 text-slate-400 hover:text-rose-600 cursor-pointer"
+                          className="p-2.5 text-slate-400 hover:text-rose-600 cursor-pointer transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
