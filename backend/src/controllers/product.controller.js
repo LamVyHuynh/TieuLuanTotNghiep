@@ -22,7 +22,7 @@ const addProduct = async (req, res) => {
       });
     }
 
-    // 2. Ép kiểu dữ liệu để an toàn cho SQL (Carbs chứ không phải Cabs nhé mạy)
+    // 2. Ép kiểu dữ liệu để an toàn cho SQL
     const cleanProductData = {
       ...productData,
       price: parseFloat(productData.price),
@@ -31,15 +31,15 @@ const addProduct = async (req, res) => {
         : null,
       stock_quantity: parseInt(productData.stock_quantity) || 0,
       calories: parseInt(productData.calories) || 0,
-      protein: parseFloat(productData.protein) || 0, // Dùng float cho chính xác
-      carbs: parseFloat(productData.carbs) || 0, // Sửa cabs thành carbs
+      protein: parseFloat(productData.protein) || 0,
+      carbs: parseFloat(productData.carbs) || 0,
       fat: parseFloat(productData.fat) || 0,
     };
 
     // 3. Gọi service để lưu vào DB
     const newProductId = await createProduct(cleanProductData);
 
-    // 4. Trả về kết quả (dùng đúng tên biến newProductId)
+    // 4. Trả về kết quả
     res.status(201).json({
       message:
         "Thêm sản phẩm thành công! Database đã nhận đủ chỉ số dinh dưỡng.",
@@ -68,7 +68,7 @@ const getProducts = async (req, res) => {
   }
 };
 
-// Xoá sản phẩm (nếu cần thiết)
+// Xoá sản phẩm
 const deleteSanPham = async (req, res) => {
   try {
     const productId = req.params.id;
@@ -76,7 +76,7 @@ const deleteSanPham = async (req, res) => {
     if (success) {
       res.status(200).json({
         message: "Xoá sản phẩm thành công!",
-        deletedProductId: productId, // Trả về ID của sản phẩm đã xoá để frontend có thể cập nhật UI
+        deletedProductId: productId, // Trả về ID để frontend cập nhật UI tức thì
       });
     } else {
       res.status(404).json({ message: "Không tìm thấy sản phẩm để xoá!" });
@@ -93,12 +93,12 @@ const updateInfoProduct = async (req, res) => {
     const productId = req.params.id;
     const productData = req.body;
 
-    // Validate dữ liệu nếu cần thiết (tương tự như createProduct)
+    // Gọi service cập nhật
     const success = await updateProduct(productId, productData);
     if (success) {
       res.status(200).json({
         message: "Cập nhật sản phẩm thành công!",
-        data: { id_product: productId, ...productData },
+        data: { id_product: productId, ...productData }, // Trả về data mới để frontend đồng bộ
       });
     } else {
       res.status(404).json({ message: "Không tìm thấy sản phẩm để cập nhật!" });
