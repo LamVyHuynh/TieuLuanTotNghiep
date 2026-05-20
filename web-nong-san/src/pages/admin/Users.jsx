@@ -22,7 +22,7 @@ import {
   Eraser,
   Save,
   Shield,
-  Key, // Thêm icon Key cho nút Đổi mật khẩu
+  Key,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient.js";
 
@@ -74,6 +74,36 @@ function UsersPage() {
 
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
+  // --- STATE CHO MODAL XÁC NHẬN XOÁ ---
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    show: false,
+    userId: null,
+    isDeleting: false,
+  });
+
+  // --- STATE CHO THÔNG BÁO Ở GIỮA ---
+  const [toast, setToast] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
+
+  const toastTimerRef = useRef(null);
+
+  // --- HÀM THÔNG BÁO XỊN XÒ CHÍNH GIỮA ---
+  const showToast = (type, message) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ show: true, type, message });
+    toastTimerRef.current = setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 2500);
+  };
+
+  const closeToast = () => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast((prev) => ({ ...prev, show: false }));
+  };
+
   const totalDropDown = (userId) => {
     if (openDropdownId === userId) {
       setOpenDropdownId(null);
@@ -102,40 +132,53 @@ function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
   }, [fetchUsers]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  const handleToggleLockStatus = async (userId) => {
-    if (
-      !window.confirm(
-        "Bạn có chắc muốn thay đổi trạng thái hoạt động của người dùng này?",
-      )
-    )
-      return;
+  // --- LOGIC KHOÁ/MỞ KHOÁ ---
+  const handleToggleLockStatus = async (user) => {
+    setOpenDropdownId(null);
+    const isLocking = user.is_active === 1 || user.is_active === true;
     try {
-      await axiosClient.post(`/auth/users/${userId}/toggle-status`);
+      await axiosClient.post(`/auth/users/${user.id}/toggle-status`);
+      showToast(
+        "success",
+        isLocking
+          ? "Đã khoá tài khoản thành công! 🥰"
+          : "Đã mở khoá tài khoản! 🥰",
+      );
       fetchUsers();
     } catch (error) {
+      showToast("error", "Lỗi khi thay đổi trạng thái người dùng! 😥");
       console.error("Lỗi khi thay đổi trạng thái người dùng:", error);
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (
-      !window.confirm(
-        "Bạn có chắc muốn xoá người dùng này? Hành động này không thể hoàn tác!",
-      )
-    )
-      return;
+  // --- LOGIC XOÁ USER (Dùng modal xác nhận) ---
+  const openDeleteConfirm = (id) => {
+    setOpenDropdownId(null);
+    setDeleteConfirm({ show: true, userId: id, isDeleting: false });
+  };
+
+  const executeDelete = async () => {
+    setDeleteConfirm((prev) => ({ ...prev, isDeleting: true }));
     try {
-      await axiosClient.delete(`/auth/users/${userId}/delete-user`);
+      await axiosClient.delete(
+        `/auth/users/${deleteConfirm.userId}/delete-user`,
+      );
+      showToast("success", "Người dùng đã bị xoá vĩnh viễn! 🥰");
       fetchUsers();
     } catch (error) {
+      showToast("error", "Lỗi khi xoá người dùng! 😥");
       console.error("Lỗi khi xoá người dùng:", error);
-      alert("Đã có lỗi xảy ra khi xoá người dùng. Vui lòng thử lại sau.");
+    } finally {
+      setDeleteConfirm({ show: false, userId: null, isDeleting: false });
     }
   };
 
@@ -217,7 +260,7 @@ function UsersPage() {
   const [isAddUserFormOpen, setIsAddUserFormOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [showAddPassword, setShowAddPassword] = useState(false);
-  const [addError, setAddError] = useState("");
+
   const [addFormData, setAddFormData] = useState({
     full_name: "",
     email: "",
@@ -227,28 +270,27 @@ function UsersPage() {
 
   const handleAddChange = (e) => {
     setAddFormData({ ...addFormData, [e.target.name]: e.target.value });
-    if (addError) setAddError("");
   };
 
   const handleClearForm = () => {
     setAddFormData({ full_name: "", email: "", phone: "", password: "" });
-    setAddError("");
   };
 
   const handleAddUserSubmit = async (e) => {
     e.preventDefault();
-    setAddError("");
     setIsAdding(true);
     try {
       await axiosClient.post("/auth/register", addFormData);
       setIsAddUserFormOpen(false);
       handleClearForm();
+      showToast("success", "Thêm người dùng mới thành công! 🥰");
       fetchUsers();
     } catch (error) {
-      setAddError(
+      showToast(
+        "error",
         error.response?.data?.message ||
           error.response?.data?.error ||
-          "Lỗi hệ thống khi thêm người dùng",
+          "Lỗi hệ thống khi thêm người dùng 😥",
       );
     } finally {
       setIsAdding(false);
@@ -260,7 +302,6 @@ function UsersPage() {
   // ========================================================
   const [isEditUserFormOpen, setIsEditUserFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editError, setEditError] = useState("");
 
   const [editFormData, setEditFormData] = useState({
     id: "",
@@ -278,19 +319,16 @@ function UsersPage() {
       phone: user.phone,
       role_id: user.role_id,
     });
-    setEditError("");
     setIsEditUserFormOpen(true);
     setOpenDropdownId(null);
   };
 
   const handleEditChange = (e) => {
     setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
-    if (editError) setEditError("");
   };
 
   const handleEditUserSubmit = async (e) => {
     e.preventDefault();
-    setEditError("");
     setIsEditing(true);
 
     try {
@@ -299,10 +337,12 @@ function UsersPage() {
         editFormData,
       );
       setIsEditUserFormOpen(false);
+      showToast("success", "Cập nhật thông tin thành công! 🥰");
       fetchUsers();
     } catch (error) {
-      setEditError(
-        error.response?.data?.message || "Lỗi hệ thống khi cập nhật người dùng",
+      showToast(
+        "error",
+        error.response?.data?.message || "Lỗi hệ thống khi cập nhật 😥",
       );
     } finally {
       setIsEditing(false);
@@ -310,12 +350,11 @@ function UsersPage() {
   };
 
   // ========================================================
-  // FORM ĐỔI MẬT KHẨU (NEW)
+  // FORM ĐỔI MẬT KHẨU
   // ========================================================
   const [isChangePwdFormOpen, setIsChangePwdFormOpen] = useState(false);
   const [isChangingPwd, setIsChangingPwd] = useState(false);
   const [showChangePwd, setShowChangePwd] = useState(false);
-  const [changePwdError, setChangePwdError] = useState("");
 
   const [changePwdData, setChangePwdData] = useState({
     id: "",
@@ -324,15 +363,13 @@ function UsersPage() {
 
   const openChangePwdModal = (user) => {
     setChangePwdData({ id: user.id, new_password: "" });
-    setChangePwdError("");
-    setShowChangePwd(false); // Reset trạng thái ẩn hiện mật khẩu
+    setShowChangePwd(false);
     setIsChangePwdFormOpen(true);
     setOpenDropdownId(null);
   };
 
   const handleChangePwdSubmit = async (e) => {
     e.preventDefault();
-    setChangePwdError("");
     setIsChangingPwd(true);
 
     try {
@@ -341,10 +378,11 @@ function UsersPage() {
       });
 
       setIsChangePwdFormOpen(false);
-      alert("Đổi mật khẩu thành công!"); // Có thể thay bằng thư viện Toast cho đẹp
+      showToast("success", "Đổi mật khẩu thành công! 🥰");
     } catch (error) {
-      setChangePwdError(
-        error.response?.data?.message || "Lỗi hệ thống khi đổi mật khẩu",
+      showToast(
+        "error",
+        error.response?.data?.message || "Lỗi hệ thống khi đổi mật khẩu 😥",
       );
     } finally {
       setIsChangingPwd(false);
@@ -352,7 +390,7 @@ function UsersPage() {
   };
 
   return (
-    <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8">
+    <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 relative bg-slate-50/50 overflow-hidden">
       <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className="text-3xl font-black tracking-[-0.04em] text-slate-900">
@@ -375,7 +413,7 @@ function UsersPage() {
 
       {/* ================= MODAL THÊM USER ================= */}
       {isAddUserFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
           <div className="animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
               <h3 className="text-lg font-bold text-slate-800">
@@ -390,11 +428,6 @@ function UsersPage() {
             </div>
 
             <div className="p-6">
-              {addError && (
-                <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
-                  {addError}
-                </div>
-              )}
               <form
                 id="addUserForm"
                 onSubmit={handleAddUserSubmit}
@@ -531,7 +564,7 @@ function UsersPage() {
 
       {/* ================= MODAL SỬA USER ================= */}
       {isEditUserFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
           <div className="animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
               <h3 className="text-lg font-bold text-slate-800">
@@ -546,12 +579,6 @@ function UsersPage() {
             </div>
 
             <div className="p-6">
-              {editError && (
-                <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
-                  {editError}
-                </div>
-              )}
-
               <form
                 id="editUserForm"
                 onSubmit={handleEditUserSubmit}
@@ -676,9 +703,9 @@ function UsersPage() {
         </div>
       )}
 
-      {/* ================= MODAL ĐỔI MẬT KHẨU (NEW) ================= */}
+      {/* ================= MODAL ĐỔI MẬT KHẨU ================= */}
       {isChangePwdFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
           <div className="animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
               <h3 className="text-lg font-bold text-slate-800">
@@ -693,12 +720,6 @@ function UsersPage() {
             </div>
 
             <div className="p-6">
-              {changePwdError && (
-                <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
-                  {changePwdError}
-                </div>
-              )}
-
               <form
                 id="changePwdForm"
                 onSubmit={handleChangePwdSubmit}
@@ -834,7 +855,9 @@ function UsersPage() {
                   return (
                     <tr
                       key={user.id || user.email}
-                      className={`group transition hover:bg-[#f7faf6] ${index % 2 === 1 ? "bg-[#fbfcfa]" : ""}`}
+                      className={`group transition hover:bg-[#f7faf6] ${
+                        index % 2 === 1 ? "bg-[#fbfcfa]" : ""
+                      }`}
                     >
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
@@ -892,7 +915,6 @@ function UsersPage() {
                                 <Edit size={16} /> Chỉnh sửa
                               </button>
 
-                              {/* --- NÚT ĐỔI MẬT KHẨU NÈ MẠY --- */}
                               <button
                                 className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-50"
                                 onClick={() => openChangePwdModal(user)}
@@ -907,10 +929,7 @@ function UsersPage() {
                                     ? "text-amber-600 hover:bg-amber-50"
                                     : "text-emerald-600 hover:bg-emerald-50"
                                 }`}
-                                onClick={() => {
-                                  handleToggleLockStatus(user.id);
-                                  setOpenDropdownId(null);
-                                }}
+                                onClick={() => handleToggleLockStatus(user)}
                               >
                                 {user.is_active === 1 ||
                                 user.is_active === true ? (
@@ -919,7 +938,7 @@ function UsersPage() {
                                   </>
                                 ) : (
                                   <>
-                                    <Unlock size={16} /> Mở khoá
+                                    <Unlock size={16} /> Mở khóa
                                   </>
                                 )}
                               </button>
@@ -928,10 +947,7 @@ function UsersPage() {
 
                               <button
                                 className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
-                                onClick={() => {
-                                  handleDeleteUser(user.id);
-                                  setOpenDropdownId(null);
-                                }}
+                                onClick={() => openDeleteConfirm(user.id)}
                               >
                                 <Trash2 size={16} /> Xóa user
                               </button>
@@ -956,6 +972,7 @@ function UsersPage() {
               {Math.min(currentPage * usersPerPage, totalUsers)} trong tổng số{" "}
               {totalUsers} người dùng
             </span>
+
             <div className="flex items-center gap-2">
               <button
                 className="cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -964,6 +981,7 @@ function UsersPage() {
               >
                 <ChevronLeft size={16} />
               </button>
+
               <div className="flex items-center gap-1">
                 {startPage > 1 && (
                   <>
@@ -976,6 +994,7 @@ function UsersPage() {
                     <span className="px-1 text-slate-400">...</span>
                   </>
                 )}
+
                 {visiblePageNumbers.map((number) => (
                   <button
                     key={number}
@@ -989,6 +1008,7 @@ function UsersPage() {
                     {number}
                   </button>
                 ))}
+
                 {endPage < totalPages && (
                   <>
                     <span className="px-1 text-slate-400">...</span>
@@ -1001,6 +1021,7 @@ function UsersPage() {
                   </>
                 )}
               </div>
+
               <button
                 className="cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() =>
@@ -1039,6 +1060,93 @@ function UsersPage() {
           );
         })}
       </section>
+
+      {/* ================= MODAL XÁC NHẬN XOÁ (UI MỚI CỰC XỊN) ================= */}
+      {deleteConfirm.show && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer"
+            onClick={() => setDeleteConfirm({ ...deleteConfirm, show: false })}
+          ></div>
+          <div className="relative w-full max-w-sm rounded-[2.5rem] bg-white overflow-hidden shadow-2xl border-2 border-rose-100">
+            <div className="p-8 flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-rose-50/50">
+                <Trash2 size={40} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-2">
+                Xoá thiệt hả?
+              </h3>
+              <p className="text-slate-500 font-medium leading-relaxed mb-8">
+                Tài khoản này sẽ bị xoá vĩnh viễn khỏi hệ thống. Bạn chắc chưa?
+              </p>
+              <div className="flex w-full gap-3">
+                <button
+                  onClick={() =>
+                    setDeleteConfirm({ ...deleteConfirm, show: false })
+                  }
+                  className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-all cursor-pointer"
+                >
+                  Thôi hổng xoá
+                </button>
+                <button
+                  onClick={executeDelete}
+                  disabled={deleteConfirm.isDeleting}
+                  className="flex-1 py-4 bg-rose-500 hover:bg-rose-600 text-white font-black rounded-2xl shadow-lg shadow-rose-200 transition-all flex justify-center items-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  {deleteConfirm.isDeleting ? (
+                    <div className="h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full" />
+                  ) : (
+                    "Xoá luôn!"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= KHUNG THÔNG BÁO Ở GIỮA ================= */}
+      {toast.show && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer"
+            onClick={closeToast}
+          ></div>
+          <div
+            className={`relative w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl flex flex-col bg-white border-2 ${
+              toast.type === "success"
+                ? "border-emerald-500"
+                : "border-rose-400"
+            }`}
+          >
+            <div
+              className={`px-6 py-5 flex flex-col items-center justify-center gap-2 text-white relative ${
+                toast.type === "success" ? "bg-emerald-500" : "bg-rose-400"
+              }`}
+            >
+              <button
+                onClick={closeToast}
+                className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-white/30 transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+              {toast.type === "success" ? (
+                <span className="text-[60px] drop-shadow-md">🥰</span>
+              ) : (
+                <span className="text-[60px] drop-shadow-md">😥</span>
+              )}
+              <span className="font-black text-xl tracking-widest uppercase drop-shadow-sm">
+                {toast.type === "success" ? "Thành công" : "Thất bại"}
+              </span>
+            </div>
+            <div className="px-6 py-8 text-center bg-white">
+              <p className="text-slate-700 font-bold text-lg leading-relaxed">
+                {toast.message}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
