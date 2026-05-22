@@ -8,6 +8,7 @@ import {
   Box,
   ImageIcon,
   FileText,
+  Search,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -38,7 +39,7 @@ function CategoriesPage() {
     name: "",
     description: "",
     image_url: "",
-    status: 1, // Mặc định là hiển thị (active)
+    status: "active",
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -169,46 +170,55 @@ function CategoriesPage() {
         </button>
       </header>
 
-      <section className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 px-2">
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
-          <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl">
-            <Box size={28} />
-          </div>
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-              Tổng danh mục
-            </p>
-            <p className="text-2xl font-black text-slate-800">
-              {stastics.total}
-            </p>
-          </div>
+      {/* KHU VỰC TÌM KIẾM & THỐNG KÊ */}
+      <section className="mb-10 grid grid-cols-1 lg:grid-cols-12 gap-6 px-2">
+        {/* Tìm kiếm */}
+        <div className="lg:col-span-5 flex relative">
+          <Search
+            size={20}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 "
+          />
+          <input
+            type="text"
+            placeholder="Tìm kiếm danh mục..."
+            className="w-full  bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-medium shadow-sm outline-none focus:border-emerald-500 transition-all"
+          />
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
-          <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl">
-            <Edit size={28} />
+        {/* Thống kê (3 Cards) */}
+        <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+              <Box size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-400">
+                Tổng danh mục
+              </p>
+              <p className="text-lg font-black">{stastics.total}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-              Đang hiển thị
-            </p>
-            <p className="text-2xl font-black text-slate-800">
-              {stastics.active}
-            </p>
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+              <Edit size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-400">
+                Đang hiển thị
+              </p>
+              <p className="text-lg font-black">{stastics.active}</p>
+            </div>
           </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
-          <div className="p-4 bg-rose-50 text-rose-500 rounded-2xl">
-            <Trash2 size={28} />
-          </div>
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-              Đang ẩn
-            </p>
-            <p className="text-2xl font-black text-slate-800">
-              {stastics.inactive}
-            </p>
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+            <div className="p-3 bg-rose-50 text-rose-500 rounded-xl">
+              <Trash2 size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-400">
+                Danh mục đang ẩn
+              </p>
+              <p className="text-lg font-black">{stastics.inactive}</p>
+            </div>
           </div>
         </div>
       </section>
@@ -360,7 +370,6 @@ function CategoriesPage() {
                 />
               </div>
 
-              {/* THÊM TRƯỜNG TRẠNG THÁI NÀY VÀO */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-slate-400 uppercase flex items-center gap-1">
                   Trạng thái

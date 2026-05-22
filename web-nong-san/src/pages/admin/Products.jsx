@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Plus, X, Save, Activity, Box, Edit, Trash2 } from "lucide-react";
+import {
+  Plus,
+  X,
+  Save,
+  Activity,
+  Box,
+  Edit,
+  Trash2,
+  Search,
+  LayoutDashboard,
+  AlertTriangle,
+  DollarSign,
+} from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
 function ProductsPage() {
@@ -75,6 +87,17 @@ function ProductsPage() {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     };
   }, []);
+
+  // Tính toán thống kê
+  const stastics = {
+    total: productList.length,
+    lowStock: productList.filter((product) => product.stock_quantity <= 5)
+      .length,
+    totalValue: productList.reduce((sum, product) => {
+      const price = product.discount_price || product.price || 0;
+      return sum + price * (product.stock_quantity || 0);
+    }, 0),
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -365,6 +388,62 @@ function ProductsPage() {
           <span className="text-base">Thêm món mới</span>
         </button>
       </header>
+
+      {/* THỐNG KÊ & TÌM KIẾM */}
+      <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4 px-2">
+        <div className="lg:col-span-2 flex relative">
+          <Search
+            size={18}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 "
+          />
+          <input
+            type="text"
+            placeholder="Tìm kiếm sản phẩm..."
+            className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-medium shadow-sm outline-none focus:border-emerald-500 transition-all"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+            <div className="p-3 bg-emerald-100 text-emerald-700 rounded-xl">
+              <LayoutDashboard size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-400">
+                Tổng món
+              </p>
+              <p className="text-lg font-black">{stastics.total}</p>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+            <div className="p-3 bg-amber-100 text-amber-700 rounded-xl">
+              <AlertTriangle size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-400">
+                Sản phẩm sắp hết
+              </p>
+              <p className="text-lg font-black">{stastics.lowStock}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Card giá trị kho (Nếu muốn tách riêng cho đẹp) */}
+      <section className="mb-8 px-2">
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl">
+            <DollarSign size={28} />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              Tổng giá trị kho hàng
+            </p>
+            <p className="text-2xl font-black text-slate-800">
+              {Number(stastics.totalValue).toLocaleString("vi-VN")} đ
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* TABLE BẢNG HIỂN THỊ ĐÃ KHÔI PHỤC ĐẦY ĐỦ */}
       {isLoading ? (
