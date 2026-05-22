@@ -2,6 +2,7 @@ const { ca } = require("zod/v4/locales");
 const {
   createCategory,
   getAllCategories,
+  updateCategory,
 } = require("../services/category.service");
 
 // Controller để thêm danh mục mới
@@ -48,7 +49,31 @@ const getAllCategoriesController = async (req, res) => {
   }
 };
 
+// Cập nhật thông tin danh mục
+const updateCategoryController = async (req, res) => {
+  try {
+    const categoryId = req.params.id;
+    const categoryData = req.body;
+    const updateDataCategory = await updateCategory(categoryId, categoryData);
+    if (updateDataCategory) {
+      res.status(200).json({
+        message: "Cập nhật danh mục thành công!",
+      });
+    } else {
+      res.status(404).json({
+        message: "Không tìm thấy danh mục với ID này!",
+      });
+    }
+  } catch (error) {
+    console.error("Lỗi cập nhật danh mục:", error);
+    res.status(500).json({
+      message: "Lỗi server rồi ba ơi!",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   createCategoryController,
   getAllCategoriesController,
+  updateCategoryController,
 };

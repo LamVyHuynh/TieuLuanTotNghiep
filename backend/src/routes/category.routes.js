@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   createCategoryController,
   getAllCategoriesController,
+  updateCategoryController,
 } = require("../controllers/category.controller");
 const { authenticateToken } = require("../middlewares/auth.middleware");
 
@@ -15,5 +16,8 @@ router.post("/add-category", createCategoryController);
 
 // Route hiển thị danh sách danh mục
 router.get("/", getAllCategoriesController);
+
+// Route cập nhật thông tin danh mục
+router.put("/:id", updateCategoryController);
 
 module.exports = router;
