@@ -75,6 +75,13 @@ function CategoriesPage() {
     };
   }, []);
 
+  // Tính toán thống kê
+  const stastics = {
+    total: categoryList.length,
+    active: categoryList.filter((cat) => cat.status === 1).length,
+    inactive: categoryList.filter((cat) => cat.status === 0).length,
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -91,7 +98,7 @@ function CategoriesPage() {
       name: category.name,
       description: category.description || "",
       image_url: category.image_url || "",
-      status: category.status || "active",
+      status: category.status,
     });
     setCurrentCategoryId(category.id_category);
     setIsEditMode(true);
@@ -162,6 +169,50 @@ function CategoriesPage() {
         </button>
       </header>
 
+      <section className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 px-2">
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+          <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl">
+            <Box size={28} />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              Tổng danh mục
+            </p>
+            <p className="text-2xl font-black text-slate-800">
+              {stastics.total}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+          <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl">
+            <Edit size={28} />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              Đang hiển thị
+            </p>
+            <p className="text-2xl font-black text-slate-800">
+              {stastics.active}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+          <div className="p-4 bg-rose-50 text-rose-500 rounded-2xl">
+            <Trash2 size={28} />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              Đang ẩn
+            </p>
+            <p className="text-2xl font-black text-slate-800">
+              {stastics.inactive}
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* TABLE */}
       {isLoading ? (
         <div className="flex justify-center p-20">
@@ -212,9 +263,9 @@ function CategoriesPage() {
                     </td>
                     <td className="p-5 text-center">
                       <span
-                        className={`px-3 py-1 rounded-lg text-xs font-bold uppercase ${cat.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold uppercase ${cat.status === 1 ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
                       >
-                        {cat.status === "active" ? "Hiển thị" : "Đang ẩn"}
+                        {cat.status === 1 ? "Hiển thị" : "Đang ẩn"}
                       </span>
                     </td>
                     <td className="p-5 text-right">
@@ -307,6 +358,27 @@ function CategoriesPage() {
                   className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white shadow-inner"
                   placeholder="https://..."
                 />
+              </div>
+
+              {/* THÊM TRƯỜNG TRẠNG THÁI NÀY VÀO */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                  Trạng thái
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      status: parseInt(e.target.value),
+                    }))
+                  }
+                  className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white shadow-inner cursor-pointer"
+                >
+                  <option value={1}>Hiển thị (Active)</option>
+                  <option value={0}>Ẩn (Inactive)</option>
+                </select>
               </div>
 
               <button

@@ -1,10 +1,12 @@
 const pool = require("../config/db");
 
 // Thêm danh mục mới
+// status = 1 là hiển thị, status = 0 là ẩn
 async function createCategory(data) {
+  const status = data.status ?? 1; // Đảm bảo status chỉ nhận giá trị 1 hoặc 0
   const [result] = await pool.query(
     "INSERT INTO categories (name, description, image_url, status) VALUES (?, ?, ?, ?)",
-    [data.name, data.description, data.image_url, data.status || "active"],
+    [data.name, data.description, data.image_url, status],
   );
 
   return result.insertId;
@@ -18,9 +20,10 @@ async function getAllCategories() {
 
 // Cập nhật thông tin danh mục
 async function updateCategory(id, data) {
+  const status = data.status ?? 1; // Đảm bảo status chỉ nhận giá trị 1 hoặc 0
   const [result] = await pool.query(
     "UPDATE categories SET name = ?, description = ?, image_url = ?, status = ? WHERE id_category = ?",
-    [data.name, data.description, data.image_url, data.status, id],
+    [data.name, data.description, data.image_url, status, id],
   );
   return result.affectedRows > 0; // Trả về true nếu có bản ghi nào bị ảnh hưởng, ngược lại trả về false
 }
