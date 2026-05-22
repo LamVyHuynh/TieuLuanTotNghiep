@@ -12,6 +12,7 @@ import Products from "../pages/admin/Products";
 import Reports from "../pages/admin/Reports";
 import Orders from "../pages/admin/Orders";
 import Stores from "../pages/admin/Stores";
+import CategoriesPage from "../pages/admin/Categories";
 import LogsPage from "../pages/admin/LogsPage";
 import UserLayout from "../layouts/UserLayout";
 import AdminLayout from "../layouts/AdminLayout";
@@ -48,6 +49,7 @@ const publicRoutes = [
           { path: "users", element: Users },
           { path: "products", element: Products },
           { path: "stores", element: Stores },
+          { path: "categories", element: CategoriesPage },
           { path: "orders", element: Orders },
           { path: "reports", element: Reports },
           { path: "logs", element: LogsPage },

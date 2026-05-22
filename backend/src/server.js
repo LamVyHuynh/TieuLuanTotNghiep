@@ -18,6 +18,9 @@ const authRoutes = require("./routes/auth.routes");
 // Import product routes
 const productRoutes = require("./routes/product.routes");
 
+// Import danh mục router
+const categoryRoutes = require("./routes/category.routes");
+
 // Import cookie-parser để đọc cookie từ request header
 const cookieParser = require("cookie-parser");
 
@@ -51,6 +54,9 @@ app.use("/auth", authRoutes);
 
 // Gắn route sản phẩm
 app.use("/products", productRoutes);
+
+// gắn router cho danh mục sản phẩm
+app.use("/categories", categoryRoutes);
 
 // gắn router login
 // app.use("/login", authRoutes);
