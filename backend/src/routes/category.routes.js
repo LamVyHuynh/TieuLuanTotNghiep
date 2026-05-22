@@ -5,6 +5,7 @@ const {
   createCategoryController,
   getAllCategoriesController,
   updateCategoryController,
+  deleteCategoryController,
 } = require("../controllers/category.controller");
 const { authenticateToken } = require("../middlewares/auth.middleware");
 
@@ -19,5 +20,8 @@ router.get("/", getAllCategoriesController);
 
 // Route cập nhật thông tin danh mục
 router.put("/:id", updateCategoryController);
+
+// Route xoá danh mục
+router.delete("/:id", deleteCategoryController);
 
 module.exports = router;

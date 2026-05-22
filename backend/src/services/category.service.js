@@ -25,8 +25,18 @@ async function updateCategory(id, data) {
   return result.affectedRows > 0; // Trả về true nếu có bản ghi nào bị ảnh hưởng, ngược lại trả về false
 }
 
+// Hàm xoá danh mục
+async function deleteCategory(id) {
+  const [result] = await pool.query(
+    "DELETE FROM categories WHERE id_category = ?",
+    [id],
+  );
+  return result.affectedRows > 0; // Trả về true nếu có bản ghi nào bị ảnh hưởng, ngược lại trả về false
+}
+
 module.exports = {
   createCategory,
   getAllCategories,
   updateCategory,
+  deleteCategory,
 };
