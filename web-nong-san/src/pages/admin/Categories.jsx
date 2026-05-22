@@ -39,7 +39,7 @@ function CategoriesPage() {
     name: "",
     description: "",
     image_url: "",
-    status: "active",
+    status: 1, // Mặc định là hiển thị (active)
   };
   const [formData, setFormData] = useState(initialFormState);
 
