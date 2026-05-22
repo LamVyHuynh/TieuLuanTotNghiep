@@ -26,9 +26,9 @@ async function createProduct(productData) {
     `INSERT INTO product (
       id_Store, id_Category, name, description, price, 
       discount_price, unit, stock_quantity, calories, 
-      protein, carbs, fat, image_url, status, 
+      , carbs, fat, image_url, status, 
       created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
     [
       id_Store,
       id_Category,
@@ -39,7 +39,7 @@ async function createProduct(productData) {
       unit,
       stock_quantity || 0,
       calories || 0,
-      protein || 0,
+
       carbs || 0,
       fat || 0,
       image_url,
