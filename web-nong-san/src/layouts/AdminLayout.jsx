@@ -10,6 +10,7 @@ import {
   Store,
   Users,
   History,
+  LayoutGrid,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +18,7 @@ import { useNavigate } from "react-router-dom";
 const sidebarItems = [
   { label: "Tổng quan", icon: BarChart3, to: "/admin", end: true },
   { label: "Người dùng", icon: Users, to: "/admin/users" },
-  { label: "Danh mục", icon: Package, to: "/admin/categories" },
+  { label: "Danh mục", icon: LayoutGrid, to: "/admin/categories" },
   { label: "Sản phẩm", icon: Package, to: "/admin/products" },
   { label: "Cửa hàng", icon: Store, to: "/admin/stores" },
   { label: "Đơn hàng", icon: ShoppingBag, to: "/admin/orders" },
