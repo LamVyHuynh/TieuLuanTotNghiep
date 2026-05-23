@@ -17,7 +17,6 @@ import LogsPage from "../pages/admin/LogsPage";
 import UserLayout from "../layouts/UserLayout";
 import AdminLayout from "../layouts/AdminLayout";
 import ProtectedRoute from "./ProtectedRoute";
-import UpdateUserInfo from "../pages/User/UpdateUserInfo/ProfilePage";
 
 const publicRoutes = [
   {
@@ -34,7 +33,6 @@ const publicRoutes = [
       { path: "login", element: Login },
       { path: "register", element: Register },
       { path: "order", element: Order },
-      { path: "profile", element: UpdateUserInfo },
     ],
   },
   {
