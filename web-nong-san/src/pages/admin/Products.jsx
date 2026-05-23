@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Plus,
   X,
@@ -15,6 +15,7 @@ import {
 import axiosClient from "../../api/axiosClient";
 
 function ProductsPage() {
+  const [categoryList, setCategoryList] = useState([]);
   const [productList, setProductList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,8 +42,7 @@ function ProductsPage() {
   const toastTimerRef = useRef(null);
 
   const [formData, setFormData] = useState({
-    id_Store: 1,
-    id_Category: 1,
+    id_category: "",
     name: "",
     description: "",
     price: "",
@@ -69,11 +69,20 @@ function ProductsPage() {
     setToast((prev) => ({ ...prev, show: false }));
   };
 
-  const fetchProducts = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosClient.get("products");
-      setProductList(response.data.products || []);
+      const [productRes, categoryRes] = await Promise.all([
+        axiosClient.get("products"),
+        axiosClient.get("categories"),
+      ]);
+      setProductList(productRes.data.products || []);
+
+      // Lọc danh mục đang hoạt động để hiển thị trong form
+      const activeCategories = (categoryRes.data.categories || []).filter(
+        (cat) => cat.status === 1,
+      );
+      setCategoryList(activeCategories);
     } catch (error) {
       console.error("Lỗi load sản phẩm:", error);
     } finally {
@@ -82,11 +91,20 @@ function ProductsPage() {
   };
 
   useEffect(() => {
-    fetchProducts();
+    fetchData();
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     };
   }, []);
+
+  // Hiện tên danh mục thay vì ID (nếu muốn, có thể bỏ qua nếu không cần)
+  const categoryMap = useMemo(() => {
+    return categoryList.reduce((acc, cat) => {
+      acc[cat.id_category] = cat.name;
+      return acc;
+    }, {});
+  }, [categoryList]);
+  const getCategoryName = (id) => categoryMap[id] || "Chưa có danh mục";
 
   // Tính toán thống kê
   const stastics = {
@@ -109,8 +127,7 @@ function ProductsPage() {
 
   const openEditModal = (product) => {
     setFormData({
-      id_Store: product.id_Store,
-      id_Category: product.id_Category,
+      id_category: product.id_category,
       name: product.name,
       description: product.description || "",
       price: product.price,
@@ -130,8 +147,7 @@ function ProductsPage() {
 
   const openAddModal = () => {
     setFormData({
-      id_Store: 1,
-      id_Category: 1,
+      id_category: "",
       name: "",
       description: "",
       price: "",
@@ -160,7 +176,7 @@ function ProductsPage() {
         showToast("success", "Bạn đã thêm món ăn thành công!");
       }
       setIsModalOpen(false);
-      fetchProducts();
+      fetchData();
     } catch (error) {
       showToast(
         "error",
@@ -180,7 +196,7 @@ function ProductsPage() {
     try {
       await axiosClient.delete(`products/${deleteConfirm.productId}`);
       showToast("success", "Món ăn đã được xoá thành công 🥰");
-      fetchProducts();
+      fetchData();
     } catch (error) {
       showToast("error", "Xoá món ăn không được rồi 😥", error);
     } finally {
@@ -226,6 +242,33 @@ function ProductsPage() {
                       onChange={handleChange}
                       className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
                     />
+                  </div>
+                  {/* Ô Dropdown Danh mục (chiếm 1 cột) */}
+                  <div className="sm:col-span-1">
+                    <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
+                      Thuộc danh mục
+                    </label>
+                    <select
+                      name="id_category" // <-- Chú ý chữ 'c' viết thường cho đúng Database
+                      required
+                      value={formData.id_category}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          id_category: parseInt(e.target.value),
+                        }))
+                      }
+                      className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner cursor-pointer"
+                    >
+                      <option value="" disabled>
+                        -- Chọn danh mục --
+                      </option>
+                      {categoryList.map((cat) => (
+                        <option key={cat.id_category} value={cat.id_category}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="sm:col-span-1">
                     <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
@@ -459,6 +502,9 @@ function ProductsPage() {
                   <th className="p-5 text-[11px] font-black uppercase text-slate-400">
                     Món ăn
                   </th>
+                  <th className="p-5 text-[11px] font-black uppercase text-slate-400">
+                    Danh mục
+                  </th>
                   <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-center">
                     Dinh dưỡng (P-C-F)
                   </th>
@@ -494,10 +540,24 @@ function ProductsPage() {
                           <p className="font-black text-slate-800 leading-none mb-1">
                             {product.name}
                           </p>
+
                           <span className="text-[10px] font-bold text-slate-400 uppercase bg-slate-100 px-1.5 py-0.5 rounded-md">
                             {product.unit}
                           </span>
                         </div>
+                      </div>
+                    </td>
+                    {/* Cột Danh mục */}
+                    <td className="p-5">
+                      <div className="flex">
+                        <span
+                          title={getCategoryName(product.id_category)}
+                          className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 shadow-sm"
+                        >
+                          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest truncate max-w-[120px]">
+                            {getCategoryName(product.id_category)}
+                          </span>
+                        </span>
                       </div>
                     </td>
                     {/* Cột Dinh dưỡng */}

@@ -3,8 +3,7 @@ const pool = require("../config/db");
 
 async function createProduct(productData) {
   const {
-    id_Store,
-    id_Category,
+    id_category,
     name,
     description,
     price,
@@ -24,14 +23,13 @@ async function createProduct(productData) {
   // - Đảm bảo số lượng ? khớp chính xác với mảng bên dưới
   const [result] = await pool.query(
     `INSERT INTO product (
-      id_Store, id_Category, name, description, price, 
-      discount_price, unit, stock_quantity, calories, 
+       id_category, name, description, price, 
+      discount_price, unit, stock_quantity, calories, protein,
      carbs, fat, image_url, status, 
       created_at, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
     [
-      id_Store,
-      id_Category,
+      id_category,
       name,
       description,
       price,
@@ -39,6 +37,7 @@ async function createProduct(productData) {
       unit,
       stock_quantity || 0,
       calories || 0,
+      protein || 0,
       carbs || 0,
       fat || 0,
       image_url,
@@ -69,8 +68,7 @@ async function deleteProduct(productId) {
 // Cập nhật thông tin sản phẩm
 async function updateProduct(productId, productData) {
   const {
-    id_Store,
-    id_Category,
+    id_category,
     name,
     description,
     price,
@@ -87,8 +85,7 @@ async function updateProduct(productId, productData) {
 
   const [result] = await pool.query(
     `UPDATE product SET 
-    id_Store = ?, 
-    id_Category = ?, 
+    id_category = ?, 
     name = ?, 
     description = ?, 
     price = ?, 
@@ -104,8 +101,7 @@ async function updateProduct(productId, productData) {
     updated_at = NOW()
   WHERE id_product = ?`,
     [
-      id_Store,
-      id_Category,
+      id_category,
       name,
       description,
       price,

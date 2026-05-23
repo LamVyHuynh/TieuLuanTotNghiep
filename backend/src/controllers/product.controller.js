@@ -10,12 +10,7 @@ const addProduct = async (req, res) => {
     const productData = req.body;
 
     // 1. Validate dữ liệu bắt buộc
-    if (
-      !productData.name ||
-      !productData.price ||
-      !productData.id_Store ||
-      !productData.id_Category
-    ) {
+    if (!productData.name || !productData.price || !productData.id_category) {
       return res.status(400).json({
         message:
           "Thiếu thông tin rồi! Phải có tên, giá, danh mục và cửa hàng nhé!",
