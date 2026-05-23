@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Plus,
   X,
@@ -14,6 +14,7 @@ import axiosClient from "../../api/axiosClient";
 
 function CategoriesPage() {
   const [categoryList, setCategoryList] = useState([]);
+  const [productList, setProductList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // --- STATE MODAL ---
@@ -60,8 +61,12 @@ function CategoriesPage() {
   const fetchCategories = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosClient.get("categories");
-      setCategoryList(response.data.categories || []);
+      const [catRes, proRes] = await Promise.all([
+        axiosClient.get("categories"),
+        axiosClient.get("products"),
+      ]);
+      setCategoryList(catRes.data.categories || []);
+      setProductList(proRes.data.products || []);
     } catch (error) {
       console.error("Lỗi load danh mục:", error);
     } finally {
@@ -75,6 +80,15 @@ function CategoriesPage() {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     };
   }, []);
+
+  // Đếm số lượng sản phẩm thuộc danh mục
+  const coutProductsInCategory = useMemo(() => {
+    const counts = {};
+    productList.forEach((p) => {
+      counts[p.id_category] = (counts[p.id_category] || 0) + 1;
+    });
+    return counts;
+  }, [productList]);
 
   // Tính toán thống kê
   const stastics = {
@@ -254,6 +268,7 @@ function CategoriesPage() {
                     key={cat.id_category}
                     className="group hover:bg-emerald-50/30 transition-all"
                   >
+                    {/* Thay đoạn td Tên danh mục cũ bằng đoạn này */}
                     <td className="p-5">
                       <div className="flex items-center gap-4">
                         <img
@@ -263,9 +278,17 @@ function CategoriesPage() {
                           alt=""
                           className="h-14 w-14 rounded-2xl object-cover shadow-sm"
                         />
-                        <p className="font-black text-slate-800 text-base">
-                          {cat.name}
-                        </p>
+                        <div className="flex flex-col">
+                          <p className="font-black text-slate-800 text-base">
+                            {cat.name}
+                          </p>
+
+                          {/* Hiện số lượng món ở đây */}
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">
+                            {coutProductsInCategory[cat.id_category] || 0} sản
+                            phẩm
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td className="p-5 text-sm font-medium text-slate-500 max-w-xs truncate">
