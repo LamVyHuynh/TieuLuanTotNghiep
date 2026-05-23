@@ -60,6 +60,16 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   };
 
+  //  Hàm refreshUser - Gọi lại API /auth/me để lấy thông tin người dùng mới nhất
+  const refetchUser = async () => {
+    try {
+      const response = await axiosClient.get("/auth/me");
+      setCurrentUser(response.data.user);
+    } catch (error) {
+      console.error("Lỗi khi refetch user:", error);
+    }
+  };
+
   //   Hàm logout  - Xóa token khỏi localStorage
   const logout = async () => {
     try {
@@ -75,7 +85,14 @@ export const AuthProvider = ({ children }) => {
   };
   return (
     <AuthContext.Provider
-      value={{ currentUser, loading, fetchCurrentUser, login, logout }}
+      value={{
+        currentUser,
+        loading,
+        fetchCurrentUser,
+        login,
+        logout,
+        refetchUser,
+      }}
     >
       {children}
     </AuthContext.Provider>
