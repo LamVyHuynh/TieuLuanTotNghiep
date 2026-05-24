@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HealthyGO - Cửa Hàng &amp; Bếp Sống</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "surface-container-high": "#e8e8e8",
+                "tertiary-fixed-dim": "#9ed75b",
+                "on-secondary-fixed": "#2c1600",
+                "on-primary-fixed-variant": "#005313",
+                "surface-container-lowest": "#ffffff",
+                "on-error": "#ffffff",
+                "error-container": "#ffdad6",
+                "inverse-surface": "#2f3131",
+                "on-primary": "#ffffff",
+                "surface-variant": "#e2e2e2",
+                "on-tertiary": "#ffffff",
+                "on-background": "#1a1c1c",
+                "inverse-primary": "#78dc77",
+                "surface-container-low": "#f3f3f3",
+                "on-tertiary-fixed-variant": "#2e4f00",
+                "on-primary-container": "#003c0b",
+                "background": "#f9f9f9",
+                "secondary-fixed-dim": "#ffb870",
+                "tertiary": "#3e6a00",
+                "on-error-container": "#93000a",
+                "secondary-container": "#ff9800",
+                "surface-tint": "#006e1c",
+                "primary": "#4CAF50",
+                "tertiary-fixed": "#b9f474",
+                "surface-container-highest": "#e2e2e2",
+                "inverse-on-surface": "#f1f1f1",
+                "surface-dim": "#dadada",
+                "on-surface-variant": "#3f4a3c",
+                "on-surface": "#1a1c1c",
+                "surface": "#f9f9f9",
+                "primary-fixed-dim": "#78dc77",
+                "tertiary-container": "#74aa34",
+                "primary-fixed": "#94f990",
+                "outline-variant": "#becab9",
+                "on-tertiary-container": "#203900",
+                "on-secondary": "#ffffff",
+                "on-secondary-fixed-variant": "#693c00",
+                "primary-container": "#4caf50",
+                "on-primary-fixed": "#002204",
+                "error": "#ba1a1a",
+                "surface-bright": "#f9f9f9",
+                "secondary-fixed": "#ffdcbe",
+                "surface-container": "#eeeeee",
+                "secondary": "#8b5000",
+                "on-tertiary-fixed": "#0f2000",
+                "outline": "#6f7a6b",
+                "on-secondary-container": "#653900"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {},
+        "fontFamily": {
+                "headline": [
+                        "Plus Jakarta Sans"
+                ],
+                "display": [
+                        "Plus Jakarta Sans"
+                ],
+                "body": [
+                        "Inter"
+                ],
+                "label": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {}
+},
+    },
+  }
+</script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-nav {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+      .product-card-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .product-card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      }
+      .category-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      .category-scroll {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .masonry-grid {
+        column-count: 2;
+        column-gap: 1.5rem;
+      }
+      @media (min-width: 768px) {
+        .masonry-grid {
+          column-count: 3;
+        }
+      }
+      @media (min-width: 1024px) {
+        .masonry-grid {
+          column-count: 4;
+        }
+      }
+      .masonry-item {
+        break-inside: avoid;
+        margin-bottom: 1.5rem;
+      }
+    </style>
+</head>
+<body class="bg-zinc-50 text-on-surface font-body antialiased selection:bg-primary/20">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-zinc-100 shadow-sm transition-all h-16 flex items-center">
+<div class="flex justify-between items-center px-4 w-full max-w-7xl mx-auto gap-4">
+<div class="text-xl font-black tracking-tighter text-primary font-headline shrink-0">HealthyGO</div>
+<div class="hidden md:flex flex-1 max-w-xl mx-4">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-[20px]">search</span>
+<input class="w-full pl-11 pr-4 py-2 bg-zinc-100 border-transparent rounded-full text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all" placeholder="Tìm món ăn, nguyên liệu, combo..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-1 md:gap-4 font-headline text-sm font-medium tracking-tight">
+<a class="hidden lg:flex text-zinc-500 hover:text-primary transition-colors items-center gap-1.5" href="#">
+<span class="material-symbols-outlined text-[20px]">history</span> Lịch sử mua hàng
+</a>
+<button class="md:hidden p-2 text-zinc-600">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="p-2 hover:bg-zinc-100 transition-colors rounded-full relative flex items-center">
+<span class="material-symbols-outlined text-zinc-700">shopping_cart</span>
+<span class="absolute top-1 right-1 bg-primary text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white box-content">2</span>
+</button>
+<button class="p-2 hover:bg-zinc-100 transition-colors rounded-full hidden sm:block">
+<span class="material-symbols-outlined text-zinc-700">account_circle</span>
+</button>
+</div>
+</div>
+</nav>
+<main class="pt-20 pb-24 max-w-7xl mx-auto px-4 sm:px-6">
+<!-- 1. Category Nav / Quick Filters (Simplified) -->
+<div class="flex gap-3 overflow-x-auto category-scroll pb-4 mb-6">
+<button class="flex-shrink-0 px-5 py-2.5 rounded-full bg-zinc-900 text-white font-semibold text-sm shadow-sm flex items-center gap-2">Tất Cả</button>
+<button class="flex-shrink-0 px-5 py-2.5 rounded-full bg-white border border-zinc-200 text-zinc-600 font-semibold text-sm hover:border-zinc-300 hover:text-zinc-900 transition-all flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">restaurant</span> Món Nấu Sẵn</button>
+<button class="flex-shrink-0 px-5 py-2.5 rounded-full bg-white border border-zinc-200 text-zinc-600 font-semibold text-sm hover:border-zinc-300 hover:text-zinc-900 transition-all flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">eco</span> Rau Tươi</button>
+<button class="flex-shrink-0 px-5 py-2.5 rounded-full bg-white border border-zinc-200 text-zinc-600 font-semibold text-sm hover:border-zinc-300 hover:text-zinc-900 transition-all flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">skillet</span> Gia Vị &amp; Dầu</button>
+<button class="flex-shrink-0 px-5 py-2.5 rounded-full bg-white border border-zinc-200 text-zinc-600 font-semibold text-sm hover:border-zinc-300 hover:text-zinc-900 transition-all flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">local_mall</span> Combo Thông Minh</button>
+</div>
+<!-- 2. The Feed (Masonry Grid) -->
+<div class="masonry-grid">
+<!-- Item 1: Meal -->
+<div class="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:border-primary/20 transition-all group">
+<div class="relative rounded-2xl overflow-hidden mb-4">
+<img alt="Salmon Poke Bowl" class="w-full h-auto object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4f5Dp7GtKruprNkzFm5RmIpTv0E7ZVCjY-4C0r2JYfk9xfNDfrVITPwYSXsVZcCleZ7UOW2TGjTM95rTcq62RcmULv8LMM6E-caxcfEuk9KmoCYLLDqJ2O_yP-rjjeDQFIsKPzcsYtOFAUHXkBIlBrw-4n00bvXOEN66FIWDoky3jpY8KB3Yi7ANg2InTQEaaOsnsB50HQ5UuOsptpNEbfVKKkMiDC4LYZRLm7GoqqUXmeYncjra3Yj6ilv4rcFpmowIiZ664kK8N"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-primary shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">restaurant</span> Món Nấu Sẵn
+          </div>
+</div>
+<div class="px-2 pb-1">
+<h4 class="font-headline font-bold text-lg mb-1.5 text-zinc-800 leading-tight">Poke Bowl Cá Hồi Na-uy</h4>
+<p class="text-zinc-500 text-xs mb-3 flex items-center gap-2">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 15'</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">local_fire_department</span> 450 Cal</span>
+</p>
+<div class="flex justify-between items-center">
+<span class="text-zinc-900 font-headline font-black text-lg">145.000đ</span>
+<button class="bg-primary/10 text-primary hover:bg-primary hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 2: Ingredient -->
+<div class="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:border-primary/20 transition-all group">
+<div class="relative rounded-2xl overflow-hidden bg-zinc-50 mb-4 aspect-square flex items-center justify-center">
+<img alt="Organic Olive Oil" class="w-3/4 object-contain mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbxTYLXQII_BplP0yKQ256IbtHXM4J_BIS5huKrg8uyhJkErsmJ1JcEXoaqlrM8mWfA-SeO0Sd2qMiW1KWVIcY_jqAm2xqNg-YmLXQnpoCKb5zaUruEYHviXI7JdpxAcjRSmqMOmk6nua5VIa9fh_QAGGlslv-h4icvkPrX0O6RjuhZtqq-P-we-sJZnqGO6GrzC-SQ4mLBcx09oYxUFJ8iGR70JniqApwADXe1ZavNnq_ZrSPSwmC96fO8DFPuFG7zSutCOCj0BGM"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-emerald-600 shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">eco</span> Nguyên liệu
+          </div>
+</div>
+<div class="px-2 pb-1">
+<h4 class="font-headline font-bold text-base mb-1 text-zinc-800 leading-tight">Dầu Olive Hy Lạp Extra Virgin</h4>
+<p class="text-zinc-500 text-xs mb-3">Chai 250ml</p>
+<div class="flex justify-between items-center">
+<span class="text-zinc-900 font-headline font-black text-lg">185.000đ</span>
+<button class="bg-primary/10 text-primary hover:bg-primary hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 3: Quick AI Recommendation Strip (Interspersed) -->
+<div class="masonry-item bg-gradient-to-br from-primary/10 to-emerald-50 rounded-3xl p-5 border border-primary/20 flex flex-col justify-center">
+<div class="flex items-center gap-2 mb-3 text-primary">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-bold text-sm tracking-wide uppercase">Gợi ý hôm nay</span>
+</div>
+<h3 class="font-headline font-extrabold text-2xl text-zinc-900 mb-2 leading-tight">Salad Cá Hồi Dầu Olive</h3>
+<p class="text-sm text-zinc-600 mb-5">Mua combo để có đầy đủ dinh dưỡng và tiết kiệm 15%</p>
+<button class="bg-primary text-white w-full py-3 rounded-full font-bold text-sm hover:bg-primary/90 transition-colors shadow-md">Thêm Combo (310.000đ)</button>
+</div>
+<!-- Item 4: Meal -->
+<div class="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:border-primary/20 transition-all group">
+<div class="relative rounded-2xl overflow-hidden mb-4">
+<img alt="Grilled Chicken Salad" class="w-full h-auto object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAI-eok0Kv7V_zXFXQOix7bpQFq5F2aB6Krmk0XbiKMmNMneyKiGt_TMqQAmAeNI2QOPkaYlG49X1nMbTK7vvGefFU6TduAESiaJIznm-cgu6UCvu5RxWBIg5hLyM_u_gKuEA5z-piqvQ6KcTaHBJJQkrwcFe4UhcoKVSTHkrG79IsFT4PrFS8J3gxZCns-BXNFl4p9us0KYMrJkNOnTdGn4Yb0SEt15O4EvPCN22owijOHEDFxepN71OoznFFL2PU5GuEsxKfyY7G"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-primary shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">restaurant</span> Món Nấu Sẵn
+          </div>
+</div>
+<div class="px-2 pb-1">
+<h4 class="font-headline font-bold text-lg mb-1.5 text-zinc-800 leading-tight">Salad Ức Gà Áp Chảo</h4>
+<p class="text-zinc-500 text-xs mb-3 flex items-center gap-2">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 10'</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">local_fire_department</span> 380 Cal</span>
+</p>
+<div class="flex justify-between items-center">
+<span class="text-zinc-900 font-headline font-black text-lg">95.000đ</span>
+<button class="bg-primary/10 text-primary hover:bg-primary hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 5: Ingredient -->
+<div class="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:border-primary/20 transition-all group">
+<div class="relative rounded-2xl overflow-hidden bg-zinc-50 mb-4 aspect-square flex items-center justify-center">
+<img alt="Fresh Basil" class="w-3/4 object-contain mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuv_AGi5EXHIUFuhb8Ivn0pC59QGsyr8Il-0xAshVou4YEXuXKL0qFOvMD4kTLGRnUFGPN7-s0MAIJhw0fdgvjmY6nTxiu828bUu1MSneGJEovqzNukuZGLm8IiDaXXdwyK9ZBB0ENSnZXvytVC_GUz-P3WVN4p__VWTQI_xxVjPnVGQt6p0ObtWyD61HXJ_JvvBRXiAVPTGWqli4mGvzz9zYRUE3ArDJCv2tU1WAi-EAAmeEvUzlOiXVGZ7TYlYZBRWY_R0CzeojV"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-emerald-600 shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">eco</span> Rau Tươi
+          </div>
+</div>
+<div class="px-2 pb-1">
+<h4 class="font-headline font-bold text-base mb-1 text-zinc-800 leading-tight">Lá Húng Tây (Basil)</h4>
+<p class="text-zinc-500 text-xs mb-3">Túi 50g</p>
+<div class="flex justify-between items-center">
+<span class="text-zinc-900 font-headline font-black text-lg">15.000đ</span>
+<button class="bg-primary/10 text-primary hover:bg-primary hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 6: Meal -->
+<div class="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:border-primary/20 transition-all group">
+<div class="relative rounded-2xl overflow-hidden mb-4">
+<img alt="Beef Steak" class="w-full h-auto object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfan-1UKkINsM75vsq1hNLJ22HNkn09DVBVSvA4F4kcql6Xid_-Sf0KxtzVUv0xa4sJOpGLGUrwEqCLCi1n00Ab8CsQCN9ukkA1FUjY-gkOuJniDEGtpq2tD2nGilZSsumYWwbSxFzQDTsGPe0zhViHOLxeyTgWDLRDsVMafY1d-i6MNu1Xe7pKif70J9AxbO-q3Lc1I3DvAcsKxdNPCVi1uWSV1D_SqfNuVckEcWcUV5LyVHF4PCsQgKILS9Swm3s21gI6SvWIquV"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-primary shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">restaurant</span> Món Nấu Sẵn
+          </div>
+</div>
+<div class="px-2 pb-1">
+<h4 class="font-headline font-bold text-lg mb-1.5 text-zinc-800 leading-tight">Steak Thăn Bò Úc Sốt Tiêu</h4>
+<p class="text-zinc-500 text-xs mb-3 flex items-center gap-2">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 20'</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">local_fire_department</span> 620 Cal</span>
+</p>
+<div class="flex justify-between items-center">
+<span class="text-zinc-900 font-headline font-black text-lg">210.000đ</span>
+<button class="bg-primary/10 text-primary hover:bg-primary hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 7: Ingredient -->
+<div class="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:border-primary/20 transition-all group">
+<div class="relative rounded-2xl overflow-hidden bg-zinc-50 mb-4 aspect-square flex items-center justify-center">
+<img alt="Himalayan Salt" class="w-3/4 object-contain mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4jyLMTv4F-yxgCC6QHO6lRmzgDgufiOKWO7GrlgEb1lpfHO6REQuc78B81jlQK4BdHYPV7YJer6RF25-8JyX5x0F0r8kXnAEUEfKPoDXKZ1K4UGuft6aJsRa2tD2a6UBmP0rzSsZKzU0Nf__E1ntT7EBGmA6qqcaPjVQ3Kj8qte04ju4eteQ-Cbc2Ukpd9zc3qtwqXHOTrNina3TEjmxpAdxva7NwSFsulRRLoS81l7Q1exVvrpmMn59HYYDi_iDtbdZFHrbC3ykE"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-emerald-600 shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">skillet</span> Gia vị
+          </div>
+</div>
+<div class="px-2 pb-1">
+<h4 class="font-headline font-bold text-base mb-1 text-zinc-800 leading-tight">Muối Hồng Himalaya</h4>
+<p class="text-zinc-500 text-xs mb-3">Túi 500g</p>
+<div class="flex justify-between items-center">
+<span class="text-zinc-900 font-headline font-black text-lg">45.000đ</span>
+<button class="bg-primary/10 text-primary hover:bg-primary hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 8: Ingredient -->
+<div class="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:border-primary/20 transition-all group">
+<div class="relative rounded-2xl overflow-hidden bg-zinc-50 mb-4 aspect-[4/5] flex items-center justify-center">
+<img alt="Honey" class="w-2/3 object-contain mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCucvIbxZYfwyaTD8yoHqb8KCPgKOHoCvHgboCi77JUSQrl-YJ4A-O33_Rhq4MieQD9VHHjCz2gFKWTVwhUWRxx7LHt88HI7grrrnD80FUueRgiRJ1NSRvfTpkAv7yxIWDl8nwmiar4h-U72hdWR9AtumBx6jf2X6pWOFTtmr9vEhfjsy3hVWFHPONrcXl62U6uYzZq7r1LX4k02VgMjrPn6NuQgu-S0xF4WT_2sGqpMhT8N_nDH9sS71Zc33c8pnAdI038KvuKbLA4"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-emerald-600 shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">eco</span> Tự nhiên
+          </div>
+</div>
+<div class="px-2 pb-1">
+<h4 class="font-headline font-bold text-base mb-1 text-zinc-800 leading-tight">Mật Ong Hoa Nhãn</h4>
+<p class="text-zinc-500 text-xs mb-3">Chai 500ml</p>
+<div class="flex justify-between items-center">
+<span class="text-zinc-900 font-headline font-black text-lg">220.000đ</span>
+<button class="bg-primary/10 text-primary hover:bg-primary hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Load More Indicator -->
+<div class="mt-12 flex flex-col items-center justify-center gap-3 text-zinc-400">
+<span class="material-symbols-outlined animate-spin duration-1000">refresh</span>
+<span class="text-sm font-medium">Đang tải thêm món ngon...</span>
+</div>
+</main>
+<!-- Simplified Footer -->
+<footer class="bg-white py-6 border-t border-zinc-100 text-center">
+<div class="text-xl font-black tracking-tighter text-zinc-300 font-headline mb-2">HealthyGO</div>
+<p class="font-body text-xs text-zinc-400">© 2024 HealthyGO. All rights reserved.</p>
+</footer>
+<!-- FAB for Mobile (Optional, kept for quick cart access) -->
+<button class="md:hidden fixed bottom-6 right-6 bg-primary text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[24px]">shopping_cart</span>
+<span class="absolute top-0 right-0 bg-white text-primary text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-primary box-content">2</span>
+</button>
+</body></html>

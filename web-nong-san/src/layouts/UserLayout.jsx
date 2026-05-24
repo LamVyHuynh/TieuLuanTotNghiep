@@ -15,6 +15,7 @@ import {
   Eye,
   EyeOff,
   Save,
+  History,
 } from "lucide-react";
 import axiosClient from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
@@ -65,7 +66,7 @@ function UserLayout() {
     setEditFormData({
       full_name: currentUser?.full_name || "",
       phone: currentUser?.phone || "",
-      email: currentUser?.email || "", // Lấy email để hiển thị thôi
+      email: currentUser?.email || "",
     });
     setShowUserMenu(false);
     setIsEditProfileOpen(true);
@@ -82,7 +83,7 @@ function UserLayout() {
       await axiosClient.put(`/auth/users/${currentUser.id}/update-user`, {
         full_name: editFormData.full_name,
         phone: editFormData.phone,
-        email: currentUser.email, // Gửi lại email gốc cho chắc cốp
+        email: currentUser.email,
         role_id: currentUser.role_id,
       });
       setIsEditProfileOpen(false);
@@ -107,7 +108,6 @@ function UserLayout() {
   const [isChangePwdOpen, setIsChangePwdOpen] = useState(false);
   const [isChangingPwd, setIsChangingPwd] = useState(false);
   const [showNewPwd, setShowNewPwd] = useState(false);
-
   const [pwdData, setPwdData] = useState({ new_password: "" });
 
   const openChangePwd = () => {
@@ -168,57 +168,72 @@ function UserLayout() {
   if (loading) return <p>Đang tải...</p>;
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f6fbf7_0%,#fdfdf8_45%,#f7faf8_100%)] text-slate-800 relative">
-      <header className="sticky top-0 z-40 border-b border-white/60 bg-white/85 shadow-[0_10px_40px_rgba(17,24,39,0.06)] backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1400px] items-center gap-4 p-[15px] px-10">
-          <Link to="/" className="shrink-0 no-underline">
-            <div className="leading-none">
-              <span className="text-[2rem] font-black tracking-[-0.06em] text-emerald-600 sm:text-[2.35rem]">
-                Healthy
-              </span>
-              <span className="ml-1 text-[2rem] font-black tracking-[-0.06em] text-amber-500 sm:text-[2.35rem]">
-                GO
-              </span>
-            </div>
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-emerald-500/20 relative">
+      {/* HEADER THEO THIẾT KẾ MỚI (Tối giản, trong suốt, gộp chung) */}
+      <nav className="fixed top-0 w-full z-40 bg-white/90 backdrop-blur-xl border-b border-zinc-100 shadow-sm transition-all h-16 flex items-center">
+        <div className="flex justify-between items-center px-4 w-full max-w-7xl mx-auto gap-4">
+          {/* Logo */}
+          <Link
+            to="/"
+            className="text-xl font-black tracking-tighter text-emerald-600 shrink-0 no-underline"
+          >
+            HealthyGO
           </Link>
 
-          <div className="hidden min-w-0 flex-1 md:block">
-            <div className="relative mx-auto max-w-2xl">
-              <input
-                className="h-13 w-full rounded-full border border-emerald-100 bg-slate-50/90 py-3 pl-6 pr-16 text-sm text-slate-700 shadow-inner shadow-emerald-50 outline-none ring-0 transition-all duration-300 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:shadow-[0_0_0_4px_rgba(16,185,129,0.08)]"
-                placeholder="Hôm nay mạy muốn nấu món gì?..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <button
-                className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-emerald-600 text-white shadow-[0_8px_18px_rgba(5,150,105,0.25)] transition-all duration-300 hover:scale-[1.03] hover:bg-emerald-700 active:scale-95"
-                onClick={handleSearch}
-              >
-                <Search size={18} />
-              </button>
-            </div>
+          {/* Search Bar (Desktop) */}
+          <div className="hidden md:flex flex-1 max-w-xl mx-4 relative">
+            <Search
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 cursor-pointer"
+              onClick={handleSearch}
+            />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm món ăn, nguyên liệu, combo..."
+              className="w-full pl-11 pr-4 py-2 bg-zinc-100 border-transparent rounded-full text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white transition-all"
+            />
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+          {/* Các nút Menu bên phải */}
+          <div className="flex items-center gap-2 md:gap-4 text-sm font-medium tracking-tight">
+            <Link
+              to="/order"
+              className="hidden lg:flex text-zinc-500 hover:text-emerald-600 transition-colors items-center gap-1.5 no-underline"
+            >
+              <History size={18} /> Lịch sử mua hàng
+            </Link>
+
+            <button className="md:hidden p-2 text-zinc-600 cursor-pointer">
+              <Search size={20} />
+            </button>
+
             <Link
               to="/cart"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-emerald-100 bg-white text-emerald-700 no-underline shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50"
+              className="p-2 hover:bg-zinc-100 text-zinc-700 transition-colors rounded-full relative flex items-center cursor-pointer no-underline"
             >
-              <ShoppingBag size={18} />
+              <ShoppingBag size={20} />
+              <span className="absolute top-0.5 right-0.5 bg-emerald-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white box-content">
+                2
+              </span>
             </Link>
+
             {currentUser ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   type="button"
                   onClick={() => setShowUserMenu((prev) => !prev)}
-                  className="flex cursor-pointer items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 sm:px-5"
+                  className="flex items-center gap-1.5 p-1 pl-3 pr-2 bg-zinc-100 hover:bg-zinc-200 transition-colors rounded-full cursor-pointer text-zinc-700 font-semibold text-sm"
                 >
-                  <span>{currentUser.full_name}</span>
-                  <ChevronDown size={16} />
+                  <span className="max-w-[100px] truncate">
+                    {currentUser.full_name.split(" ").pop()}
+                  </span>
+                  <ChevronDown size={14} className="text-zinc-400" />
                 </button>
 
                 <div
-                  className={`absolute right-0 top-[calc(100%+10px)] z-50 w-52 origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${
+                  className={`absolute right-0 top-[calc(100%+10px)] w-52 origin-top-right overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${
                     showUserMenu
                       ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
                       : "pointer-events-none -translate-y-2 scale-95 opacity-0"
@@ -227,40 +242,39 @@ function UserLayout() {
                   <button
                     type="button"
                     onClick={openEditProfile}
-                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 hover:text-emerald-600"
                   >
-                    <UserRound size={16} className="text-slate-400" />
-                    Cập nhật thông tin
+                    <UserRound size={16} className="text-zinc-400" /> Cập nhật
+                    thông tin
                   </button>
                   <button
                     type="button"
                     onClick={openChangePwd}
-                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 hover:text-emerald-600"
                   >
-                    <KeyRound size={16} className="text-slate-400" />
-                    Đổi mật khẩu
+                    <KeyRound size={16} className="text-zinc-400" /> Đổi mật
+                    khẩu
                   </button>
                   <button
                     type="button"
                     onClick={handleLogout}
                     className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                   >
-                    <LogOut size={16} className="text-rose-500" />
-                    Đăng xuất
+                    <LogOut size={16} className="text-rose-500" /> Đăng xuất
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="rounded-full border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 no-underline transition hover:bg-emerald-50 sm:px-5"
+                  className="px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 rounded-full transition no-underline"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
-                  className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white no-underline shadow-[0_10px_18px_rgba(5,150,105,0.22)] transition hover:-translate-y-0.5 hover:bg-emerald-700 sm:px-5"
+                  className="hidden sm:block px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full transition shadow-sm no-underline"
                 >
                   Đăng ký
                 </Link>
@@ -268,87 +282,55 @@ function UserLayout() {
             )}
           </div>
         </div>
+      </nav>
 
-        <div className="border-t border-emerald-50 bg-[linear-gradient(90deg,#1f9d68_0%,#23b26d_50%,#1f9d68_100%)] text-white">
-          <nav className="mx-auto flex max-w-[1400px] items-center gap-6 overflow-x-auto whitespace-nowrap px-4 py-3 text-sm font-semibold sm:px-6 lg:px-10">
-            <Link
-              to="/"
-              className="rounded-full px-3 py-1 text-white/95 no-underline transition hover:bg-white/15"
-            >
-              Trang chủ
-            </Link>
-            <Link
-              to="/order"
-              className="rounded-full px-3 py-1 text-white/95 no-underline transition hover:bg-white/15"
-            >
-              Đơn hàng
-            </Link>
-            <Link
-              to="/cart"
-              className="rounded-full px-3 py-1 text-white/95 no-underline transition hover:bg-white/15"
-            >
-              Giỏ hàng
-            </Link>
-            <Link
-              to="/tracking"
-              className="rounded-full px-3 py-1 text-white/95 no-underline transition hover:bg-white/15"
-            >
-              Theo dõi đơn
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <main>
+      {/* BODY CHÍNH */}
+      <main className="pt-20">
         <Outlet />
       </main>
 
       {/* ================= MODAL CẬP NHẬT THÔNG TIN CÁ NHÂN ================= */}
       {isEditProfileOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
-          <div className="animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
-              <h3 className="text-lg font-bold text-slate-800">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm transition-all duration-300">
+          <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50/50 px-6 py-4">
+              <h3 className="text-lg font-bold text-zinc-800">
                 Thông tin cá nhân
               </h3>
               <button
                 onClick={() => setIsEditProfileOpen(false)}
-                className="cursor-pointer rounded-full p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
+                className="cursor-pointer rounded-full p-2 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 transition"
               >
                 <X size={20} />
               </button>
             </div>
-
             <div className="p-6">
               <form onSubmit={handleEditSubmit} className="space-y-4">
-                {/* Ô EMAIL BỊ KHOÁ (READ-ONLY) */}
                 <div className="space-y-1.5">
-                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
                     Địa chỉ Email
                   </label>
                   <div className="relative">
                     <Mail
                       size={18}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
                     />
                     <input
-                      name="email"
                       type="email"
                       disabled
                       value={editFormData.email}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-100 py-3 pl-11 pr-4 text-sm text-slate-500 outline-none cursor-not-allowed"
+                      className="w-full rounded-xl border border-zinc-200 bg-zinc-100 py-3 pl-11 pr-4 text-sm text-zinc-500 outline-none cursor-not-allowed"
                     />
                   </div>
                 </div>
-
                 <div className="space-y-1.5">
-                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
                     Họ và tên
                   </label>
                   <div className="relative">
                     <User
                       size={18}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
                     />
                     <input
                       name="full_name"
@@ -356,19 +338,18 @@ function UserLayout() {
                       required
                       value={editFormData.full_name}
                       onChange={handleEditChange}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
+                      className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-sm outline-none transition hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
-
                 <div className="space-y-1.5">
-                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
                     Số điện thoại
                   </label>
                   <div className="relative">
                     <Phone
                       size={18}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
                     />
                     <input
                       name="phone"
@@ -376,28 +357,22 @@ function UserLayout() {
                       required
                       value={editFormData.phone}
                       onChange={handleEditChange}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10"
+                      className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-sm outline-none transition hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
-
-                <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-zinc-100">
                   <button
                     type="button"
                     onClick={() => setIsEditProfileOpen(false)}
-                    className="cursor-pointer rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-200 active:scale-[0.98]"
+                    className="cursor-pointer rounded-xl px-5 py-2.5 text-sm font-semibold text-zinc-600 transition hover:bg-zinc-200"
                   >
                     Hủy bỏ
                   </button>
-
                   <button
                     type="submit"
                     disabled={isEditing}
-                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-md transition active:scale-[0.98] ${
-                      isEditing
-                        ? "bg-slate-400 cursor-not-allowed"
-                        : "bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700"
-                    }`}
+                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${isEditing ? "bg-zinc-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700"}`}
                   >
                     {isEditing ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -416,28 +391,27 @@ function UserLayout() {
 
       {/* ================= MODAL ĐỔI MẬT KHẨU CÁ NHÂN ================= */}
       {isChangePwdOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
-          <div className="animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
-              <h3 className="text-lg font-bold text-slate-800">Đổi mật khẩu</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm transition-all duration-300">
+          <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50/50 px-6 py-4">
+              <h3 className="text-lg font-bold text-zinc-800">Đổi mật khẩu</h3>
               <button
                 onClick={() => setIsChangePwdOpen(false)}
-                className="cursor-pointer rounded-full p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
+                className="cursor-pointer rounded-full p-2 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 transition"
               >
                 <X size={20} />
               </button>
             </div>
-
             <div className="p-6">
               <form onSubmit={handleChangePwdSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
                     Mật khẩu mới
                   </label>
                   <div className="relative">
                     <Key
                       size={18}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
                     />
                     <input
                       name="new_password"
@@ -448,38 +422,32 @@ function UserLayout() {
                         setPwdData({ new_password: e.target.value })
                       }
                       placeholder="Nhập mật khẩu mới..."
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-10 text-sm outline-none transition hover:bg-white focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+                      className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-10 text-sm outline-none transition hover:bg-white focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPwd(!showNewPwd)}
-                      className="absolute cursor-pointer right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute cursor-pointer right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
                     >
                       {showNewPwd ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  <p className="mt-2 text-[11px] text-slate-500">
-                    * Mật khẩu mới nên có ít nhất 8 ký tự để bảo mật.
+                  <p className="mt-2 text-[11px] text-zinc-500">
+                    * Mật khẩu mới nên có ít nhất 8 ký tự.
                   </p>
                 </div>
-
-                <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-zinc-100">
                   <button
                     type="button"
                     onClick={() => setIsChangePwdOpen(false)}
-                    className="cursor-pointer rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-200 active:scale-[0.98]"
+                    className="cursor-pointer rounded-xl px-5 py-2.5 text-sm font-semibold text-zinc-600 transition hover:bg-zinc-200"
                   >
                     Hủy bỏ
                   </button>
-
                   <button
                     type="submit"
                     disabled={isChangingPwd}
-                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-md transition active:scale-[0.98] ${
-                      isChangingPwd
-                        ? "bg-slate-400 cursor-not-allowed"
-                        : "bg-indigo-600 shadow-indigo-600/20 hover:bg-indigo-700"
-                    }`}
+                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${isChangingPwd ? "bg-zinc-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"}`}
                   >
                     {isChangingPwd ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -500,16 +468,14 @@ function UserLayout() {
       {toast.show && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer"
+            className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm cursor-pointer"
             onClick={closeToast}
           ></div>
           <div
             className={`relative w-full max-w-sm rounded-[2.5rem] bg-white overflow-hidden shadow-2xl border-2 ${toast.type === "success" ? "border-emerald-500" : "border-rose-400"}`}
           >
             <div
-              className={`p-8 flex flex-col items-center text-center relative ${
-                toast.type === "success" ? "bg-emerald-500" : "bg-rose-500"
-              }`}
+              className={`p-8 flex flex-col items-center text-center relative ${toast.type === "success" ? "bg-emerald-500" : "bg-rose-500"}`}
             >
               <button
                 onClick={closeToast}
@@ -517,17 +483,15 @@ function UserLayout() {
               >
                 <X size={20} />
               </button>
-              {toast.type === "success" ? (
-                <span className="text-[60px] drop-shadow-md mb-2">🥰</span>
-              ) : (
-                <span className="text-[60px] drop-shadow-md mb-2">😥</span>
-              )}
+              <span className="text-[60px] drop-shadow-md mb-2">
+                {toast.type === "success" ? "🥰" : "😥"}
+              </span>
               <h3 className="text-2xl font-black text-white tracking-wide uppercase">
                 {toast.type === "success" ? "Thành công" : "Thất bại"}
               </h3>
             </div>
             <div className="p-8 bg-white flex flex-col items-center text-center">
-              <p className="text-slate-600 font-medium text-lg leading-relaxed">
+              <p className="text-zinc-600 font-medium text-lg leading-relaxed">
                 {toast.message}
               </p>
             </div>
