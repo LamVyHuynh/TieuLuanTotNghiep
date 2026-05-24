@@ -32,8 +32,7 @@ const getRoleInfo = (role_id) => {
     return { name: "Quản trị", color: "bg-amber-100 text-amber-700" };
   if (role_id === 2)
     return { name: "Khách hàng", color: "bg-lime-100 text-lime-700" };
-  if (role_id === 3)
-    return { name: "Chủ cửa hàng", color: "bg-blue-100 text-blue-700" };
+
   return { name: "Chưa rõ", color: "bg-slate-100 text-slate-700" };
 };
 
@@ -216,12 +215,6 @@ function UsersPage() {
       value: stats.customers,
       icon: Users,
       iconClass: "bg-lime-100 text-lime-700",
-    },
-    {
-      label: "Chủ cửa hàng",
-      value: stats.storeOwners,
-      icon: Store,
-      iconClass: "bg-blue-100 text-blue-700",
     },
     {
       label: "Quản trị viên",
@@ -661,7 +654,6 @@ function UsersPage() {
                     >
                       <option value={1}>Quản trị viên</option>
                       <option value={2}>Khách hàng</option>
-                      <option value={3}>Chủ cửa hàng</option>
                     </select>
                     <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
                       <ChevronRight size={16} className="rotate-90" />
