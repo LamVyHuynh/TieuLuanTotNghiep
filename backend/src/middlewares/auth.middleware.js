@@ -51,4 +51,4 @@ function authenticateToken(req, res, next) {
   });
 }
 
-module.exports = { authenticateToken, isAdmin };
+module.exports = { authenticateToken };
