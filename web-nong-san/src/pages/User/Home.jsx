@@ -10,8 +10,11 @@ function Home() {
   const [categories, setCategories] = useState([]);
   const [isLoading, setLoading] = useState(true);
 
-  // MẢNG DUY NHẤT ĐỂ RENDER RA MÀN HÌNH (Giải quyết vụ lộn xộn vô tận)
-  const [displayProducts, setDisplayProducts] = useState([]);
+  // Số lượng sản phẩm hiển thị trên màn hình
+  const [displayCount, setDisplayCount] = useState(8);
+
+  // STATE MỚI: Dùng để điều khiển cái cục xoay xoay dưới đáy
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
 
   // API lấy dữ liệu sản phẩm và danh mục từ backend
   useEffect(() => {
@@ -23,7 +26,6 @@ function Home() {
           axiosClient.get("products"),
         ]);
 
-        // Chỉ lấy danh mục đang hiển thị
         const activeCategories = (catRes.data.categories || []).filter(
           (c) => c.status === 1,
         );
@@ -40,7 +42,6 @@ function Home() {
     fetchData();
   }, []);
 
-  // Map tên danh mục backend về tên filter hiển thị frontend
   const categoryMap = useMemo(() => {
     const map = {};
     categories.forEach((cat) => {
@@ -49,40 +50,43 @@ function Home() {
     return map;
   }, [categories]);
 
-  // Lọc sản phẩm khi khách hàng bấm tab (Danh sách gốc sau khi lọc)
   const filteredProducts = useMemo(() => {
     if (activeFilter === "Tất Cả") return products;
     return products.filter((p) => categoryMap[p.id_category] === activeFilter);
   }, [products, activeFilter, categoryMap]);
 
-  // KHI ĐỔI TAB HOẶC MỚI VÀO: Reset mảng hiển thị về 8 món đầu tiên
+  // Reset về 8 món mỗi khi đổi danh mục
   useEffect(() => {
-    setDisplayProducts(filteredProducts.slice(0, 8));
-  }, [filteredProducts]);
+    setDisplayCount(8);
+  }, [activeFilter]);
 
   // ========================================================
-  // LOGIC CUỘN VÔ TẬN VÀ TRỘN NGẪU NHIÊN (SHUFFLE)
+  // LOGIC CUỘN + HIỆU ỨNG TẢI (FAKE DELAY)
   // ========================================================
   useEffect(() => {
     const handleScroll = () => {
+      // Nếu đang trong lúc xoay xoay, hoặc đã hiện hết sạch đồ ăn rồi thì KHÔNG làm gì cả
+      if (isFetchingMore || displayCount >= filteredProducts.length) return;
+
       if (
         window.innerHeight + window.scrollY >=
         document.body.offsetHeight - 500
       ) {
-        // Trộn ngẫu nhiên danh sách đã lọc
-        const shuffled = [...filteredProducts].sort(() => Math.random() - 0.5);
-        // Nối thêm 4 món (đã trộn) vào mảng đang hiển thị
-        setDisplayProducts((prev) => [...prev, ...shuffled.slice(0, 4)]);
+        // 1. Bật cục xoay xoay lên
+        setIsFetchingMore(true);
+
+        // 2. Chờ 0.8 giây (800ms) rồi mới bung đồ ăn ra cho đẹp
+        setTimeout(() => {
+          setDisplayCount((prev) => prev + 4);
+          setIsFetchingMore(false); // Tắt cục xoay
+        }, 800);
       }
     };
 
-    // Chỉ chạy hiệu ứng lướt khi có sản phẩm
-    if (filteredProducts.length > 0) {
-      window.addEventListener("scroll", handleScroll);
-    }
-
+    window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [filteredProducts]); // Đưa filteredProducts vào dependency để luôn lấy data mới nhất
+  }, [displayCount, filteredProducts.length, isFetchingMore]);
+  // Phải có 3 cái dependency này để scroll luôn lấy đúng giá trị mới nhất
 
   return (
     <>
@@ -134,7 +138,7 @@ function Home() {
           ))}
         </div>
 
-        {/* ===================== LOADING HOẶC LƯỚI SẢN PHẨM ===================== */}
+        {/* ===================== LOADING LÚC MỚI VÀO ===================== */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-emerald-600">
             <RefreshCcw size={32} className="animate-spin mb-4" />
@@ -142,9 +146,7 @@ function Home() {
           </div>
         ) : (
           <div className="masonry-grid">
-            {/* LẶP QUA MẢNG displayProducts THAY VÌ filteredProducts */}
-            {displayProducts.map((item, index) => {
-              // 1. CHÈN THẺ AI GỢI Ý VÀO VỊ TRÍ SỐ 3 (Chỉ hiện khi ở tab "Tất Cả")
+            {filteredProducts.slice(0, displayCount).map((item, index) => {
               const aiCard =
                 index === 2 && activeFilter === "Tất Cả" ? (
                   <div
@@ -170,11 +172,9 @@ function Home() {
                   </div>
                 ) : null;
 
-              // 2. RENDER THẺ SẢN PHẨM TỪ DB
               const productCard = (
                 <div
-                  // FIX LỖI TRÙNG KEY Ở ĐÂY: Vì lặp vô tận nên nối thêm index vào cho khỏi trùng
-                  key={`${item.id_product}-${index}`}
+                  key={item.id_product}
                   className="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:shadow-xl hover:border-emerald-300 transition-all duration-500 ease-out group cursor-pointer"
                 >
                   <div className="overflow-hidden rounded-2xl">
@@ -220,7 +220,7 @@ function Home() {
               );
 
               return (
-                <React.Fragment key={`frag-${item.id_product}-${index}`}>
+                <React.Fragment key={`frag-${item.id_product}`}>
                   {aiCard}
                   {productCard}
                 </React.Fragment>
@@ -229,7 +229,6 @@ function Home() {
           </div>
         )}
 
-        {/* ===================== RỖNG & LOAD MORE ===================== */}
         {!isLoading && filteredProducts.length === 0 && (
           <div className="text-center py-20 text-slate-500">
             <h3 className="text-xl font-bold mb-2">Chưa có món ăn nào</h3>
@@ -237,12 +236,12 @@ function Home() {
           </div>
         )}
 
-        {/* Vòng lặp vô tận nên lúc nào kéo xuống cũng hiện đang tải thêm */}
-        {displayProducts.length > 0 && !isLoading && (
-          <div className="mt-16 flex flex-col items-center justify-center gap-3 text-zinc-400 pb-10">
-            <RefreshCcw size={24} className="animate-spin duration-1000" />
-            <span className="text-sm font-medium tracking-wide">
-              Đang làm mới món ngon...
+        {/* ===================== CỤC LOAD DƯỚI ĐÁY MÀ MÀY KẾT ===================== */}
+        {isFetchingMore && (
+          <div className="mt-12 flex flex-col items-center justify-center gap-3 text-emerald-600 pb-10">
+            <RefreshCcw size={26} className="animate-spin duration-700" />
+            <span className="text-sm font-semibold tracking-wide">
+              Đang tải thêm món ngon...
             </span>
           </div>
         )}
