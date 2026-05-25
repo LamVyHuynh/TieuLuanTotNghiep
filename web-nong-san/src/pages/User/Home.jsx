@@ -10,6 +10,9 @@ function Home() {
   const [categories, setCategories] = useState([]);
   const [isLoading, setLoading] = useState(true);
 
+  // MẢNG DUY NHẤT ĐỂ RENDER RA MÀN HÌNH (Giải quyết vụ lộn xộn vô tận)
+  const [displayProducts, setDisplayProducts] = useState([]);
+
   // API lấy dữ liệu sản phẩm và danh mục từ backend
   useEffect(() => {
     const fetchData = async () => {
@@ -41,36 +44,46 @@ function Home() {
   const categoryMap = useMemo(() => {
     const map = {};
     categories.forEach((cat) => {
-      // Đổi thành id_category (hoặc id tùy thuộc vào DB của mày)
       map[cat.id_category] = cat.name;
     });
     return map;
   }, [categories]);
 
-  // Lọc sản phẩm khi khách hàng bấm tab
+  // Lọc sản phẩm khi khách hàng bấm tab (Danh sách gốc sau khi lọc)
   const filteredProducts = useMemo(() => {
     if (activeFilter === "Tất Cả") return products;
-    // Lọc theo tên danh mục
     return products.filter((p) => categoryMap[p.id_category] === activeFilter);
   }, [products, activeFilter, categoryMap]);
 
-  // Hiệu ứng "Đang tải thực sự.. " khi lướt gần cuối
-  const [displayCount, setDisplayCount] = useState(8); // Ban đầu hiện 8 món
-
-  // Khi nào kéo xuống gần cuối thì tăng displayCount lên
-  const handleScroll = () => {
-    if (
-      window.innerHeight + window.scrollY >=
-      document.body.offsetHeight - 500
-    ) {
-      setDisplayCount((prev) => prev + 4); // Mỗi lần lướt xuống cuối, hiện thêm 4 món
-    }
-  };
-
+  // KHI ĐỔI TAB HOẶC MỚI VÀO: Reset mảng hiển thị về 8 món đầu tiên
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
+    setDisplayProducts(filteredProducts.slice(0, 8));
+  }, [filteredProducts]);
+
+  // ========================================================
+  // LOGIC CUỘN VÔ TẬN VÀ TRỘN NGẪU NHIÊN (SHUFFLE)
+  // ========================================================
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >=
+        document.body.offsetHeight - 500
+      ) {
+        // Trộn ngẫu nhiên danh sách đã lọc
+        const shuffled = [...filteredProducts].sort(() => Math.random() - 0.5);
+        // Nối thêm 4 món (đã trộn) vào mảng đang hiển thị
+        setDisplayProducts((prev) => [...prev, ...shuffled.slice(0, 4)]);
+      }
+    };
+
+    // Chỉ chạy hiệu ứng lướt khi có sản phẩm
+    if (filteredProducts.length > 0) {
+      window.addEventListener("scroll", handleScroll);
+    }
+
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [filteredProducts]); // Đưa filteredProducts vào dependency để luôn lấy data mới nhất
+
   return (
     <>
       <style>{`
@@ -93,7 +106,7 @@ function Home() {
       `}</style>
 
       <div className="pb-24 max-w-7xl mx-auto px-4 sm:px-6 min-h-screen">
-        {/* ===================== THANH FILTER TỪ DATABASE ===================== */}
+        {/* ===================== THANH FILTER ===================== */}
         <div className="flex gap-3 overflow-x-auto category-scroll pb-4 mb-6 pt-4">
           <button
             onClick={() => setActiveFilter("Tất Cả")}
@@ -106,7 +119,6 @@ function Home() {
             Tất Cả
           </button>
 
-          {/* Map danh sách categories từ DB ra thành các nút bấm */}
           {categories.map((cat) => (
             <button
               key={cat.id_category}
@@ -130,7 +142,8 @@ function Home() {
           </div>
         ) : (
           <div className="masonry-grid">
-            {filteredProducts.slice(0, displayCount).map((item, index) => {
+            {/* LẶP QUA MẢNG displayProducts THAY VÌ filteredProducts */}
+            {displayProducts.map((item, index) => {
               // 1. CHÈN THẺ AI GỢI Ý VÀO VỊ TRÍ SỐ 3 (Chỉ hiện khi ở tab "Tất Cả")
               const aiCard =
                 index === 2 && activeFilter === "Tất Cả" ? (
@@ -160,11 +173,11 @@ function Home() {
               // 2. RENDER THẺ SẢN PHẨM TỪ DB
               const productCard = (
                 <div
-                  key={item.id_product}
+                  // FIX LỖI TRÙNG KEY Ở ĐÂY: Vì lặp vô tận nên nối thêm index vào cho khỏi trùng
+                  key={`${item.id_product}-${index}`}
                   className="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:shadow-xl hover:border-emerald-300 transition-all duration-500 ease-out group cursor-pointer"
                 >
                   <div className="overflow-hidden rounded-2xl">
-                    {/* Lấy ảnh từ DB, nếu rỗng thì xài ảnh mặc định */}
                     <img
                       src={
                         item.image_url ||
@@ -183,7 +196,6 @@ function Home() {
                       {item.name}
                     </h4>
 
-                    {/* Hiển thị Đơn vị và Calo */}
                     <p className="text-zinc-500 text-xs mb-3 flex items-center gap-2 flex-wrap">
                       <span className="font-semibold px-1.5 py-0.5 bg-slate-100 rounded-md">
                         {item.unit || "Phần"}
@@ -207,9 +219,8 @@ function Home() {
                 </div>
               );
 
-              // Gom thẻ AI (nếu có) và thẻ Sản phẩm lại trả về
               return (
-                <React.Fragment key={item.id_product}>
+                <React.Fragment key={`frag-${item.id_product}-${index}`}>
                   {aiCard}
                   {productCard}
                 </React.Fragment>
@@ -226,12 +237,12 @@ function Home() {
           </div>
         )}
 
-        {/* Chỉ hiện khi còn sản phẩm để tải thêm */}
-        {filteredProducts.length > displayCount && !isLoading && (
+        {/* Vòng lặp vô tận nên lúc nào kéo xuống cũng hiện đang tải thêm */}
+        {displayProducts.length > 0 && !isLoading && (
           <div className="mt-16 flex flex-col items-center justify-center gap-3 text-zinc-400 pb-10">
             <RefreshCcw size={24} className="animate-spin duration-1000" />
             <span className="text-sm font-medium tracking-wide">
-              Đang tải thêm món ngon...
+              Đang làm mới món ngon...
             </span>
           </div>
         )}
@@ -246,7 +257,6 @@ function Home() {
         </p>
       </footer>
 
-      {/* FAB cho Mobile */}
       <button className="md:hidden fixed bottom-6 right-6 bg-emerald-600 text-white w-14 h-14 rounded-full shadow-[0_10px_25px_rgba(5,150,105,0.3)] flex items-center justify-center z-50 hover:bg-emerald-700 transition-colors cursor-pointer">
         <ShoppingBag size={22} />
         <span className="absolute top-0 right-0 bg-white text-emerald-700 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-emerald-600 box-content shadow-sm">
