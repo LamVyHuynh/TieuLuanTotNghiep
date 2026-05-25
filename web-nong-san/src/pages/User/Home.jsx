@@ -13,9 +13,6 @@ function Home() {
   // Số lượng sản phẩm hiển thị trên màn hình
   const [displayCount, setDisplayCount] = useState(8);
 
-  // STATE MỚI: Dùng để điều khiển cái cục xoay xoay dưới đáy
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
-
   // API lấy dữ liệu sản phẩm và danh mục từ backend
   useEffect(() => {
     const fetchData = async () => {
@@ -26,6 +23,7 @@ function Home() {
           axiosClient.get("products"),
         ]);
 
+        // Chỉ lấy danh mục đang hiển thị
         const activeCategories = (catRes.data.categories || []).filter(
           (c) => c.status === 1,
         );
@@ -42,6 +40,7 @@ function Home() {
     fetchData();
   }, []);
 
+  // Map tên danh mục backend về tên filter hiển thị frontend
   const categoryMap = useMemo(() => {
     const map = {};
     categories.forEach((cat) => {
@@ -50,43 +49,45 @@ function Home() {
     return map;
   }, [categories]);
 
+  // Lọc sản phẩm khi khách hàng bấm tab
   const filteredProducts = useMemo(() => {
     if (activeFilter === "Tất Cả") return products;
     return products.filter((p) => categoryMap[p.id_category] === activeFilter);
   }, [products, activeFilter, categoryMap]);
 
-  // Reset về 8 món mỗi khi đổi danh mục
+  // Reset về 8 món mỗi khi khách hàng đổi Tab
   useEffect(() => {
     setDisplayCount(8);
   }, [activeFilter]);
 
   // ========================================================
-  // LOGIC CUỘN + HIỆU ỨNG TẢI (FAKE DELAY)
+  // LOGIC CUỘN CHUẨN (Cuộn tới đâu mở khoá tới đó)
   // ========================================================
   useEffect(() => {
     const handleScroll = () => {
-      // Nếu đang trong lúc xoay xoay, hoặc đã hiện hết sạch đồ ăn rồi thì KHÔNG làm gì cả
-      if (isFetchingMore || displayCount >= filteredProducts.length) return;
-
       if (
         window.innerHeight + window.scrollY >=
         document.body.offsetHeight - 500
       ) {
-        // 1. Bật cục xoay xoay lên
-        setIsFetchingMore(true);
-
-        // 2. Chờ 0.8 giây (800ms) rồi mới bung đồ ăn ra cho đẹp
-        setTimeout(() => {
-          setDisplayCount((prev) => prev + 4);
-          setIsFetchingMore(false); // Tắt cục xoay
-        }, 800);
+        // Tăng giới hạn in ra thêm 4 món
+        setDisplayCount((prev) => prev + 4);
       }
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [displayCount, filteredProducts.length, isFetchingMore]);
-  // Phải có 3 cái dependency này để scroll luôn lấy đúng giá trị mới nhất
+  }, []);
+
+  // ========================================================
+  // PHẦN TRÁI TIM CỦA MASONRY: ĐIỀU KHIỂN KÍCH THƯỚC ẢNH
+  // Tao tạo ra 3 kiểu tỷ lệ ảnh: Dài (3/4), Vừa (vuông 1/1), Nhỏ (4/3)
+  // ========================================================
+  const getMasonryHeart = (index) => {
+    const heightPattern = index % 3; // Tạo vòng lặp 0, 1, 2
+    if (heightPattern === 0) return "aspect-[3/4]"; // Dài Max (Portrait)
+    if (heightPattern === 1) return "aspect-square"; // Vừa (Square)
+    return "aspect-[4/3]"; // Nhỏ (Landscape)
+  };
 
   return (
     <>
@@ -138,7 +139,7 @@ function Home() {
           ))}
         </div>
 
-        {/* ===================== LOADING LÚC MỚI VÀO ===================== */}
+        {/* ===================== LOADING HOẶC LƯỚI SẢN PHẨM ===================== */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-emerald-600">
             <RefreshCcw size={32} className="animate-spin mb-4" />
@@ -147,6 +148,7 @@ function Home() {
         ) : (
           <div className="masonry-grid">
             {filteredProducts.slice(0, displayCount).map((item, index) => {
+              // 1. CHÈN THẺ AI GỢI Ý VÀO VỊ TRÍ SỐ 3 (Chỉ hiện khi ở tab "Tất Cả")
               const aiCard =
                 index === 2 && activeFilter === "Tất Cả" ? (
                   <div
@@ -172,26 +174,30 @@ function Home() {
                   </div>
                 ) : null;
 
+              // 2. RENDER THẺ SẢN PHẨM TỪ DB
               const productCard = (
                 <div
-                  key={item.id_product}
-                  className="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:shadow-xl hover:border-emerald-300 transition-all duration-500 ease-out group cursor-pointer"
+                  key={item.id_product} // Về lại ID chuẩn, không sợ trùng nữa
+                  className="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:shadow-xl hover:border-emerald-300 transition-all duration-500 ease-out group cursor-pointer relative"
                 >
-                  <div className="overflow-hidden rounded-2xl">
+                  {/* ====== PHẦN UPDATE MỚI: ẢNH CÓ KÍCH THƯỚC LINH HOẠT ====== */}
+                  <div
+                    className={`overflow-hidden rounded-2xl relative ${getMasonryHeart(index)}`}
+                  >
                     <img
                       src={
                         item.image_url ||
                         "https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=700&q=80"
                       }
                       alt={item.name}
-                      className="group-hover:scale-105 transition-transform duration-700"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm flex items-center gap-1 text-emerald-700 uppercase">
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm flex items-center gap-1 text-emerald-700 uppercase z-10">
                       {categoryMap[item.id_category] || "Món Ngon"}
                     </div>
                   </div>
 
-                  <div className="px-2 pb-1">
+                  <div className="px-2 pb-1 pt-3">
                     <h4 className="font-black text-base md:text-lg mb-1.5 text-zinc-800 leading-tight">
                       {item.name}
                     </h4>
@@ -229,6 +235,7 @@ function Home() {
           </div>
         )}
 
+        {/* ===================== RỖNG & LOAD MORE ===================== */}
         {!isLoading && filteredProducts.length === 0 && (
           <div className="text-center py-20 text-slate-500">
             <h3 className="text-xl font-bold mb-2">Chưa có món ăn nào</h3>
@@ -236,11 +243,11 @@ function Home() {
           </div>
         )}
 
-        {/* ===================== CỤC LOAD DƯỚI ĐÁY MÀ MÀY KẾT ===================== */}
-        {isFetchingMore && (
-          <div className="mt-12 flex flex-col items-center justify-center gap-3 text-emerald-600 pb-10">
-            <RefreshCcw size={26} className="animate-spin duration-700" />
-            <span className="text-sm font-semibold tracking-wide">
+        {/* Chỉ hiện hiệu ứng Loading khi số lượng trong Database VẪN CÒN NHIỀU HƠN số lượng đang in ra */}
+        {filteredProducts.length > displayCount && !isLoading && (
+          <div className="mt-16 flex flex-col items-center justify-center gap-3 text-zinc-400 pb-10">
+            <RefreshCcw size={24} className="animate-spin duration-1000" />
+            <span className="text-sm font-medium tracking-wide">
               Đang tải thêm món ngon...
             </span>
           </div>
