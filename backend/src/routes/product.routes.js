@@ -10,18 +10,18 @@ const {
 const { authenticateToken } = require("../middlewares/auth.middleware");
 
 // Áp dụng middleware authenticateToken cho tất cả route trong router này
-router.use(authenticateToken);
-
-// Route để thêm sản phẩm mới
-router.post("/add-product", addProduct);
+// router.use(authenticateToken);
 
 // Route để lấy danh sách sản phẩm
 router.get("/", getProducts);
 
+// Route để thêm sản phẩm mới
+router.post("/add-product", authenticateToken, addProduct);
+
 // Route để xoá sản phẩm (nếu cần thiết)
-router.delete("/:id", deleteSanPham);
+router.delete("/:id", authenticateToken, deleteSanPham);
 
 // Route để cập nhật thông tin sản phẩm
-router.put("/:id", updateInfoProduct);
+router.put("/:id", authenticateToken, updateInfoProduct);
 
 module.exports = router;

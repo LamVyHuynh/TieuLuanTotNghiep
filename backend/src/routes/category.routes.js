@@ -10,18 +10,18 @@ const {
 const { authenticateToken } = require("../middlewares/auth.middleware");
 
 // Áp dụng middleware authenticateToken cho tất cả route trong router này
-router.use(authenticateToken);
-
-// Route thêm mới danh mục
-router.post("/add-category", createCategoryController);
+// router.use(authenticateToken);
 
 // Route hiển thị danh sách danh mục
 router.get("/", getAllCategoriesController);
 
+// Route thêm mới danh mục
+router.post("/add-category", authenticateToken, createCategoryController);
+
 // Route cập nhật thông tin danh mục
-router.put("/:id", updateCategoryController);
+router.put("/:id", authenticateToken, updateCategoryController);
 
 // Route xoá danh mục
-router.delete("/:id", deleteCategoryController);
+router.delete("/:id", authenticateToken, deleteCategoryController);
 
 module.exports = router;
