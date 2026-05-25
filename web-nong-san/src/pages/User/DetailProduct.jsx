@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -7,42 +7,66 @@ import {
   Plus,
   ShoppingBasket,
   Sparkles,
+  RefreshCcw,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CartContext } from "../../context/CartContext";
-import { CheckoutContext } from "../../context/CheckoutContext";
-import { ProductContext } from "../../context/ProductContext";
-
-const nutritionFacts = [
-  { label: "Energy", value: "49 kcal" },
-  { label: "Protein", value: "4.3g" },
-  { label: "Carbs", value: "8.8g" },
-  { label: "Fiber", value: "3.6g" },
-  { label: "Fat", value: "0.9g" },
-];
+import axiosClient from "../../api/axiosClient";
 
 function DetailProduct() {
-  const { productList } = useContext(ProductContext);
-  const { addToCart } = useContext(CartContext);
-  const { addToPayment } = useContext(CheckoutContext);
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const product = productList.find((item) => item.id === Number(id));
+  const [product, setProduct] = useState(null);
+  const [similarProducts, setSimilarProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
 
-  const similarProducts = useMemo(() => {
-    if (!product) {
-      return [];
-    }
+  // GỌI API LẤY DATA THẬT
+  // GỌI API LẤY DATA THẬT
+  useEffect(() => {
+    const fetchProductDetail = async () => {
+      setIsLoading(true);
+      try {
+        // 1. Lấy chi tiết 1 sản phẩm
+        const res = await axiosClient.get(`/products/${id}`);
+        const currentItem = res.data.product; // Bỏ chữ 's' đi nha mạy!
+        setProduct(currentItem);
 
-    return productList.filter((item) => item.id !== product.id).slice(0, 4);
-  }, [product, productList]);
+        // 2. Lấy danh sách để làm gợi ý (Tránh lỗi .slice)
+        const allRes = await axiosClient.get("/products");
+        let others = allRes.data.products.filter(
+          (p) => p.id_product !== Number(id),
+        ); // Lọc ID trước
+        // BÍ KÍP "TRỘN BÀI" NGẪU NHIÊN:
+        // Đảo lộn thứ tự danh sách món ăn, sau đó mới lấy 4 món đầu tiên
+        others = others.sort(() => 0.5 - Math.random()).slice(0, 4);
+        setSimilarProducts(others);
+      } catch (error) {
+        console.error("Lỗi lấy chi tiết sản phẩm:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProductDetail();
+    // Cuộn lên đầu trang mỗi khi đổi sản phẩm
+    window.scrollTo(0, 0);
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center text-emerald-600 bg-[#f6f8f4]">
+        <RefreshCcw size={40} className="animate-spin mb-4" />
+        <p className="font-bold tracking-wide">Đang nấu món ngon...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
-      <div className="mx-auto max-w-[900px] px-4 py-20 text-center sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-[900px] px-4 py-32 text-center sm:px-6 lg:px-10 bg-[#f6f8f4] min-h-screen">
         <h2 className="text-3xl font-black tracking-[-0.03em] text-rose-500">
           Không tìm thấy sản phẩm!
         </h2>
@@ -50,7 +74,7 @@ function DetailProduct() {
           Sản phẩm có thể đã bị xóa hoặc đổi đường dẫn.
         </p>
         <button
-          className="mt-6 cursor-pointer rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700"
+          className="mt-6 cursor-pointer rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700 shadow-lg"
           onClick={() => navigate("/")}
         >
           Về trang chủ
@@ -62,12 +86,12 @@ function DetailProduct() {
   const totalPrice = product.price * quantity;
 
   const handleIncrease = () => {
-    if (quantity < product.quantity) {
+    if (quantity < (product.stock || 50)) {
+      // Giả sử tồn kho là stock
       setQuantity((prev) => prev + 1);
-      return;
+    } else {
+      alert("Hết hàng trong kho rồi mày ơi! :(");
     }
-
-    alert("Hết hàng rồi mày ơi! :(");
   };
 
   const handleDecrease = () => {
@@ -77,125 +101,119 @@ function DetailProduct() {
   };
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
+    // Logic gọi API thêm giỏ hàng sẽ viết ở đây
     setIsAdded(true);
-
-    setTimeout(() => {
-      navigate("/cart");
-    }, 1000);
-  };
-
-  const handleBuyNow = () => {
-    addToPayment({ ...product, quantity });
-    navigate("/checkout");
+    setTimeout(() => navigate("/cart"), 1000);
   };
 
   return (
-    <div className="bg-[#f6f8f4] pb-20 pt-8 text-slate-900">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+    <div className="bg-[#f6f8f4] pb-20 pt-8 text-slate-900 min-h-screen">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10 mt-16">
         <button
           className="mb-6 inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
           onClick={() => navigate(-1)}
         >
-          <ArrowLeft size={18} />
-          Quay lại
+          <ArrowLeft size={18} /> Quay lại
         </button>
 
-        <nav className="mb-8 flex flex-wrap text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-          <button
-            className="cursor-pointer transition hover:text-emerald-700"
-            onClick={() => navigate("/")}
-          >
-            Home
-          </button>
-          <span className="mx-2">/</span>
-          <span>{product.category}</span>
-          <span className="mx-2">/</span>
-          <span className="text-slate-500">{product.name}</span>
-        </nav>
-
         <section className="grid grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-12">
+          {/* CỘT TRÁI: ẢNH SẢN PHẨM */}
           <div className="relative lg:col-span-7">
             <div className="aspect-square overflow-hidden rounded-[1.75rem] bg-white p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:p-6">
               <img
-                src={product.img}
+                src={
+                  product.image_url ||
+                  "https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=700&q=80"
+                }
                 alt={product.name}
                 className="h-full w-full rounded-[1.25rem] object-cover transition duration-500 hover:scale-[1.03]"
               />
             </div>
-
             <div className="absolute -right-2 -top-2 rounded-full bg-lime-200 px-5 py-3 text-sm font-bold text-lime-950 shadow-[0_16px_30px_rgba(101,163,13,0.18)] sm:-right-4 sm:-top-4">
-              Certified Organic
+              Best Seller 🔥
             </div>
           </div>
 
+          {/* CỘT PHẢI: CHI TIẾT */}
           <div className="space-y-7 lg:col-span-5">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">
-                <Sparkles size={14} />
-                Chi tiết sản phẩm
+                <Sparkles size={14} /> Tươi ngon mỗi ngày
               </div>
 
-              <h1 className="mt-4 text-4xl font-black tracking-[-0.05em] text-slate-950 sm:text-5xl">
+              <h1 className="mt-4 text-4xl font-black tracking-[-0.05em] text-slate-950 sm:text-5xl leading-tight">
                 {product.name}
               </h1>
 
-              <p className="mt-4 text-base leading-7 text-slate-500">
-                {product.desc} HealthyGO ưu tiên trình bày rõ thông tin sản phẩm
-                để user dễ dàng quyết định mua hàng và nối thêm AI tư vấn dinh
-                dưỡng về sau.
+              <p className="mt-4 text-base leading-7 text-slate-500 font-medium">
+                {product.description ||
+                  "Món ăn thanh đạm, giàu dinh dưỡng, phù hợp cho mọi chế độ ăn kiêng. Nguyên liệu chuẩn Organic 100%."}
               </p>
 
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <span className="text-3xl font-black tracking-[-0.04em] text-emerald-700 sm:text-4xl">
-                  {product.price.toLocaleString("vi-VN")}d
+                  {Number(product.price).toLocaleString("vi-VN")}đ
                   <span className="ml-1 text-base font-medium text-slate-400">
-                    / {product.unit}
+                    / {product.unit || "Phần"}
                   </span>
-                </span>
-                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-amber-700">
-                  Còn hàng
                 </span>
               </div>
             </div>
 
-            <section className="rounded-[1.5rem] bg-[#eef3ea] p-5 shadow-inner sm:p-6">
+            {/* BẢNG DINH DƯỠNG */}
+            <section className="rounded-[1.5rem] bg-[#eef3ea] p-5 shadow-inner sm:p-6 border border-lime-100">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-500">
-                  Nutritional facts
+                  Dinh dưỡng
                 </h2>
                 <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                  per 100g
+                  1 {product.unit || "Phần"}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {nutritionFacts.map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-xl border border-white/70 bg-white p-4 text-center shadow-sm"
-                  >
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                      {item.label}
-                    </p>
-                    <p className="mt-1 text-lg font-black tracking-[-0.03em] text-emerald-700">
-                      {item.value}
-                    </p>
-                  </div>
-                ))}
-
-                <div className="flex items-center justify-center rounded-xl border border-white/70 bg-white p-4 shadow-sm">
-                  <Leaf size={28} className="text-lime-600" />
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-xl border border-white/70 bg-white p-3 text-center shadow-sm">
+                  <p className="text-[10px] font-bold uppercase text-slate-400">
+                    Calo
+                  </p>
+                  <p className="mt-1 text-base font-black text-emerald-700">
+                    {product.calories || "--"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/70 bg-white p-3 text-center shadow-sm">
+                  <p className="text-[10px] font-bold uppercase text-slate-400">
+                    Đạm
+                  </p>
+                  <p className="mt-1 text-base font-black text-emerald-700">
+                    {product.protein || "--"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/70 bg-white p-3 text-center shadow-sm">
+                  <p className="text-[10px] font-bold uppercase text-slate-400">
+                    Carbs
+                  </p>
+                  <p className="mt-1 text-base font-black text-emerald-700">
+                    {product.carbs || "--"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/70 bg-white p-3 text-center shadow-sm">
+                  <p className="text-[10px] font-bold uppercase text-slate-400">
+                    Béo
+                  </p>
+                  <p className="mt-1 text-base font-black text-emerald-700">
+                    {product.fat || "--"}
+                  </p>
                 </div>
               </div>
             </section>
 
-            <section className="space-y-5">
+            {/* MUA HÀNG */}
+            <section className="space-y-5 border-t border-slate-200 pt-6">
               <div className="flex items-center justify-between rounded-[1.35rem] bg-[#e4e8e1] p-4 sm:p-5">
                 <div className="inline-flex items-center gap-3 rounded-full bg-white px-2 py-2 shadow-sm">
                   <button
-                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
                     onClick={handleDecrease}
+                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
                   >
                     <Minus size={16} />
                   </button>
@@ -203,8 +221,8 @@ function DetailProduct() {
                     {quantity}
                   </span>
                   <button
-                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
                     onClick={handleIncrease}
+                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
                   >
                     <Plus size={16} />
                   </button>
@@ -212,121 +230,67 @@ function DetailProduct() {
 
                 <div className="text-right">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Tổng tạm tính
+                    Tạm tính
                   </p>
                   <p className="mt-1 text-2xl font-black tracking-[-0.03em] text-slate-900">
-                    {totalPrice.toLocaleString("vi-VN")}d
+                    {totalPrice.toLocaleString("vi-VN")}đ
                   </p>
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <button
-                  className={`cursor-pointer rounded-xl px-5 py-4 text-base font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.18)] transition ${
+                  onClick={handleAddToCart}
+                  className={`cursor-pointer rounded-xl px-5 py-4 text-base font-bold text-white shadow-lg transition ${
                     isAdded
                       ? "bg-emerald-500"
                       : "bg-gradient-to-br from-emerald-700 to-emerald-500 hover:-translate-y-0.5"
                   }`}
-                  onClick={handleAddToCart}
                 >
                   {isAdded ? "Đã thêm vào giỏ" : "Thêm vào giỏ"}
                 </button>
 
                 <button
+                  onClick={() => navigate("/checkout")}
                   className="cursor-pointer rounded-xl bg-[#dfe4dc] px-5 py-4 text-base font-bold text-slate-900 transition hover:-translate-y-0.5 hover:bg-[#d4dad1]"
-                  onClick={handleBuyNow}
                 >
                   Mua ngay
                 </button>
               </div>
             </section>
-
-            <section className="space-y-4 border-t border-slate-200 pt-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                    Nguồn gốc
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-900">
-                    Đà Lạt, Việt Nam
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                    Phương thức
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-900">
-                    Organic Farming (VIETGAP)
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-[#eef3ea] p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                  Hướng dẫn bảo quản
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Bảo quản lạnh từ 4-6°C, tránh rửa trước khi lưu trữ để giữ độ
-                  giòn và nên sử dụng trong 5-7 ngày để đảm bảo chất lượng tốt
-                  nhất.
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                Kho hiện tại: <strong>{product.quantity}</strong> {product.unit}
-              </div>
-            </section>
           </div>
         </section>
 
-        <section className="mt-24">
-          <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-3xl font-black tracking-[-0.04em] text-slate-950">
-                Sản phẩm có thể bạn sẽ thích
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Section này giữ tinh thần của file HTML mẫu và tận dụng data
-                thật trong project để sau này nối API dễ hơn.
-              </p>
-            </div>
-
-            <button
-              className="inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-emerald-700 transition hover:text-emerald-900"
-              onClick={() => navigate("/")}
-            >
-              Về catalog
-              <ArrowRight size={16} />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {/* ===================== CÁC MÓN LIÊN QUAN ===================== */}
+        <section className="mt-24 border-t border-slate-200 pt-16">
+          <h2 className="mb-8 text-3xl font-black tracking-[-0.04em] text-slate-950">
+            Có thể bạn sẽ thích
+          </h2>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {similarProducts.map((item) => (
               <article
-                key={item.id}
-                className="group cursor-pointer"
-                onClick={() => navigate(`/detail-product/${item.id}`)}
+                key={item.id_product}
+                className="group cursor-pointer bg-white p-3 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300"
+                onClick={() => navigate(`/detail-product/${item.id_product}`)}
               >
-                <div className="relative mb-4 aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-white shadow-sm transition duration-300 group-hover:bg-slate-100 group-hover:shadow-[0_18px_35px_rgba(15,23,42,0.08)]">
+                <div className="relative mb-4 aspect-[4/5] overflow-hidden rounded-2xl bg-slate-50">
                   <img
-                    src={item.img}
+                    src={
+                      item.image_url ||
+                      "https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=700&q=80"
+                    }
                     alt={item.name}
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   />
-                  <span className="absolute right-4 top-4 rounded-full bg-lime-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-lime-950">
-                    {item.category}
-                  </span>
                 </div>
-
-                <h3 className="text-lg font-black tracking-[-0.03em] text-slate-900">
-                  {item.name}
-                </h3>
-                <p className="mt-1 text-emerald-700 font-bold">
-                  {item.price.toLocaleString("vi-VN")}d
-                  <span className="ml-1 text-xs font-normal text-slate-400">
-                    / {item.unit}
-                  </span>
-                </p>
+                <div className="px-2">
+                  <h3 className="text-lg font-black tracking-[-0.03em] text-slate-900 line-clamp-1">
+                    {item.name}
+                  </h3>
+                  <p className="mt-1 text-emerald-700 font-black text-lg">
+                    {Number(item.price).toLocaleString("vi-VN")}đ
+                  </p>
+                </div>
               </article>
             ))}
           </div>

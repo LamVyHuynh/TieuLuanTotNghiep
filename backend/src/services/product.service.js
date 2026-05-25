@@ -1,5 +1,6 @@
 // 1. Phải import cái pool từ file cấu hình DB của mạy
 const pool = require("../config/db");
+const { get } = require("../routes/auth.routes");
 
 async function createProduct(productData) {
   const {
@@ -120,9 +121,18 @@ async function updateProduct(productId, productData) {
   return result.affectedRows > 0;
 }
 
+const getProductById = async (productId) => {
+  const [rows] = await pool.query(
+    "SELECT * FROM product WHERE id_product = ?",
+    [productId],
+  );
+  return rows[0]; // Trả về sản phẩm đầu tiên (nếu có)
+};
+
 module.exports = {
   createProduct,
   getAllProducts,
   deleteProduct,
   updateProduct,
+  getProductById,
 };

@@ -3,6 +3,7 @@ const {
   getAllProducts,
   deleteProduct,
   updateProduct,
+  getProductById,
 } = require("../services/product.service");
 
 const addProduct = async (req, res) => {
@@ -106,9 +107,32 @@ const updateInfoProduct = async (req, res) => {
   }
 };
 
+const getProductDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await getProductById(id); // Trả về 1 object sản phẩm
+
+    // Vì service đã trả về rows[0], nên product sẽ là dữ liệu thật hoặc undefined
+    if (product) {
+      res.status(200).json({
+        message: "Lấy chi tiết sản phẩm thành công!",
+        product: product, // Trả nguyên cái object đi luôn
+      });
+    } else {
+      res.status(404).json({ message: "Không tìm thấy sản phẩm!" });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: "Lỗi server khi lấy chi tiết sản phẩm!",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addProduct,
   getProducts,
   deleteSanPham,
   updateInfoProduct,
+  getProductDetail,
 };

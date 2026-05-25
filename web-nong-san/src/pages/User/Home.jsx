@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Plus, RefreshCcw, Sparkles, ShoppingBag } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
-
+import { useNavigate } from "react-router-dom";
 function Home() {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("Tất Cả");
 
   // Dữ liệu useState của sản phẩm và danh mục
@@ -179,6 +180,7 @@ function Home() {
                 <div
                   key={item.id_product} // Về lại ID chuẩn, không sợ trùng nữa
                   className="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:shadow-xl hover:border-emerald-300 transition-all duration-500 ease-out group cursor-pointer relative"
+                  onClick={() => navigate(`detail-product/${item.id_product}`)}
                 >
                   {/* ====== PHẦN UPDATE MỚI: ẢNH CÓ KÍCH THƯỚC LINH HOẠT ====== */}
                   <div
@@ -217,7 +219,15 @@ function Home() {
                       <span className="text-zinc-900 font-black text-lg">
                         {Number(item.price).toLocaleString("vi-VN")}đ
                       </span>
-                      <button className="bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer">
+                      {/* CỰC KỲ QUAN TRỌNG: Thêm e.stopPropagation()
+                      -  Để khi khách bấm nút "Dấu + Thêm giỏ hàng", nó không bị hiểu nhầm là đang bấm vào cái Card và bị nhảy trang. */}
+                      <button
+                        className="bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log("Thêm vào vỏ hàng");
+                        }}
+                      >
                         <Plus size={18} strokeWidth={3} />
                       </button>
                     </div>
