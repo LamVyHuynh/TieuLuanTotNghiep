@@ -21,6 +21,9 @@ const productRoutes = require("./routes/product.routes");
 // Import danh mục router
 const categoryRoutes = require("./routes/category.routes");
 
+// Import  vỏ hàng router
+const cartRoutes = require("./routes/cart.routes");
+
 // Import cookie-parser để đọc cookie từ request header
 const cookieParser = require("cookie-parser");
 
@@ -58,6 +61,8 @@ app.use("/products", productRoutes);
 // gắn router cho danh mục sản phẩm
 app.use("/categories", categoryRoutes);
 
+// gắn router cho giỏ hàng
+app.use("/cart", cartRoutes);
 // gắn router login
 // app.use("/login", authRoutes);
 

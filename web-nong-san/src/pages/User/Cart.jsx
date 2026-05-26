@@ -61,7 +61,7 @@ function Cart() {
 
   const handleSelectProduct = (id) => {
     setSelectIdItem((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -76,12 +76,12 @@ function Cart() {
 
   const selectedProducts = useMemo(
     () => cartItems.filter((item) => selectIdItem.includes(item.id)),
-    [cartItems, selectIdItem]
+    [cartItems, selectIdItem],
   );
 
   const subtotal = selectedProducts.reduce(
     (acc, item) => acc + item.price * item.quantity,
-    0
+    0,
   );
   const discount = selectedProducts.length > 0 ? 15000 : 0;
   const shippingFee = selectedProducts.length > 0 ? 20000 : 0;
@@ -256,7 +256,7 @@ function Cart() {
               onClick={() => navigate("/")}
             >
               <ArrowLeft size={16} />
-               Tiếp tục mua sắm
+              Tiếp tục mua sắm
             </button>
           </section>
 
@@ -267,19 +267,19 @@ function Cart() {
 
             <div className="mt-6 space-y-4 text-sm text-slate-500">
               <div className="flex justify-between gap-4">
-                  <span>Tổng tiền hàng</span>
+                <span>Tổng tiền hàng</span>
                 <span className="font-semibold text-slate-900">
                   {subtotal.toLocaleString("vi-VN")}d
                 </span>
               </div>
               <div className="flex justify-between gap-4 text-lime-700">
-                  <span>Giảm giá ưu đãi</span>
+                <span>Giảm giá ưu đãi</span>
                 <span className="font-semibold">
                   -{discount.toLocaleString("vi-VN")}d
                 </span>
               </div>
               <div className="flex justify-between gap-4">
-                  <span>Phí vận chuyển</span>
+                <span>Phí vận chuyển</span>
                 <span className="font-semibold text-slate-900">
                   {shippingFee.toLocaleString("vi-VN")}d
                 </span>
@@ -305,13 +305,13 @@ function Cart() {
                 className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-500 px-6 py-4 text-base font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.20)] transition hover:opacity-95"
                 onClick={handleCheckout}
               >
-                 Tiến hành thanh toán
+                Tiến hành thanh toán
                 <CreditCard size={18} />
               </button>
 
               <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
                 <ShieldCheck size={15} />
-                 Thanh toán an toàn 100%
+                Thanh toán an toàn 100%
               </div>
             </div>
           </aside>
@@ -321,15 +321,15 @@ function Cart() {
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-[0.22em] text-lime-700">
-                 Gợi ý riêng cho bạn
+                Gợi ý riêng cho bạn
               </span>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.04em] text-slate-950">
-                 Có thể bạn cũng thích
+                Có thể bạn cũng thích
               </h2>
             </div>
 
             <button className="hidden cursor-pointer items-center gap-2 text-sm font-bold text-emerald-700 md:inline-flex">
-               Xem tất cả
+              Xem tất cả
               <ArrowRight size={16} />
             </button>
           </div>
