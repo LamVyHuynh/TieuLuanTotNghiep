@@ -1,4 +1,4 @@
-const { addItemToCart } = require("../services/cart.service");
+const { addItemToCart, getCartItems } = require("../services/cart.service");
 
 const addToCart = async (req, res) => {
   try {
@@ -22,6 +22,24 @@ const addToCart = async (req, res) => {
   }
 };
 
+const getCart = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const items = await getCartItems(userId);
+    res.status(200).json({
+      message: "Lấy giỏ hàng thành công",
+      cartItems: items,
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy giỏ hàng:", error);
+    res.status(500).json({
+      message: "Lỗi Server khi lấy giỏ hàng!",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addToCart,
+  getCart,
 };

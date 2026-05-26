@@ -1,50 +1,73 @@
-import { useState, createContext } from "react";
+import { useState, createContext, useEffect, useCallback } from "react";
+import axiosClient from "../api/axiosClient";
+
 const CartContext = createContext();
+
 const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
 
-  const addToCart = (product, quantity) => {
-    // Kiểm tra xem sản phẩm đó đã tồn tại trong giỏ hàng chưa prevItems.find((item) => item.id === product.id)
-    // Nếu đã tồn tại thì sẽ dùng map chạy trong prevItem kiểm tra trùng id
-    // Vì hàng đã tồn tại trong vỏ, nên chỉ có thể cập nhật số lượng của hàng mà thoi ...item, quantity: item.quantity + quantity
-    // Hoặc không thay đổi gì cả hàng vẫn giữ nguyên như lúc mới thêm
-    // Nếu chưa tổn tại thì sẽ lấy prevItems của thêm product mới vàng vào giỏ hàng [...prevItems, { ...product, quantity }]
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      } else {
-        return [...prevItems, { ...product, quantity }];
-      }
-    });
-  };
-
-  // Tiến hành kiểm tra xem có khác id với nhau không dùng filter để mà lọc
-  // Khác thì giữa lại, giống thì bỏ đi
-  const removeProductCart = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
-  };
-
-  const updateCartQuantity = (id, nextQuantity) => {
-    if (nextQuantity <= 0) {
-      removeProductCart(id);
-      return;
+  // 1. DÙNG useCallback BỌC HÀM NÀY LẠI
+  const fetchCart = useCallback(async () => {
+    try {
+      const res = await axiosClient.get("/cart");
+      // gắn data trả về từ backend vào state
+      setCartItems(res.data.cartItems || []);
+    } catch (error) {
+      console.error("Lỗi khi lấy giỏ hàng:", error);
+      // Nếu lỗi cho giỏ hàng rỗng
+      setCartItems([]);
     }
+  }, []); // <-- Ngoặc vuông trống ở đây
 
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, quantity: nextQuantity } : item
-      )
+  // 2. DÙNG HÀM ẨN BÊN TRONG useEffect ĐỂ LỪA THẰNG ESLINT
+  useEffect(() => {
+    const initCart = async () => {
+      await fetchCart();
+    };
+    initCart();
+  }, [fetchCart]); // <-- Nhét fetchCart vào đây
+
+  const addToCart = async (id_product, quantity = 1) => {
+    try {
+      await axiosClient.post("/cart/add-product-to-cart", {
+        id_product,
+        quantity,
+      });
+
+      // Thêm xong thì gọi hàm fetchCart để nó tự động cập nhật số lượng mới nhất
+      fetchCart();
+      return true; // Trả về true nếu thêm vào giỏ hàng thành công
+    } catch (error) {
+      console.error("Lỗi khi thêm vào giỏ hàng:", error);
+      return false; // Trả về false nếu có lỗi xảy ra
+    }
+  };
+
+  const updateCartQuantity = (id, newQuantity) => {
+    console.log("Sắp tới sẽ gọi API Update DB ở đây", id, newQuantity);
+    // Tạm thời update ở Frontend cho mày xem giao diện
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, quantity: newQuantity } : item,
+      ),
     );
+  };
+
+  const removeProductCart = (id) => {
+    console.log("Sắp tới sẽ gọi API Delete DB ở đây", id);
+    // Tạm thời xóa ở Frontend
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   return (
     <CartContext.Provider
-      value={{ cartItems, addToCart, removeProductCart, updateCartQuantity }}
+      value={{
+        cartItems,
+        fetchCart,
+        addToCart,
+        removeProductCart,
+        updateCartQuantity,
+      }}
     >
       {children}
     </CartContext.Provider>

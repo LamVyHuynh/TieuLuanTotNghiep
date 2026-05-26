@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import { Plus, RefreshCcw, Sparkles, ShoppingBag } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 import { useNavigate } from "react-router-dom";
+import { CartContext } from "../../context/CartContext";
 function Home() {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("Tất Cả");
@@ -13,6 +14,9 @@ function Home() {
 
   // Số lượng sản phẩm hiển thị trên màn hình
   const [displayCount, setDisplayCount] = useState(8);
+
+  // thêm sản phẩm vào giỏ hàng
+  const { addToCart } = useContext(CartContext);
 
   // API lấy dữ liệu sản phẩm và danh mục từ backend
   useEffect(() => {
@@ -223,9 +227,15 @@ function Home() {
                       -  Để khi khách bấm nút "Dấu + Thêm giỏ hàng", nó không bị hiểu nhầm là đang bấm vào cái Card và bị nhảy trang. */}
                       <button
                         className="bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          console.log("Thêm vào vỏ hàng");
+                          const success = await addToCart(item.id_product, 1);
+                          if (success) {
+                            alert(`Đã thêm ${item.name} vào giỏ hàng!`);
+                          } else {
+                            alert("Bạn cần đăng nhập để mua hàng nha!");
+                            navigate("/login");
+                          }
                         }}
                       >
                         <Plus size={18} strokeWidth={3} />

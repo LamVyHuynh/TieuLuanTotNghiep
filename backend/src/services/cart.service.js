@@ -38,6 +38,29 @@ const addItemToCart = async (userId, productId, quantity = 1) => {
   return true;
 };
 
+// lấy thông tin giỏ hàng của người dùng
+const getCartItems = async (userId) => {
+  const query = `
+    SELECT 
+      ci.id_cart_item, 
+      ci.quantity, 
+      p.id_product AS id, 
+      p.name, 
+      p.price, 
+      p.image_url AS img, 
+      p.unit, 
+      p.calories,
+      (p.price * ci.quantity) AS total_price
+    FROM cart_items ci
+    JOIN cart c ON ci.id_cart = c.id_cart
+    JOIN product p ON ci.id_product = p.id_product
+    WHERE c.user_id = ?
+  `;
+  const [rows] = await pool.query(query, [userId]);
+  return rows;
+};
+
 module.exports = {
   addItemToCart,
+  getCartItems,
 };
