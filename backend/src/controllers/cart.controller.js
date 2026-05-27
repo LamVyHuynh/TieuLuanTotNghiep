@@ -2,6 +2,7 @@ const {
   addItemToCart,
   getCartItems,
   updateCartItem,
+  removeCartItem,
 } = require("../services/cart.service");
 
 const addToCart = async (req, res) => {
@@ -67,8 +68,29 @@ const updateCart = async (req, res) => {
   }
 };
 
+const removeFromCart = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const productId = req.params.id;
+
+    if (!productId) {
+      return res.status(400).json({ message: "Thiếu thông tin sản phẩm rồi " });
+    }
+
+    await removeCartItem(userId, productId);
+    res.status(200).json({ message: "Đã xóa sản phẩm khỏi giỏ hàng" });
+  } catch (error) {
+    console.error("Lỗi khi xóa sản phẩm khỏi giỏ hàng:", error);
+    res.status(500).json({
+      message: "Lỗi Server khi xóa sản phẩm khỏi giỏ hàng!",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addToCart,
   getCart,
   updateCart,
+  removeFromCart,
 };

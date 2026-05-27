@@ -67,10 +67,13 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  const removeProductCart = (id) => {
-    console.log("Sắp tới sẽ gọi API Delete DB ở đây", id);
-    // Tạm thời xóa ở Frontend
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  const removeProductCart = async (id) => {
+    try {
+      await axiosClient.delete(`/cart/remove/${id}`);
+      fetchCart(); // Cập nhật lại giỏ hàng sau khi xóa sản phẩm
+    } catch (error) {
+      console.error("Lỗi khi xóa sản phẩm khỏi giỏ hàng:", error);
+    }
   };
 
   return (

@@ -76,8 +76,26 @@ const updateCartItem = async (userId, productId, newQuantity) => {
   return result.affectedRows > 0; // Trả về true nếu cập nhật thành công, false nếu không tìm thấy sản phẩm trong giỏ hàng
 };
 
+// Xoá sản phẩm khỏi giỏ hàng (nếu cần thiết, chưa có API này nhưng có thể thêm sau)
+const removeCartItem = async (userId, productId) => {
+  const [cart] = await pool.query(
+    "SELECT id_cart FROM cart WHERE user_id = ?",
+    [userId],
+  );
+  if (cart.length === 0) return false; // Nếu không có giỏ hàng thì thôi, không cần xóa
+  const cartId = cart[0].id_cart;
+
+  // Xóa sản phẩm khỏi giỏ hàng
+  const [result] = await pool.query(
+    "DELETE FROM cart_items WHERE id_cart = ? AND id_product = ?",
+    [cartId, productId],
+  );
+  return result.affectedRows > 0; // Trả về true nếu xóa thành công, false nếu không tìm thấy sản phẩm trong giỏ hàng
+};
+
 module.exports = {
   addItemToCart,
   getCartItems,
   updateCartItem,
+  removeCartItem,
 };
