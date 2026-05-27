@@ -8,7 +8,15 @@ const CartProvider = ({ children }) => {
 
   // 1. DÙNG useCallback BỌC HÀM NÀY LẠI
   const fetchCart = useCallback(async () => {
+    // Check xem thẻ token có tồn tại không
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      setCartItems([]); // Nếu không có token, đặt giỏ hàng rỗng // Đéo gọi API nữa
+      return;
+    }
+
     try {
+      // Gọi API để lấy giỏ hàng của người dùng
       const res = await axiosClient.get("/cart");
       // gắn data trả về từ backend vào state
       setCartItems(res.data.cartItems || []);
@@ -17,8 +25,7 @@ const CartProvider = ({ children }) => {
       // Nếu lỗi cho giỏ hàng rỗng
       setCartItems([]);
     }
-  }, []); // <-- Ngoặc vuông trống ở đây
-
+  }, []);
   // 2. DÙNG HÀM ẨN BÊN TRONG useEffect ĐỂ LỪA THẰNG ESLINT
   useEffect(() => {
     const initCart = async () => {

@@ -1,8 +1,15 @@
-import React, { useState, useEffect, useMemo, useContext } from "react";
-import { Plus, RefreshCcw, Sparkles, ShoppingBag } from "lucide-react";
+import React, { useState, useEffect, useMemo, useContext, useRef } from "react";
+import {
+  Plus,
+  RefreshCcw,
+  Sparkles,
+  ShoppingBag,
+  CheckCircle2,
+} from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 import { useNavigate } from "react-router-dom";
 import { CartContext } from "../../context/CartContext";
+
 function Home() {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("Tất Cả");
@@ -17,6 +24,20 @@ function Home() {
 
   // thêm sản phẩm vào giỏ hàng
   const { addToCart } = useContext(CartContext);
+
+  // =================================================================
+  // STATE CHO TOAST THÔNG BÁO (THÊM VÀO GIỎ)
+  // =================================================================
+  const [toast, setToast] = useState({ show: false, message: "" });
+  const toastTimerRef = useRef(null);
+
+  const showToast = (message) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ show: true, message });
+    toastTimerRef.current = setTimeout(() => {
+      setToast({ show: false, message: "" });
+    }, 2500); // 2.5 giây tự tắt
+  };
 
   // API lấy dữ liệu sản phẩm và danh mục từ backend
   useEffect(() => {
@@ -65,16 +86,13 @@ function Home() {
     setDisplayCount(8);
   }, [activeFilter]);
 
-  // ========================================================
-  // LOGIC CUỘN CHUẨN (Cuộn tới đâu mở khoá tới đó)
-  // ========================================================
+  // LOGIC CUỘN CHUẨN
   useEffect(() => {
     const handleScroll = () => {
       if (
         window.innerHeight + window.scrollY >=
         document.body.offsetHeight - 500
       ) {
-        // Tăng giới hạn in ra thêm 4 món
         setDisplayCount((prev) => prev + 4);
       }
     };
@@ -83,40 +101,26 @@ function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ========================================================
-  // PHẦN TRÁI TIM CỦA MASONRY: ĐIỀU KHIỂN KÍCH THƯỚC ẢNH
-  // Tao tạo ra 3 kiểu tỷ lệ ảnh: Dài (3/4), Vừa (vuông 1/1), Nhỏ (4/3)
-  // ========================================================
   const getMasonryHeart = (index) => {
-    const heightPattern = index % 3; // Tạo vòng lặp 0, 1, 2
-    if (heightPattern === 0) return "aspect-[3/4]"; // Dài Max (Portrait)
-    if (heightPattern === 1) return "aspect-square"; // Vừa (Square)
-    return "aspect-[4/3]"; // Nhỏ (Landscape)
+    const heightPattern = index % 3;
+    if (heightPattern === 0) return "aspect-[3/4]";
+    if (heightPattern === 1) return "aspect-square";
+    return "aspect-[4/3]";
   };
 
   return (
     <>
       <style>{`
-        /* Ẩn thanh cuộn của phần filter */
         .category-scroll::-webkit-scrollbar { display: none; }
         .category-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* CSS cho cột Masonry bất đối xứng */
-        .masonry-grid {
-          column-count: 2;
-          column-gap: 1.5rem;
-        }
+        .masonry-grid { column-count: 2; column-gap: 1.5rem; }
         @media (min-width: 768px) { .masonry-grid { column-count: 3; } }
         @media (min-width: 1024px) { .masonry-grid { column-count: 4; } }
-        
-        .masonry-item {
-          break-inside: avoid;
-          margin-bottom: 1.5rem;
-        }
+        .masonry-item { break-inside: avoid; margin-bottom: 1.5rem; }
       `}</style>
 
-      <div className="pb-24 max-w-7xl mx-auto px-4 sm:px-6 min-h-screen">
-        {/* ===================== THANH FILTER ===================== */}
+      <div className="pb-24 max-w-7xl mx-auto px-4 sm:px-6 min-h-screen relative">
+        {/* THANH FILTER */}
         <div className="flex gap-3 overflow-x-auto category-scroll pb-4 mb-6 pt-4">
           <button
             onClick={() => setActiveFilter("Tất Cả")}
@@ -144,7 +148,7 @@ function Home() {
           ))}
         </div>
 
-        {/* ===================== LOADING HOẶC LƯỚI SẢN PHẨM ===================== */}
+        {/* LOADING HOẶC LƯỚI SẢN PHẨM */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-emerald-600">
             <RefreshCcw size={32} className="animate-spin mb-4" />
@@ -153,7 +157,6 @@ function Home() {
         ) : (
           <div className="masonry-grid">
             {filteredProducts.slice(0, displayCount).map((item, index) => {
-              // 1. CHÈN THẺ AI GỢI Ý VÀO VỊ TRÍ SỐ 3 (Chỉ hiện khi ở tab "Tất Cả")
               const aiCard =
                 index === 2 && activeFilter === "Tất Cả" ? (
                   <div
@@ -179,16 +182,16 @@ function Home() {
                   </div>
                 ) : null;
 
-              // 2. RENDER THẺ SẢN PHẨM TỪ DB
               const productCard = (
                 <div
-                  key={item.id_product} // Về lại ID chuẩn, không sợ trùng nữa
+                  key={item.id_product}
                   className="masonry-item bg-white rounded-3xl p-3 shadow-sm border border-zinc-100 hover:shadow-xl hover:border-emerald-300 transition-all duration-500 ease-out group cursor-pointer relative"
                   onClick={() => navigate(`detail-product/${item.id_product}`)}
                 >
-                  {/* ====== PHẦN UPDATE MỚI: ẢNH CÓ KÍCH THƯỚC LINH HOẠT ====== */}
                   <div
-                    className={`overflow-hidden rounded-2xl relative ${getMasonryHeart(index)}`}
+                    className={`overflow-hidden rounded-2xl relative ${getMasonryHeart(
+                      index,
+                    )}`}
                   >
                     <img
                       src={
@@ -204,7 +207,7 @@ function Home() {
                   </div>
 
                   <div className="px-2 pb-1 pt-3">
-                    <h4 className="font-black text-base md:text-lg mb-1.5 text-zinc-800 leading-tight">
+                    <h4 className="font-black text-base md:text-lg mb-1.5 text-zinc-800 leading-tight line-clamp-1">
                       {item.name}
                     </h4>
 
@@ -223,17 +226,16 @@ function Home() {
                       <span className="text-zinc-900 font-black text-lg">
                         {Number(item.price).toLocaleString("vi-VN")}đ
                       </span>
-                      {/* CỰC KỲ QUAN TRỌNG: Thêm e.stopPropagation()
-                      -  Để khi khách bấm nút "Dấu + Thêm giỏ hàng", nó không bị hiểu nhầm là đang bấm vào cái Card và bị nhảy trang. */}
+
+                      {/* NÚT THÊM VÀO GIỎ HÀNG */}
                       <button
                         className="bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer"
                         onClick={async (e) => {
                           e.stopPropagation();
                           const success = await addToCart(item.id_product, 1);
                           if (success) {
-                            alert(`Đã thêm ${item.name} vào giỏ hàng!`);
+                            showToast(`Đã thêm ${item.name} vào giỏ! 🥰`);
                           } else {
-                            alert("Bạn cần đăng nhập để mua hàng nha!");
                             navigate("/login");
                           }
                         }}
@@ -255,7 +257,7 @@ function Home() {
           </div>
         )}
 
-        {/* ===================== RỖNG & LOAD MORE ===================== */}
+        {/* RỖNG & LOAD MORE */}
         {!isLoading && filteredProducts.length === 0 && (
           <div className="text-center py-20 text-slate-500">
             <h3 className="text-xl font-bold mb-2">Chưa có món ăn nào</h3>
@@ -263,7 +265,6 @@ function Home() {
           </div>
         )}
 
-        {/* Chỉ hiện hiệu ứng Loading khi số lượng trong Database VẪN CÒN NHIỀU HƠN số lượng đang in ra */}
         {filteredProducts.length > displayCount && !isLoading && (
           <div className="mt-16 flex flex-col items-center justify-center gap-3 text-zinc-400 pb-10">
             <RefreshCcw size={24} className="animate-spin duration-1000" />
@@ -272,6 +273,22 @@ function Home() {
             </span>
           </div>
         )}
+
+        {/* ================= TOAST THÔNG BÁO (HIỂN THỊ NỔI LÊN) ================= */}
+        <div
+          className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ease-out pointer-events-none ${
+            toast.show
+              ? "opacity-100 translate-y-0 scale-100"
+              : "opacity-0 translate-y-10 scale-95"
+          }`}
+        >
+          <div className="flex items-center gap-3 rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_40px_rgba(5,150,105,0.4)] border border-emerald-500/50">
+            <CheckCircle2 size={20} className="text-emerald-100" />
+            <span className="truncate max-w-[250px] sm:max-w-md">
+              {toast.message}
+            </span>
+          </div>
+        </div>
       </div>
 
       <footer className="bg-white py-8 border-t border-zinc-100 text-center">

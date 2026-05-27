@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import axiosClient from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
+// Vỏ hàng
+import { CartContext } from "../context/CartContext";
 
 function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -165,6 +167,14 @@ function UserLayout() {
     navigate("/");
   };
 
+  // Lấy danh sách đồ ăn từ giỏ hàng
+  const { cartItems } = useContext(CartContext);
+
+  //  Tính tổng số lượng sản phẩm trong giỏ hàng
+  const totalItemsCart = cartItems
+    ? cartItems.reduce((total, item) => total + item.quantity, 0)
+    : 0;
+
   if (loading) return <p>Đang tải...</p>;
 
   return (
@@ -214,9 +224,13 @@ function UserLayout() {
               className="p-2 hover:bg-zinc-100 text-zinc-700 transition-colors rounded-full relative flex items-center cursor-pointer no-underline"
             >
               <ShoppingBag size={20} />
-              <span className="absolute top-0.5 right-0.5 bg-emerald-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white box-content">
-                2
-              </span>
+
+              {/* Số lượng sản phẩm trong giỏ hàng */}
+              {totalItemsCart > 0 && (
+                <span className="absolute top-0.5 right-0.5 bg-emerald-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white box-content">
+                  {totalItemsCart}
+                </span>
+              )}
             </Link>
 
             {currentUser ? (
