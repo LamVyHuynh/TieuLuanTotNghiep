@@ -1,4 +1,8 @@
-const { addItemToCart, getCartItems } = require("../services/cart.service");
+const {
+  addItemToCart,
+  getCartItems,
+  updateCartItem,
+} = require("../services/cart.service");
 
 const addToCart = async (req, res) => {
   try {
@@ -39,7 +43,32 @@ const getCart = async (req, res) => {
   }
 };
 
+const updateCart = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id_product, newQuantity } = req.body;
+
+    if (!id_product || newQuantity === undefined) {
+      return res
+        .status(400)
+        .json({ message: "Thiếu thông tin sản phẩm  hoặc số lượng" });
+    }
+
+    await updateCartItem(userId, id_product, newQuantity);
+    res
+      .status(200)
+      .json({ message: "Đã cập nhật số lượng sản phẩm trong giỏ hàng" });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật giỏ hàng:", error);
+    res.status(500).json({
+      message: "Lỗi Server khi cập nhật giỏ hàng!",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addToCart,
   getCart,
+  updateCart,
 };

@@ -50,14 +50,21 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  const updateCartQuantity = (id, newQuantity) => {
-    console.log("Sắp tới sẽ gọi API Update DB ở đây", id, newQuantity);
-    // Tạm thời update ở Frontend cho mày xem giao diện
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item,
-      ),
-    );
+  const updateCartQuantity = async (id_product, newQuantity) => {
+    if (newQuantity < 1) return; // Không cho cập nhật số lượng nhỏ hơn 1
+
+    try {
+      await axiosClient.put("/cart/update-cart", {
+        id_product: id_product,
+        newQuantity: newQuantity,
+      });
+      fetchCart(); // Cập nhật lại giỏ hàng sau khi thay đổi số lượng
+    } catch (error) {
+      console.error(
+        "Lỗi khi cập nhật số lượng sản phẩm trong giỏ hàng:",
+        error,
+      );
+    }
   };
 
   const removeProductCart = (id) => {

@@ -60,7 +60,24 @@ const getCartItems = async (userId) => {
   return rows;
 };
 
+// UpdateCart Item: Cập nhật số lượng sản phẩm trong giỏ hàng
+const updateCartItem = async (userId, productId, newQuantity) => {
+  const [cart] = await pool.query("SELECT * FROM cart WHERE user_id = ?", [
+    userId,
+  ]);
+  if (cart.length === 0) return false; // Nếu không có giỏ hàng thì thôi, không cần cập nhật
+  const cartId = cart[0].id_cart;
+
+  // Cập nhật số lượng sản phẩm trong giỏ hàng
+  const [result] = await pool.query(
+    "UPDATE cart_items SET quantity = ? WHERE id_cart = ? AND id_product = ?",
+    [newQuantity, cartId, productId],
+  );
+  return result.affectedRows > 0; // Trả về true nếu cập nhật thành công, false nếu không tìm thấy sản phẩm trong giỏ hàng
+};
+
 module.exports = {
   addItemToCart,
   getCartItems,
+  updateCartItem,
 };
