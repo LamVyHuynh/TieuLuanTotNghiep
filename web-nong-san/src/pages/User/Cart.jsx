@@ -1,5 +1,5 @@
 import React, { useContext, useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   CreditCard,
@@ -18,6 +18,7 @@ function Cart() {
     useContext(CartContext);
   const { addToPayment } = useContext(CheckoutContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [selectIdItem, setSelectIdItem] = useState([]);
   const [showError, setShowError] = useState(false);
@@ -28,26 +29,22 @@ function Cart() {
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    // Dùng setTimeout 0 để lừa linter tránh lỗi "Calling setState synchronously..."
-    // Việc này đảm bảo state được set ngay sau lần render đầu tiên
     const resetAnimation = setTimeout(() => {
       setIsExiting(false);
     }, 0);
-
     return () => clearTimeout(resetAnimation);
-  }, []);
+  }, [location.pathname]);
 
-  // Hàm chuyển trang mượt mà (Dùng chung cho tất cả các nút)
   const handleNavigate = (path) => {
-    setIsExiting(true); // Bật hiệu ứng trượt đi và mờ dần
+    if (location.pathname === path) return;
+    setIsExiting(true);
     setTimeout(() => {
-      navigate(path); // Chuyển trang thực sự sau 400ms
+      if (path === -1) navigate(-1);
+      else navigate(path);
     }, 400);
   };
 
-  // State để quản lý món nào đang chờ xóa
   const [itemToDelete, setItemToDelete] = useState(null);
-  // State toast thông báo
   const [toast, setToast] = useState({
     show: false,
     message: "",
@@ -78,7 +75,6 @@ function Cart() {
     0,
   );
 
-  // Tạm tính phí ship và giảm giá nếu có chọn món
   const discount = selectedProducts.length > 0 ? 15000 : 0;
   const shippingFee = selectedProducts.length > 0 ? 20000 : 0;
   const finalTotal = Math.max(subtotal - discount + shippingFee, 0);
@@ -91,7 +87,7 @@ function Cart() {
     }
 
     addToPayment(selectedProducts);
-    handleNavigate("/checkout"); // Chuyển qua checkout cũng cho trượt mượt luôn
+    handleNavigate("/checkout");
   };
 
   const showToast = (message, type = "success") => {
@@ -106,16 +102,13 @@ function Cart() {
     if (itemToDelete) {
       await removeProductCart(itemToDelete.id);
       showToast(`Đã xoá ${itemToDelete.name} khỏi giỏ!`);
-      setItemToDelete(null); // Đóng modal xác nhận
+      setItemToDelete(null);
     }
   };
 
   const allSelected =
     cartItems.length > 0 && selectIdItem.length === cartItems.length;
 
-  // =================================================================
-  // GIAO DIỆN KHI GIỎ HÀNG TRỐNG
-  // =================================================================
   if (cartItems.length === 0) {
     return (
       <div
@@ -153,9 +146,6 @@ function Cart() {
     );
   }
 
-  // =================================================================
-  // GIAO DIỆN KHI GIỎ HÀNG CÓ ĐỒ
-  // =================================================================
   return (
     <>
       <div
@@ -350,7 +340,6 @@ function Cart() {
         </div>
       </div>
 
-      {/* MODAL XÁC NHẬN XOÁ (ĐƯỢC ĐƯA RA NGOÀI ĐỂ KHÔNG BỊ TRƯỢT THEO TRANG) */}
       {itemToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl text-center animate-in zoom-in-95 duration-200">
@@ -379,7 +368,6 @@ function Cart() {
         </div>
       )}
 
-      {/* TOAST THÔNG BÁO KẾT QUẢ */}
       {toast.show && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-3 rounded-full bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-10">
           <CheckCircle2 size={20} /> {toast.message}

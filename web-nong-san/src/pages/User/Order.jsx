@@ -1,15 +1,35 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   CalendarDays,
   ChevronRight,
   Clock3,
   Package,
   Wallet,
+  ArrowLeft,
 } from "lucide-react";
 
 function Order() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    const resetAnimation = setTimeout(() => {
+      setIsExiting(false);
+    }, 0);
+    return () => clearTimeout(resetAnimation);
+  }, [location.pathname]);
+
+  const handleNavigate = (path) => {
+    if (location.pathname === path) return;
+    setIsExiting(true);
+    setTimeout(() => {
+      if (path === -1) navigate(-1);
+      else navigate(path);
+    }, 400);
+  };
 
   const orders = [
     { id: "HD8866", date: "10/03/2026", total: "550.000", status: "Đang giao" },
@@ -22,7 +42,19 @@ function Order() {
   };
 
   return (
-    <div className="mx-auto max-w-[980px] px-4 py-8 sm:px-6 lg:px-8">
+    <div
+      className={`mx-auto max-w-[980px] px-4 py-8 sm:px-6 lg:px-8 min-h-screen transform transition-all duration-500 ease-in-out ${
+        isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+      }`}
+    >
+      <button
+        className="mb-5 inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+        onClick={() => handleNavigate("/")}
+      >
+        <ArrowLeft size={18} />
+        Về trang chủ
+      </button>
+
       <section className="mb-6 overflow-hidden rounded-[28px] border border-emerald-100/70 bg-[linear-gradient(135deg,#f2fff7_0%,#ffffff_45%,#fff8ec_100%)] px-6 py-7 shadow-[0_18px_40px_rgba(15,23,42,0.06)] sm:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -83,7 +115,7 @@ function Order() {
 
             <button
               className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 transition-all duration-300 hover:bg-emerald-100"
-              onClick={() => navigate("/tracking")}
+              onClick={() => handleNavigate("/tracking")}
             >
               <Clock3 size={16} />
               Xem theo dõi đơn hàng

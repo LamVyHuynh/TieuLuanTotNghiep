@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useContext } from "react";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   ChevronDown,
   KeyRound,
@@ -26,9 +26,34 @@ function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation(); // Dùng cái này để theo dõi chuyển trang
 
   const { currentUser, logout, loading, refetchUser } = useAuth();
   const userMenuRef = useRef(null);
+
+  // =================================================================
+  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
+  // =================================================================
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    // Mỗi lần URL thay đổi (vào trang mới) -> Reset lại cờ trượt để hiện nội dung
+    const resetAnimation = setTimeout(() => {
+      setIsExiting(false);
+    }, 0);
+    return () => clearTimeout(resetAnimation);
+  }, [location.pathname]);
+
+  // Hàm chuyển trang mượt mà
+  const handleNavigate = (path) => {
+    // Nếu đang ở đúng trang đó rồi thì không trượt làm gì
+    if (location.pathname === path) return;
+
+    setIsExiting(true); // Bật cờ trượt đi
+    setTimeout(() => {
+      navigate(path); // Chuyển trang sau khi trượt xong (400ms)
+    }, 400);
+  };
 
   // =================================================================
   // TOAST THÔNG BÁO
@@ -178,17 +203,17 @@ function UserLayout() {
   if (loading) return <p>Đang tải...</p>;
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-emerald-500/20 relative">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-emerald-500/20 relative overflow-x-hidden">
       {/* HEADER THEO THIẾT KẾ MỚI (Tối giản, trong suốt, gộp chung) */}
       <nav className="fixed top-0 w-full z-40 bg-white/90 backdrop-blur-xl border-b border-zinc-100 shadow-sm transition-all h-16 flex items-center">
         <div className="flex justify-between items-center px-4 w-full max-w-7xl mx-auto gap-4">
-          {/* Logo */}
-          <Link
-            to="/"
-            className="text-xl font-black tracking-tighter text-emerald-600 shrink-0 no-underline"
+          {/* Logo - Bấm vào thì về Home mượt mà */}
+          <button
+            onClick={() => handleNavigate("/")}
+            className="text-xl font-black tracking-tighter text-emerald-600 shrink-0 no-underline cursor-pointer"
           >
             HealthyGO
-          </Link>
+          </button>
 
           {/* Search Bar (Desktop) */}
           <div className="hidden md:flex flex-1 max-w-xl mx-4 relative">
@@ -208,30 +233,31 @@ function UserLayout() {
 
           {/* Các nút Menu bên phải */}
           <div className="flex items-center gap-2 md:gap-4 text-sm font-medium tracking-tight">
-            <Link
-              to="/order"
-              className="hidden lg:flex text-zinc-500 hover:text-emerald-600 transition-colors items-center gap-1.5 no-underline"
+            {/* Lịch sử mua hàng */}
+            <button
+              onClick={() => handleNavigate("/order")}
+              className="hidden lg:flex text-zinc-500 hover:text-emerald-600 transition-colors items-center gap-1.5 no-underline cursor-pointer"
             >
               <History size={18} /> Lịch sử mua hàng
-            </Link>
+            </button>
 
             <button className="md:hidden p-2 text-zinc-600 cursor-pointer">
               <Search size={20} />
             </button>
 
-            <Link
-              to="/cart"
+            {/* Giỏ hàng */}
+            <button
+              onClick={() => handleNavigate("/cart")}
               className="p-2 hover:bg-zinc-100 text-zinc-700 transition-colors rounded-full relative flex items-center cursor-pointer no-underline"
             >
               <ShoppingBag size={20} />
-
               {/* Số lượng sản phẩm trong giỏ hàng */}
               {totalItemsCart > 0 && (
                 <span className="absolute top-0.5 right-0.5 bg-emerald-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white box-content">
                   {totalItemsCart}
                 </span>
               )}
-            </Link>
+            </button>
 
             {currentUser ? (
               <div className="relative" ref={userMenuRef}>
@@ -298,10 +324,28 @@ function UserLayout() {
         </div>
       </nav>
 
-      {/* BODY CHÍNH */}
-      <main className="pt-20">
+      {/* BODY CHÍNH - GẮN HIỆU ỨNG TRƯỢT VÀO ĐÂY */}
+      {/* Cái Navbar ở trên sẽ đứng yên, chỉ có phần nội dung bên dưới là trượt đi */}
+      <main
+        className={`pt-20 transform transition-all duration-500 ease-in-out ${
+          isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+        }`}
+      >
         <Outlet />
       </main>
+
+      {/* ================= NÚT GIỎ HÀNG NỔI MOBILE ================= */}
+      <button
+        onClick={() => handleNavigate("/cart")}
+        className="md:hidden fixed bottom-6 right-6 bg-emerald-600 text-white w-14 h-14 rounded-full shadow-[0_10px_25px_rgba(5,150,105,0.3)] flex items-center justify-center z-50 hover:bg-emerald-700 transition-colors cursor-pointer"
+      >
+        <ShoppingBag size={22} />
+        {totalItemsCart > 0 && (
+          <span className="absolute top-0 right-0 bg-white text-emerald-700 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-emerald-600 box-content shadow-sm">
+            {totalItemsCart}
+          </span>
+        )}
+      </button>
 
       {/* ================= MODAL CẬP NHẬT THÔNG TIN CÁ NHÂN ================= */}
       {isEditProfileOpen && (
