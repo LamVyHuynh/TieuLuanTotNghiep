@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
 import { Leaf, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+
 function Login() {
   const [frmDataLogin, setFrmDataLogin] = useState({
     email: "",
@@ -12,48 +13,60 @@ function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [rememberLogin, setRememberLogin] = useState(false);
-  // Hiện password khi click vào biểu tượng con mắt
   const [showPassword, setShowPassword] = useState(false);
-  // Tạo state check định dạng email
   const [isEmailValid, setIsEmailValid] = useState(true);
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // =================================================================
+  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG (ENTRY & EXIT)
+  // =================================================================
+  // Đặt giá trị mặc định là TRUE để lúc trang vừa load là nó đang bị mờ/lệch
+  const [isExiting, setIsExiting] = useState(true);
+
+  useEffect(() => {
+    // Đợi 10ms rồi đổi thành FALSE -> Tạo hiệu ứng trang "trượt vào" rất mượt
+    const enterAnimation = setTimeout(() => {
+      setIsExiting(false);
+    }, 10);
+    return () => clearTimeout(enterAnimation);
+  }, [location.pathname]);
+
+  const handleNavigate = (path) => {
+    if (location.pathname === path) return;
+    setIsExiting(true); // Bật hiệu ứng trượt đi
+    setTimeout(() => {
+      navigate(path);
+    }, 400); // 400ms sau mới chuyển link
+  };
 
   const handleChange = (e) => {
     setFrmDataLogin({ ...frmDataLogin, [e.target.name]: e.target.value });
-
-    // Thêm dòng này để xóa thông báo lỗi khi người dùng bắt đầu nhập lại thông tin đăng nhập
-    // Xóa cả lỗi lẫn thông báo thành công khi người dùng sửa dữ liệu
     if (errorMessage) setErrorMessage("");
     if (successMessage) setSuccessMessage("");
   };
 
-  // Kiểm tra định dạng email bằng regex
   const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
 
-  // Khi người dùng rời con trỏ chuột khỏi ô email thì sẽ kiểm tra định dạng email
   const handleBlurEmail = () => {
-    // Nếu ô email có chữ, thì mới check định dạng
     if (frmDataLogin.email.trim() !== "") {
       const isValid = validateEmail(frmDataLogin.email);
-      setIsEmailValid(isValid); // Cập nhật state check định dạng
+      setIsEmailValid(isValid);
     } else {
-      setIsEmailValid(true); // Nếu trống thì thôi, để handleSubmit lo
+      setIsEmailValid(true);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // QUAN TRỌNG: Xóa sạch các thông báo cũ trước khi bắt đầu request mới
     setErrorMessage("");
     setSuccessMessage("");
 
-    // Kiểm tra trống của email và password trước khi gửi request đăng nhập
     if (!frmDataLogin.email || !frmDataLogin.password) {
       setErrorMessage("Vui lòng nhập đầy đủ thông tin đăng nhập");
       return;
@@ -62,83 +75,62 @@ function Login() {
 
     try {
       const response = await axiosClient.post("/auth/login", frmDataLogin);
-
-      // Khi thành công, set success message để hiển thị cho người dùng
       setSuccessMessage(response.data.message || "Đăng nhập thành công");
 
-      // Lưu dữ liệu của user đăng nhập vào localStorage để có thể sử dụng ở các trang khác
-      // dùng response.data.token để lấy token từ response trả về của backend
-      // const userData = response.data.data;
-      // lấy token và user là lấy riêng
-      // token dùng để gửi kèm trong header của các request sau này để backend xác thựct xem user đã đăng nhập chưa
-      // user dùng để lưu thông tin user đăng nhập vào localStorage để có thể dùng ở các trang khác
-      // user chuyển qua các trang khác
       const token = response.data.token;
       const user = response.data.user;
-      // Lưu token vào localStorage để sử dụng cho các yêu cầu sau
-      // localStorage.setItem("accessToken", token);
-      // Chuyển userData thành chuỗi JSON trước khi lưu vào localStorage vì localStorage chỉ lưu được chuỗi JSON
-      // console.log("userData trước khi lưu vào localStorage:", userData);
-      // localStorage.setItem("userDataLogin", JSON.stringify(userData));
-      // console.log(
-      //   "userData đã lưu vào localStorage:",
-      //   JSON.parse(localStorage.getItem("userDataLogin"))
-      // );
 
-      // tạo ra tín hiệu event
-      // window.dispatchEvent(new Event("authChange"));
-
-      // gọi hàm login của AuthContext để cập nhật thông tin người dùng và token vào context
       login(user, token);
 
       if (rememberLogin) {
-        // Nếu người dùng tích vào "Ghi nhớ", lưu email vào localStorage
         localStorage.setItem("rememberEmail", frmDataLogin.email);
       } else {
-        // Nếu người dùng không tích, phải xóa cái cũ đi (đề phòng trước đó họ từng lưu)
         localStorage.removeItem("rememberEmail");
       }
+
+      // Đợi 1 giây để đọc thông báo, sau đó kích hoạt hiệu ứng trượt đi
       setTimeout(() => {
-        if (user.role_id === 1) {
-          navigate("/admin");
-          console.log("Qua trang admin");
-        } else if (user.role_id === 2) {
-          navigate("/");
-          console.log("Qua trang user");
-        }
-      }, 1500);
+        setIsExiting(true);
+        setTimeout(() => {
+          if (user.role_id === 1) {
+            navigate("/admin");
+          } else if (user.role_id === 2) {
+            navigate("/");
+          }
+        }, 400);
+      }, 1000);
 
       setFrmDataLogin({ email: "", password: "" });
-      console.log("Login successful:", response.data);
     } catch (error) {
-      // Nếu lỗi thì xóa message thành công (nếu có) và hiện lỗi
-      setSuccessMessage(""); // Xóa message thành công
-      console.log("Full Error Object:", error.response); // Mạy log ra để soi cho kỹ
-
-      // Ưu tiên lấy message từ data trả về (đây là nơi chứa câu Rate Limit)
+      setSuccessMessage("");
       const serverMessage = error.response?.data?.message;
-      setErrorMessage(serverMessage || "Đăng nhập thất bại. Vui lòng thử lại."); // Nếu không có message từ server thì dùng message mặc định
+      setErrorMessage(serverMessage || "Đăng nhập thất bại. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  //rememeber login thì sẽ lưu token vào localStorage, nếu không thì lưu vào sessionStorage
   useEffect(() => {
     const rememberEmail = localStorage.getItem("rememberEmail");
     if (rememberEmail) {
-      // Gán email đã lưu vào localStorage vào form đăng nhập để hiển thị cho người dùng
       setFrmDataLogin((prev) => ({ ...prev, email: rememberEmail }));
       setRememberLogin(true);
     }
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#f9f9f9] p-4 text-slate-900 antialiased md:p-8">
+    <main
+      className={`min-h-screen bg-[#f9f9f9] p-4 text-slate-900 antialiased md:p-8 transform transition-all duration-500 ease-in-out ${
+        isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+      }`}
+    >
       <div className="mx-auto grid w-full max-w-6xl grid-cols-1 overflow-hidden rounded-2xl bg-white shadow-[0_24px_48px_-12px_rgba(26,28,28,0.08)] lg:grid-cols-12">
         <div className="flex flex-col justify-center p-8 md:p-12 lg:col-span-5 lg:p-16">
           <div className="mb-12">
-            <div className="mb-3 leading-none">
+            <div
+              className="mb-3 leading-none cursor-pointer"
+              onClick={() => handleNavigate("/")}
+            >
               <span className="text-[2rem] font-black tracking-[-0.06em] text-emerald-600 sm:text-[2.35rem]">
                 Healthy
               </span>
@@ -152,7 +144,6 @@ function Login() {
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* --- Nâng cấp Success Message --- */}
             {successMessage && (
               <div className="animate-in fade-in slide-in-from-top-4 duration-500 rounded-xl border border-emerald-200 bg-emerald-50 p-4 flex items-center gap-4 shadow-sm shadow-emerald-100/50">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
@@ -166,16 +157,13 @@ function Login() {
                     {successMessage}
                   </p>
                 </div>
-                {/* Hiệu ứng một cái vòng xoay nhỏ báo hiệu đang chuyển trang */}
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
               </div>
             )}
-            {/* Bạn có thể thêm đoạn này vào trong hàm return() của Login.jsx */}
             {errorMessage && (
               <div className="animate-in fade-in slide-in-from-top-2 duration-300 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 flex items-start gap-3">
                 <div className="mt-0.5 rounded-full bg-rose-100 p-1 text-rose-600">
                   <Leaf size={14} className="rotate-180" />{" "}
-                  {/* Tận dụng icon sẵn có */}
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-rose-800">
@@ -224,12 +212,13 @@ function Login() {
                 >
                   Mật khẩu
                 </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-xs font-bold tracking-[-0.01em] text-emerald-700 hover:underline"
+                <button
+                  type="button"
+                  onClick={() => handleNavigate("/forgot-password")}
+                  className="text-xs font-bold tracking-[-0.01em] text-emerald-700 hover:underline cursor-pointer bg-transparent border-none p-0"
                 >
                   Quên mật khẩu?
-                </Link>
+                </button>
               </div>
 
               <div className="relative">
@@ -272,9 +261,6 @@ function Login() {
             </div>
             <button
               type="submit"
-              // disabled khi đang gửi request đăng nhập để tránh việc người
-              // Gửi nhiều request liên tiếp khi click nhiều lần vào nút đăng nhập
-              // Bấm liên tục vào nút đăng nhập khi đang gửi request
               disabled={isLoading}
               className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl py-4 text-base font-black tracking-[-0.02em] text-white shadow-lg transition-all active:scale-[0.98] 
     ${
@@ -308,12 +294,13 @@ function Login() {
           <div className="mt-10 text-center">
             <p className="text-sm font-semibold tracking-[-0.01em] text-slate-500">
               Chưa có tài khoản?
-              <Link
-                to="/register"
-                className="ml-1 font-bold text-emerald-700 hover:underline"
+              <button
+                type="button"
+                onClick={() => handleNavigate("/register")}
+                className="ml-1 font-bold text-emerald-700 hover:underline cursor-pointer bg-transparent border-none p-0"
               >
                 Đăng ký miễn phí
-              </Link>
+              </button>
             </p>
           </div>
         </div>

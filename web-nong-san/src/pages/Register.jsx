@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
 import {
   ArrowRight,
@@ -14,10 +14,11 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-// Chuyển hướng trang sau khi đăng kí tài khoản thành công
+
 function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -27,28 +28,41 @@ function Register() {
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
-  // Show password khi người dùng click vào icon mắt
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // Tạo state check định dạng email
   const [isEmailValid, setIsEmailValid] = useState(true);
+
+  // =================================================================
+  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG (ENTRY & EXIT)
+  // =================================================================
+  const [isExiting, setIsExiting] = useState(true); // Để TRUE cho hiệu ứng trượt vào
+
+  useEffect(() => {
+    const resetAnimation = setTimeout(() => {
+      setIsExiting(false); // Đổi thành false để trang trượt mượt vào giữa
+    }, 10);
+    return () => clearTimeout(resetAnimation);
+  }, [location.pathname]);
+
+  const handleNavigate = (path) => {
+    if (location.pathname === path) return;
+    setIsExiting(true); // Trượt đi khi chuyển trang
+    setTimeout(() => {
+      navigate(path);
+    }, 400);
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-
-    // Thêm dòng này để xóa thông báo lỗi khi người dùng bắt đầu nhập lại thông tin đăng nhập
-    // Xóa cả lỗi lẫn thông báo thành công khi người dùng sửa dữ liệu
     if (errorMessage) setErrorMessage("");
     if (successMessage) setSuccessMessage("");
   };
-  // Kiểm tra định dạng email khi người dùng nhập vào trường email
+
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Khi người dùng rời con trỏ chuột khỏi ô email thì sẽ kiểm tra định dạng email
   const handleBlurEmail = () => {
     if (formData.email.trim() !== "") {
       const isValid = validateEmail(formData.email);
@@ -59,29 +73,18 @@ function Register() {
   };
 
   const handleSubmit = async (e) => {
-    // e.preventDefault() để ngăn trình duyệt gửi form theo cách truyền thống và làm mới trang
-    // cho phép chúng ta xử lý logic đăng ký bằng JavaScript.
     e.preventDefault();
-
     setErrorMessage("");
     setSuccessMessage("");
 
     if (!agreeTerms) {
       setErrorMessage("Bạn cần đồng ý điều khoản trước khi đăng ký.");
-      setIsLoading(false); // Thêm dòng này để mở khóa nút bấm
+      setIsLoading(false);
       return;
     }
-    setIsLoading(true); // Chỉ bắt đầu loading khi mọi thứ đã sẵn sàng gửi đi
+    setIsLoading(true);
 
     try {
-      // Axios dùng để gọi API request (gửi request HTTP) giữa frontend và backend
-      // Flow:frontend gửi request đăng ký -> backend nhận request, xử lý logic đăng ký, trả về response
-      // -> frontend nhận response, hiển thị ra thành công hoặc lỗi ra giao diện
-
-      // Axios dùng để gửi dữ liệu (POST): đăng ký, đăng nhập, tạo dữ liệu
-      // Lấy dữ liệu (GET): lấy thông tin người dùng, danh sách sản phẩm và đơn hàng
-      // Cập nhật dữ liệu (PUT/PATCH): cập nhật thông tin người dùng, trạng thái đơn hàng
-      // Xoá dữ liệu (DELETE): xoá sản phẩm, xoá đơn hàng
       const response = await axiosClient.post("/auth/register", formData);
 
       setSuccessMessage(response.data.message || "Đăng ký thành công");
@@ -91,13 +94,14 @@ function Register() {
         phone: "",
         password: "",
       });
-
-      setTimeout(() => navigate("/login"), 500);
       setAgreeTerms(false);
+
+      // Đợi báo thành công rồi trượt mượt sang Login
+      setTimeout(() => {
+        setIsExiting(true);
+        setTimeout(() => navigate("/login"), 400);
+      }, 800);
     } catch (error) {
-      // Xử lý lỗi: hiển thị lỗi từ backend trả về
-      // Ban đầu kiểm tra xem là backedn có message không -> có dùng không thì kiểm tra tiếp
-      //  Có error không? -> có dùng không thì hiển thị lỗi mặc định "Đăng ký thất bại"
       setErrorMessage(
         error.response?.data?.message ||
           error.response?.data?.error ||
@@ -109,7 +113,11 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9] px-4 py-8 text-slate-900 antialiased md:px-8 lg:flex lg:items-center lg:justify-center">
+    <div
+      className={`min-h-screen bg-[#f9f9f9] px-4 py-8 text-slate-900 antialiased md:px-8 lg:flex lg:items-center lg:justify-center transform transition-all duration-500 ease-in-out ${
+        isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+      }`}
+    >
       <div className="grid w-full max-w-6xl overflow-hidden rounded-2xl bg-white shadow-[0_24px_48px_-12px_rgba(26,28,28,0.10)] lg:grid-cols-2">
         <div className="relative hidden min-h-[720px] overflow-hidden bg-[#f3f3f3] lg:block">
           <div className="absolute inset-0 z-10 bg-gradient-to-t from-emerald-900/45 to-transparent" />
@@ -145,7 +153,10 @@ function Register() {
 
         <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16">
           <div className="mb-10">
-            <div className="mb-8 flex items-center gap-2">
+            <div
+              className="mb-8 flex items-center gap-2 cursor-pointer"
+              onClick={() => handleNavigate("/")}
+            >
               <Leaf size={30} className="text-emerald-700" />
               <div className="leading-none">
                 <span className="text-[2rem] font-black tracking-[-0.06em] text-emerald-600 sm:text-[2.35rem]">
@@ -316,12 +327,13 @@ function Register() {
           <div className="mt-8 border-t border-slate-200 pt-8 text-center">
             <p className="text-sm text-slate-500">
               Bạn đã có tài khoản?
-              <Link
-                to="/login"
-                className="ml-1 font-bold text-emerald-700 hover:underline"
+              <button
+                type="button"
+                onClick={() => handleNavigate("/login")}
+                className="ml-1 font-bold text-emerald-700 hover:underline cursor-pointer bg-transparent border-none p-0"
               >
                 Đăng nhập ngay
-              </Link>
+              </button>
             </p>
           </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useContext } from "react";
-import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   ChevronDown,
   KeyRound,
@@ -306,18 +306,18 @@ function UserLayout() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Link
-                  to="/login"
-                  className="px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 rounded-full transition no-underline"
+                <button
+                  onClick={() => handleNavigate("/login")}
+                  className="px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 rounded-full transition no-underline cursor-pointer"
                 >
                   Đăng nhập
-                </Link>
-                <Link
-                  to="/register"
-                  className="hidden sm:block px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full transition shadow-sm no-underline"
+                </button>
+                <button
+                  onClick={() => handleNavigate("/register")}
+                  className="hidden sm:block px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full transition shadow-sm no-underline cursor-pointer"
                 >
                   Đăng ký
-                </Link>
+                </button>
               </div>
             )}
           </div>
