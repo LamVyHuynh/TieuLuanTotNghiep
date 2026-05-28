@@ -33,20 +33,28 @@ function Register() {
   const [isEmailValid, setIsEmailValid] = useState(true);
 
   // =================================================================
-  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG (ENTRY & EXIT)
+  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
   // =================================================================
-  const [isExiting, setIsExiting] = useState(true); // Để TRUE cho hiệu ứng trượt vào
+  const [isExiting, setIsExiting] = useState(true);
+  const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
   useEffect(() => {
     const resetAnimation = setTimeout(() => {
-      setIsExiting(false); // Đổi thành false để trang trượt mượt vào giữa
+      setIsExiting(false);
     }, 10);
     return () => clearTimeout(resetAnimation);
   }, [location.pathname]);
 
   const handleNavigate = (path) => {
     if (location.pathname === path) return;
-    setIsExiting(true); // Trượt đi khi chuyển trang
+
+    if (path === "/" || path === "/login" || path === -1) {
+      setSlideDirection("translate-x-12"); // Đăng nhập / Trang chủ -> Lướt qua Phải
+    } else {
+      setSlideDirection("-translate-x-12");
+    }
+
+    setIsExiting(true);
     setTimeout(() => {
       navigate(path);
     }, 400);
@@ -96,8 +104,8 @@ function Register() {
       });
       setAgreeTerms(false);
 
-      // Đợi báo thành công rồi trượt mượt sang Login
       setTimeout(() => {
+        setSlideDirection("translate-x-12"); // Đăng ký xong quay lùi về form Login
         setIsExiting(true);
         setTimeout(() => navigate("/login"), 400);
       }, 800);
@@ -115,7 +123,7 @@ function Register() {
   return (
     <div
       className={`min-h-screen bg-[#f9f9f9] px-4 py-8 text-slate-900 antialiased md:px-8 lg:flex lg:items-center lg:justify-center transform transition-all duration-500 ease-in-out ${
-        isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+        isExiting ? `${slideDirection} opacity-0` : "translate-x-0 opacity-100"
       }`}
     >
       <div className="grid w-full max-w-6xl overflow-hidden rounded-2xl bg-white shadow-[0_24px_48px_-12px_rgba(26,28,28,0.10)] lg:grid-cols-2">

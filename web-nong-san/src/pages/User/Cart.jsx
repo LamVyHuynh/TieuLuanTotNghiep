@@ -24,24 +24,36 @@ function Cart() {
   const [showError, setShowError] = useState(false);
 
   // =================================================================
-  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
+  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG THÔNG MINH
   // =================================================================
-  const [isExiting, setIsExiting] = useState(false);
+  const [isExiting, setIsExiting] = useState(true);
+  const [slideDirection, setSlideDirection] = useState("-translate-x-12"); // Mặc định trượt từ trái sang
 
   useEffect(() => {
     const resetAnimation = setTimeout(() => {
       setIsExiting(false);
-    }, 0);
+    }, 10);
+
     return () => clearTimeout(resetAnimation);
   }, [location.pathname]);
 
   const handleNavigate = (path) => {
     if (location.pathname === path) return;
-    setIsExiting(true);
+
+    // LOGIC THÔNG MINH ĐIỀU HƯỚNG VUỐT:
+    // Nếu đi lùi (Quay lại hoặc Về trang chủ) -> Vuốt màn hình sang Phải
+    if (path === -1 || path === "/") {
+      setSlideDirection("translate-x-12");
+    } else {
+      // Nếu đi tới (Checkout thanh toán) -> Vuốt màn hình sang Trái
+      setSlideDirection("-translate-x-12");
+    }
+
+    setIsExiting(true); // Bật hiệu ứng
     setTimeout(() => {
       if (path === -1) navigate(-1);
       else navigate(path);
-    }, 400);
+    }, 400); // Chuyển trang thực sự sau 400ms
   };
 
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -87,7 +99,7 @@ function Cart() {
     }
 
     addToPayment(selectedProducts);
-    handleNavigate("/checkout");
+    handleNavigate("/checkout"); // Sẽ tự trượt sang trái do logic ở trên
   };
 
   const showToast = (message, type = "success") => {
@@ -109,11 +121,16 @@ function Cart() {
   const allSelected =
     cartItems.length > 0 && selectIdItem.length === cartItems.length;
 
+  // =================================================================
+  // GIAO DIỆN KHI GIỎ HÀNG TRỐNG
+  // =================================================================
   if (cartItems.length === 0) {
     return (
       <div
         className={`mx-auto max-w-[980px] px-4 py-16 sm:px-6 lg:px-8 transform transition-all duration-500 ease-in-out ${
-          isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+          isExiting
+            ? `${slideDirection} opacity-0`
+            : "translate-x-0 opacity-100"
         }`}
       >
         <button
@@ -146,11 +163,16 @@ function Cart() {
     );
   }
 
+  // =================================================================
+  // GIAO DIỆN KHI GIỎ HÀNG CÓ ĐỒ
+  // =================================================================
   return (
     <>
       <div
         className={`bg-[#f6f8f4] pb-20 pt-8 text-slate-900 min-h-screen relative transform transition-all duration-500 ease-in-out ${
-          isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+          isExiting
+            ? `${slideDirection} opacity-0`
+            : "translate-x-0 opacity-100"
         }`}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
@@ -340,6 +362,7 @@ function Cart() {
         </div>
       </div>
 
+      {/* MODAL XÁC NHẬN XOÁ (ĐƯỢC ĐƯA RA NGOÀI ĐỂ KHÔNG BỊ TRƯỢT THEO TRANG) */}
       {itemToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl text-center animate-in zoom-in-95 duration-200">
@@ -368,6 +391,7 @@ function Cart() {
         </div>
       )}
 
+      {/* TOAST THÔNG BÁO KẾT QUẢ */}
       {toast.show && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-3 rounded-full bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-10">
           <CheckCircle2 size={20} /> {toast.message}

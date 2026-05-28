@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, useContext, useRef } from "react";
-import { createPortal } from "react-dom"; // <-- Thêm createPortal để fix lỗi Toast bị ẩn
+import { createPortal } from "react-dom";
 import {
   Plus,
   RefreshCcw,
   Sparkles,
   ShoppingBag,
   CheckCircle2,
-  XCircle, // <-- Thêm icon XCircle cho Toast báo lỗi
+  XCircle,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -17,46 +17,47 @@ function Home() {
   const location = useLocation();
   const [activeFilter, setActiveFilter] = useState("Tất Cả");
 
-  // Dữ liệu useState của sản phẩm và danh mục
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isLoading, setLoading] = useState(true);
-
-  // Số lượng sản phẩm hiển thị trên màn hình
   const [displayCount, setDisplayCount] = useState(8);
 
-  // thêm sản phẩm vào giỏ hàng
   const { addToCart, cartItems } = useContext(CartContext);
 
-  // Tính tổng số lượng sản phẩm trong giỏ hàng cho nút mobile
   const totalItemsCart = cartItems
     ? cartItems.reduce((total, item) => total + item.quantity, 0)
     : 0;
 
   // =================================================================
-  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
+  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG THÔNG MINH
   // =================================================================
-  const [isExiting, setIsExiting] = useState(false);
+  const [isExiting, setIsExiting] = useState(true);
+  const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
   useEffect(() => {
-    // Reset hiệu ứng khi load trang (dùng setTimeout để lừa linter)
     const resetAnimation = setTimeout(() => {
       setIsExiting(false);
-    }, 0);
+    }, 10);
     return () => clearTimeout(resetAnimation);
   }, [location.pathname]);
 
   const handleNavigate = (path) => {
     if (location.pathname === path) return;
+
+    // Xác định hướng trượt
+    if (path === "/" || path === -1) {
+      setSlideDirection("translate-x-12"); // Lùi về -> Trượt sang phải
+    } else {
+      setSlideDirection("-translate-x-12"); // Tiến tới -> Trượt sang trái
+    }
+
     setIsExiting(true);
     setTimeout(() => {
-      navigate(path);
+      if (path === -1) navigate(-1);
+      else navigate(path);
     }, 400);
   };
 
-  // =================================================================
-  // STATE CHO TOAST THÔNG BÁO (THÊM VÀO GIỎ)
-  // =================================================================
   const [toast, setToast] = useState({
     show: false,
     message: "",
@@ -69,10 +70,9 @@ function Home() {
     setToast({ show: true, message, type });
     toastTimerRef.current = setTimeout(() => {
       setToast({ show: false, message: "", type: "success" });
-    }, 2500); // 2.5 giây tự tắt
+    }, 2500);
   };
 
-  // API lấy dữ liệu sản phẩm và danh mục từ backend
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -81,12 +81,9 @@ function Home() {
           axiosClient.get("categories"),
           axiosClient.get("products"),
         ]);
-
-        // Chỉ lấy danh mục đang hiển thị
         const activeCategories = (catRes.data.categories || []).filter(
           (c) => c.status === 1,
         );
-
         setCategories(activeCategories);
         setProducts(prodRes.data.products || []);
       } catch (error) {
@@ -95,11 +92,9 @@ function Home() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
-  // Map tên danh mục backend về tên filter hiển thị frontend
   const categoryMap = useMemo(() => {
     const map = {};
     categories.forEach((cat) => {
@@ -108,18 +103,15 @@ function Home() {
     return map;
   }, [categories]);
 
-  // Lọc sản phẩm khi khách hàng bấm tab
   const filteredProducts = useMemo(() => {
     if (activeFilter === "Tất Cả") return products;
     return products.filter((p) => categoryMap[p.id_category] === activeFilter);
   }, [products, activeFilter, categoryMap]);
 
-  // Reset về 8 món mỗi khi khách hàng đổi Tab
   useEffect(() => {
     setDisplayCount(8);
   }, [activeFilter]);
 
-  // LOGIC CUỘN CHUẨN
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -129,7 +121,6 @@ function Home() {
         setDisplayCount((prev) => prev + 4);
       }
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -152,14 +143,14 @@ function Home() {
         .masonry-item { break-inside: avoid; margin-bottom: 1.5rem; }
       `}</style>
 
-      {/* KHUNG TRƯỢT: Bọc cả body chính và footer */}
       <div
         className={`transform transition-all duration-500 ease-in-out ${
-          isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+          isExiting
+            ? `${slideDirection} opacity-0`
+            : "translate-x-0 opacity-100"
         }`}
       >
         <div className="pb-24 max-w-7xl mx-auto px-4 sm:px-6 min-h-screen relative">
-          {/* THANH FILTER */}
           <div className="flex gap-3 overflow-x-auto category-scroll pb-4 mb-6 pt-4">
             <button
               onClick={() => setActiveFilter("Tất Cả")}
@@ -187,7 +178,6 @@ function Home() {
             ))}
           </div>
 
-          {/* LOADING HOẶC LƯỚI SẢN PHẨM */}
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 text-emerald-600">
               <RefreshCcw size={32} className="animate-spin mb-4" />
@@ -268,7 +258,6 @@ function Home() {
                           {Number(item.price).toLocaleString("vi-VN")}đ
                         </span>
 
-                        {/* NÚT THÊM VÀO GIỎ HÀNG */}
                         <button
                           className="bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer"
                           onClick={async (e) => {
@@ -279,12 +268,9 @@ function Home() {
                                 `Đã thêm ${item.name} vào giỏ! 🥰`,
                                 "success",
                               );
-                              // -----------------------------------------------------------------
-                              // BÍ KÍP CHUYỂN TRANG MƯỢT MÀ TỪ TRANG CHỦ -> GIỎ HÀNG NẰM Ở ĐÂY
-                              // -----------------------------------------------------------------
                               setTimeout(() => {
                                 handleNavigate("/cart");
-                              }, 1200); // 1.2s đọc thông báo xong mới chuyển
+                              }, 1200);
                             } else {
                               showToast(
                                 "Vui lòng đăng nhập để mua hàng! 😥",
@@ -340,7 +326,7 @@ function Home() {
 
       <button
         onClick={() => handleNavigate("/cart")}
-        className="md:hidden fixed bottom-6 right-6 bg-emerald-600 text-white w-14 h-14 rounded-full shadow-[0_10px_25px_rgba(5,150,105,0.3)] flex items-center justify-center z-50 hover:bg-emerald-700 transition-colors cursor-pointer"
+        className="md:hidden fixed bottom-6 right-6 bg-emerald-600 text-white w-14 h-14 rounded-full shadow-[0_10px_25px_rgba(5,150,105,0.3)] flex items-center justify-center z-50 hover:bg-emerald-700 transition-colors cursor-pointer border-none"
       >
         <ShoppingBag size={22} />
         {totalItemsCart > 0 && (
@@ -350,7 +336,6 @@ function Home() {
         )}
       </button>
 
-      {/* ================= BẮN TOAST RA NGOÀI VỚI createPortal ================= */}
       {toast.show &&
         createPortal(
           <div

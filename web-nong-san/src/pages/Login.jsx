@@ -21,25 +21,31 @@ function Login() {
   const location = useLocation();
 
   // =================================================================
-  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG (ENTRY & EXIT)
+  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
   // =================================================================
-  // Đặt giá trị mặc định là TRUE để lúc trang vừa load là nó đang bị mờ/lệch
   const [isExiting, setIsExiting] = useState(true);
+  const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
   useEffect(() => {
-    // Đợi 10ms rồi đổi thành FALSE -> Tạo hiệu ứng trang "trượt vào" rất mượt
-    const enterAnimation = setTimeout(() => {
+    const resetAnimation = setTimeout(() => {
       setIsExiting(false);
     }, 10);
-    return () => clearTimeout(enterAnimation);
+    return () => clearTimeout(resetAnimation);
   }, [location.pathname]);
 
   const handleNavigate = (path) => {
     if (location.pathname === path) return;
-    setIsExiting(true); // Bật hiệu ứng trượt đi
+
+    if (path === "/" || path === -1) {
+      setSlideDirection("translate-x-12");
+    } else {
+      setSlideDirection("-translate-x-12");
+    }
+
+    setIsExiting(true);
     setTimeout(() => {
       navigate(path);
-    }, 400); // 400ms sau mới chuyển link
+    }, 400);
   };
 
   const handleChange = (e) => {
@@ -88,8 +94,8 @@ function Login() {
         localStorage.removeItem("rememberEmail");
       }
 
-      // Đợi 1 giây để đọc thông báo, sau đó kích hoạt hiệu ứng trượt đi
       setTimeout(() => {
+        setSlideDirection("-translate-x-12"); // Đăng nhập thì tiến vào app
         setIsExiting(true);
         setTimeout(() => {
           if (user.role_id === 1) {
@@ -121,7 +127,7 @@ function Login() {
   return (
     <main
       className={`min-h-screen bg-[#f9f9f9] p-4 text-slate-900 antialiased md:p-8 transform transition-all duration-500 ease-in-out ${
-        isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+        isExiting ? `${slideDirection} opacity-0` : "translate-x-0 opacity-100"
       }`}
     >
       <div className="mx-auto grid w-full max-w-6xl grid-cols-1 overflow-hidden rounded-2xl bg-white shadow-[0_24px_48px_-12px_rgba(26,28,28,0.08)] lg:grid-cols-12">

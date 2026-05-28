@@ -13,17 +13,28 @@ function Order() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [isExiting, setIsExiting] = useState(false);
+  // =================================================================
+  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG THÔNG MINH
+  // =================================================================
+  const [isExiting, setIsExiting] = useState(true);
+  const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
   useEffect(() => {
     const resetAnimation = setTimeout(() => {
       setIsExiting(false);
-    }, 0);
+    }, 10);
     return () => clearTimeout(resetAnimation);
   }, [location.pathname]);
 
   const handleNavigate = (path) => {
     if (location.pathname === path) return;
+
+    if (path === "/" || path === -1) {
+      setSlideDirection("translate-x-12");
+    } else {
+      setSlideDirection("-translate-x-12");
+    }
+
     setIsExiting(true);
     setTimeout(() => {
       if (path === -1) navigate(-1);
@@ -44,7 +55,7 @@ function Order() {
   return (
     <div
       className={`mx-auto max-w-[980px] px-4 py-8 sm:px-6 lg:px-8 min-h-screen transform transition-all duration-500 ease-in-out ${
-        isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+        isExiting ? `${slideDirection} opacity-0` : "translate-x-0 opacity-100"
       }`}
     >
       <button

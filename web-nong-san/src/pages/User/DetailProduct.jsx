@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { createPortal } from "react-dom"; // <--- BÍ KÍP Ở ĐÂY
+import { createPortal } from "react-dom";
 import {
   ArrowLeft,
   Minus,
@@ -22,18 +22,28 @@ function DetailProduct() {
   const [similarProducts, setSimilarProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // State tạo hiệu ứng chuyển trang mượt mà
-  const [isExiting, setIsExiting] = useState(false);
+  // =================================================================
+  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG THÔNG MINH
+  // =================================================================
+  const [isExiting, setIsExiting] = useState(true);
+  const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
   useEffect(() => {
     const resetAnimation = setTimeout(() => {
       setIsExiting(false);
-    }, 0);
+    }, 10);
     return () => clearTimeout(resetAnimation);
   }, [location.pathname]);
 
   const handleNavigate = (path) => {
     if (location.pathname === path) return;
+
+    if (path === "/" || path === -1) {
+      setSlideDirection("translate-x-12");
+    } else {
+      setSlideDirection("-translate-x-12");
+    }
+
     setIsExiting(true);
     setTimeout(() => {
       if (path === -1) navigate(-1);
@@ -131,7 +141,9 @@ function DetailProduct() {
     <>
       <div
         className={`bg-[#f6f8f4] pb-20 pt-8 text-slate-900 min-h-screen relative transform transition-all duration-500 ease-in-out ${
-          isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+          isExiting
+            ? `${slideDirection} opacity-0`
+            : "translate-x-0 opacity-100"
         }`}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10 mt-16">
@@ -274,8 +286,6 @@ function DetailProduct() {
                           `Đã thêm ${quantity} ${product.unit || "phần"} ${product.name} vào giỏ! 🥰`,
                           "success",
                         );
-
-                        // Đợi Toast hiện đủ lâu rồi mới kéo trang đi
                         setTimeout(() => {
                           handleNavigate("/cart");
                         }, 1200);
@@ -340,7 +350,6 @@ function DetailProduct() {
         </div>
       </div>
 
-      {/* ================= BẮN TOAST RA NGOÀI VỚI createPortal ================= */}
       {toast.show &&
         createPortal(
           <div
