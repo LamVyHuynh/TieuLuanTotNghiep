@@ -47,8 +47,17 @@ async function addAddress(userId, addressData) {
   return result.insertId;
 }
 
+// Hàm xoá địa chỉ
+async function deleteAddress(addressId, userId) {
+  const deleteQuery =
+    "DELETE FROM user_addresses WHERE id_address = ? AND user_id = ?";
+  const [result] = await pool.execute(deleteQuery, [addressId, userId]);
+  return result.affectedRows > 0;
+}
+
 module.exports = {
   getDefaultAddress,
   getAllAddresses,
   addAddress,
+  deleteAddress,
 };

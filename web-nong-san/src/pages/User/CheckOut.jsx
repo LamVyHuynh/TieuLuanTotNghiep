@@ -23,6 +23,7 @@ import {
   ChevronRight,
   User,
   Phone,
+  Trash2,
 } from "lucide-react";
 import { CheckoutContext } from "../../context/CheckoutContext";
 import { useAuth } from "../../context/AuthContext";
@@ -83,22 +84,19 @@ function CheckOut() {
   // STATE DỮ LIỆU ĐẶT HÀNG & ĐỊA CHỈ
   // =================================================================
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  const [note, setNote] = useState(""); // Ghi chú đơn hàng
+  const [note, setNote] = useState("");
 
-  // Sổ địa chỉ
   const [addresses, setAddresses] = useState([]);
-  const [selectedAddress, setSelectedAddress] = useState(null); // Lưu nguyên Object địa chỉ đang chọn
+  const [selectedAddress, setSelectedAddress] = useState(null);
 
   const [isLoadingAddress, setIsLoadingAddress] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State quản lý Modal
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [isAddingNewAddr, setIsAddingNewAddr] = useState(false);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
 
-  // Chỉ cần 1 state lưu chuỗi địa chỉ khi thêm mới
   const [newAddressText, setNewAddressText] = useState("");
 
   const [toast, setToast] = useState({
@@ -161,12 +159,11 @@ function CheckOut() {
 
     setIsSavingAddress(true);
     try {
-      // Tự động ghép tên và SĐT của user đang đăng nhập vào payload
       const addressPayload = {
         receiver_name: currentUser?.full_name,
         phone: currentUser?.phone,
         address: newAddressText.trim(),
-        is_default: 1, // Tự động làm mặc định
+        is_default: 1,
       };
 
       const res = await axiosClient.post(
@@ -177,12 +174,11 @@ function CheckOut() {
 
       showToast("Đã lưu địa chỉ thành công! 🥰", "success");
 
-      // Xóa form, quay lại màn hình list trong modal
       setNewAddressText("");
       setIsAddingNewAddr(false);
-      setShowAddressModal(false); // Đóng modal luôn
+      setShowAddressModal(false);
 
-      await fetchAddresses(newAddressId); // Load lại danh sách và bốc luôn cái vừa tạo
+      await fetchAddresses(newAddressId);
     } catch (error) {
       showToast(
         error.response?.data?.message || "Lỗi khi lưu địa chỉ!",
@@ -190,6 +186,29 @@ function CheckOut() {
       );
     } finally {
       setIsSavingAddress(false);
+    }
+  };
+
+  // --- API XOÁ ĐỊA CHỈ ---
+  const handleDeleteAddress = async (addressId, e) => {
+    e.stopPropagation(); // Ngăn sự kiện click chọn địa chỉ
+    if (!window.confirm("Bạn có chắc chắn muốn xoá địa chỉ này?")) return;
+
+    try {
+      await axiosClient.delete(`/addresses/${addressId}`);
+      showToast("Đã xoá địa chỉ!", "success");
+
+      // Nếu khách xoá trúng cái địa chỉ đang chọn ở bên ngoài màn hình
+      if (selectedAddress?.id_address === addressId) {
+        setSelectedAddress(null); // Reset lại để hàm fetch tự chọn lại cái khác
+      }
+
+      await fetchAddresses(); // Cập nhật lại danh sách mới
+    } catch (error) {
+      showToast(
+        error.response?.data?.message || "Lỗi khi xoá địa chỉ!",
+        "error",
+      );
     }
   };
 
@@ -222,7 +241,6 @@ function CheckOut() {
   const executeOrder = async () => {
     setIsSubmitting(true);
     try {
-      // Chốt đơn lấy Tên và SĐT gốc của User + Cái địa chỉ mà user đã chọn
       const orderPayload = {
         fullName: currentUser?.full_name,
         phone: currentUser?.phone,
@@ -247,7 +265,7 @@ function CheckOut() {
     } catch (error) {
       showToast(
         "Lỗi khi đặt hàng, vui lòng thử lại!",
-        error.message || "error",
+        error.response?.data?.message || "error",
       );
     } finally {
       setIsSubmitting(false);
@@ -325,7 +343,6 @@ function CheckOut() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* THÔNG TIN NGƯỜI NHẬN (Lấy cứng từ Account ra, không cho sửa ở đây) */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
                         <div className="flex items-center gap-2 mb-1">
@@ -351,7 +368,6 @@ function CheckOut() {
                       </div>
                     </div>
 
-                    {/* CỤC ĐỊA CHỈ HIỆN TẠI */}
                     <div className="space-y-2">
                       <label className="ml-1 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                         Nơi nhận hàng
@@ -406,7 +422,6 @@ function CheckOut() {
                       )}
                     </div>
 
-                    {/* GHI CHÚ ĐƠN HÀNG */}
                     <div>
                       <label className="ml-1 mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                         Ghi chú đơn hàng (Tùy chọn)
@@ -623,43 +638,55 @@ function CheckOut() {
                   /* DANH SÁCH ĐỊA CHỈ TRONG SỔ */
                   <div className="space-y-4">
                     {addresses.map((addr) => (
-                      <button
+                      // CHÚ Ý: ĐÃ SỬA CHỖ NÀY THÀNH THẺ <div> THAY VÌ <button> ĐỂ TRÁNH LỖI LỒNG BUTTON
+                      <div
                         key={addr.id_address}
-                        onClick={() => {
-                          setSelectedAddress(addr);
-                          setShowAddressModal(false);
-                        }}
-                        className={`w-full text-left p-4 rounded-2xl border-2 transition cursor-pointer ${
+                        className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition ${
                           selectedAddress?.id_address === addr.id_address
                             ? "border-emerald-500 bg-emerald-50/50"
                             : "border-slate-100 hover:border-emerald-200 bg-white"
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <MapPin
-                              size={16}
-                              className={
-                                selectedAddress?.id_address === addr.id_address
-                                  ? "text-emerald-600"
-                                  : "text-slate-400"
-                              }
-                            />
-                            <h4 className="font-bold text-slate-900">
-                              Địa chỉ giao hàng
-                            </h4>
+                        {/* KHU VỰC BẤM ĐỂ CHỌN ĐỊA CHỈ */}
+                        <div
+                          className="flex-1 cursor-pointer"
+                          onClick={() => {
+                            setSelectedAddress(addr);
+                            setShowAddressModal(false);
+                          }}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <MapPin
+                                size={16}
+                                className={
+                                  selectedAddress?.id_address ===
+                                  addr.id_address
+                                    ? "text-emerald-600"
+                                    : "text-slate-400"
+                                }
+                              />
+                              <h4 className="font-bold text-slate-900">
+                                Địa chỉ giao hàng
+                              </h4>
+                            </div>
                           </div>
-                          {selectedAddress?.id_address === addr.id_address && (
-                            <CheckCircle2
-                              size={18}
-                              className="text-emerald-600"
-                            />
-                          )}
+                          <p className="text-sm text-slate-600 mt-2 ml-6 leading-relaxed pr-4">
+                            {addr.address}
+                          </p>
                         </div>
-                        <p className="text-sm text-slate-600 mt-2 ml-6 leading-relaxed">
-                          {addr.address}
-                        </p>
-                      </button>
+
+                        {/* NÚT XOÁ ĐỊA CHỈ NẰM RIÊNG BIỆT */}
+                        <button
+                          onClick={(e) =>
+                            handleDeleteAddress(addr.id_address, e)
+                          }
+                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition cursor-pointer shrink-0"
+                          title="Xoá địa chỉ này"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     ))}
 
                     <button

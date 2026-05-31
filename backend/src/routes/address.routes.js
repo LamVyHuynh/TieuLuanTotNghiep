@@ -4,6 +4,7 @@ const {
   getDefaultAddressUser,
   getAllAddressesUser,
   addAddressUser,
+  deleteAddressUser,
 } = require("../controllers/address.controller");
 const { authenticateToken } = require("../middlewares/auth.middleware");
 
@@ -15,5 +16,8 @@ router.get("/", authenticateToken, getAllAddressesUser);
 
 // Route để thêm mới địa chỉ
 router.post("/add-address", authenticateToken, addAddressUser);
+
+// Route để xoá địa chỉ
+router.delete("/:id", authenticateToken, deleteAddressUser);
 
 module.exports = router;

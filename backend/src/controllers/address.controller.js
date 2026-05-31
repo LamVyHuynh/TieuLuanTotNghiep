@@ -2,6 +2,7 @@ const {
   getDefaultAddress,
   getAllAddresses,
   addAddress,
+  deleteAddress,
 } = require("../services/address.service");
 
 async function getDefaultAddressUser(req, res) {
@@ -50,8 +51,28 @@ async function addAddressUser(req, res) {
     res.status(500).json({ message: "Lỗi server khi thêm địa chỉ" });
   }
 }
+
+// hàm xoá địa chỉ vào controller
+const deleteAddressUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const addressId = req.params.id;
+    const isDeleted = await deleteAddress(addressId, userId);
+    if (isDeleted) {
+      res.status(200).json({ success: true, message: "Địa chỉ đã được xoá" });
+    } else {
+      res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy địa chỉ để xoá" });
+    }
+  } catch (error) {
+    console.error("Lỗi xoá địa chỉ:", error);
+    res.status(500).json({ message: "Lỗi server khi xoá địa chỉ" });
+  }
+};
 module.exports = {
   getDefaultAddressUser,
   getAllAddressesUser,
   addAddressUser,
+  deleteAddressUser,
 };
