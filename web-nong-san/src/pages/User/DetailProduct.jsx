@@ -12,6 +12,7 @@ import {
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
 import { CartContext } from "../../context/CartContext";
+import { CheckoutContext } from "../../context/CheckoutContext";
 
 function DetailProduct() {
   const { id } = useParams();
@@ -53,6 +54,7 @@ function DetailProduct() {
 
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useContext(CartContext);
+  const { addToPayment } = useContext(CheckoutContext);
 
   const [toast, setToast] = useState({
     show: false,
@@ -302,7 +304,21 @@ function DetailProduct() {
                   </button>
 
                   <button
-                    onClick={() => handleNavigate("/checkout")}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+
+                      // Đẩy sản phẩm vào Context.
+                      // LƯU Ý: Phải bọc trong mảng [...] vì trang Checkout đang dùng checkoutList.map()
+                      addToPayment([
+                        {
+                          ...product,
+                          quantity,
+                        },
+                      ]);
+
+                      // Lụm! Chuyển thẳng sang trang thanh toán (có hiệu ứng trượt sang trái)
+                      handleNavigate("/checkout");
+                    }}
                     className="cursor-pointer rounded-xl bg-[#dfe4dc] px-5 py-4 text-base font-bold text-slate-900 transition hover:-translate-y-0.5 hover:bg-[#d4dad1]"
                   >
                     Mua ngay

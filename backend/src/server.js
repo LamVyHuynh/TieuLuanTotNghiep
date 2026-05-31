@@ -24,6 +24,9 @@ const categoryRoutes = require("./routes/category.routes");
 // Import  vỏ hàng router
 const cartRoutes = require("./routes/cart.routes");
 
+// Import router địa chỉ
+const addressRoutes = require("./routes/address.routes");
+
 // Import cookie-parser để đọc cookie từ request header
 const cookieParser = require("cookie-parser");
 
@@ -65,6 +68,10 @@ app.use("/categories", categoryRoutes);
 app.use("/cart", cartRoutes);
 // gắn router login
 // app.use("/login", authRoutes);
+
+// gắn router địa chỉ
+
+app.use("/addresses", addressRoutes); //
 
 // Kiểm tra route
 app.get("/", (req, res) => {
