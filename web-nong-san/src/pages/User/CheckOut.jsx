@@ -18,7 +18,6 @@ import {
   QrCode,
   XCircle,
   X,
-  CheckCircle2,
   Plus,
   ChevronRight,
   User,
@@ -680,13 +679,6 @@ function CheckOut() {
                                 Địa chỉ giao hàng
                               </h4>
                             </div>
-                            {selectedAddress?.id_address ===
-                              addr.id_address && (
-                              <CheckCircle2
-                                size={18}
-                                className="text-emerald-600 mr-2"
-                              />
-                            )}
                           </div>
                           <p className="text-sm text-slate-600 mt-2 ml-6 leading-relaxed pr-4">
                             {addr.address}
