@@ -81,6 +81,7 @@ const CartProvider = ({ children }) => {
       value={{
         cartItems,
         fetchCart,
+        setCartItems,
         addToCart,
         removeProductCart,
         updateCartQuantity,

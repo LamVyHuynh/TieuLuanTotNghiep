@@ -26,10 +26,26 @@ function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation(); // Dùng cái này để theo dõi chuyển trang
+  const location = useLocation();
 
   const { currentUser, logout, loading, refetchUser } = useAuth();
   const userMenuRef = useRef(null);
+
+  const { cartItems, fetchCart, setCartItems } = useContext(CartContext);
+
+  // =================================================================
+  // ĐỒNG BỘ GIỎ HÀNG KHI LOGIN / LOGOUT
+  // =================================================================
+  useEffect(() => {
+    // Nếu có user đăng nhập -> Gọi API lấy giỏ hàng mới nhất
+    if (currentUser && fetchCart) {
+      fetchCart();
+    }
+    // Nếu bị văng ra (đăng xuất) -> Xoá sạch giỏ hàng trên giao diện
+    if (!currentUser && setCartItems) {
+      setCartItems([]);
+    }
+  }, [currentUser, fetchCart, setCartItems]); // Đã nhét đủ dependency để tắt cảnh báo vàng
 
   // =================================================================
   // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
@@ -37,21 +53,17 @@ function UserLayout() {
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    // Mỗi lần URL thay đổi (vào trang mới) -> Reset lại cờ trượt để hiện nội dung
     const resetAnimation = setTimeout(() => {
       setIsExiting(false);
     }, 0);
     return () => clearTimeout(resetAnimation);
   }, [location.pathname]);
 
-  // Hàm chuyển trang mượt mà
   const handleNavigate = (path) => {
-    // Nếu đang ở đúng trang đó rồi thì không trượt làm gì
     if (location.pathname === path) return;
-
-    setIsExiting(true); // Bật cờ trượt đi
+    setIsExiting(true);
     setTimeout(() => {
-      navigate(path); // Chuyển trang sau khi trượt xong (400ms)
+      navigate(path);
     }, 400);
   };
 
@@ -79,7 +91,7 @@ function UserLayout() {
   };
 
   // =================================================================
-  // CẬP NHẬT THÔNG TIN CÁ NHÂN (EMAIL CHỈ ĐỌC)
+  // CẬP NHẬT THÔNG TIN CÁ NHÂN
   // =================================================================
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -186,16 +198,17 @@ function UserLayout() {
     console.log("Tìm kiếm với từ khóa:", searchTerm);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
+    // Ép giỏ hàng trên UI về mảng rỗng ngay lập tức
+    if (setCartItems) {
+      setCartItems([]);
+    }
     setShowUserMenu(false);
     navigate("/");
   };
 
-  // Lấy danh sách đồ ăn từ giỏ hàng
-  const { cartItems } = useContext(CartContext);
-
-  //  Tính tổng số lượng sản phẩm trong giỏ hàng
+  // Tính tổng số lượng sản phẩm trong giỏ hàng
   const totalItemsCart = cartItems
     ? cartItems.reduce((total, item) => total + item.quantity, 0)
     : 0;
@@ -325,7 +338,6 @@ function UserLayout() {
       </nav>
 
       {/* BODY CHÍNH - GẮN HIỆU ỨNG TRƯỢT VÀO ĐÂY */}
-      {/* Cái Navbar ở trên sẽ đứng yên, chỉ có phần nội dung bên dưới là trượt đi */}
       <main
         className={`pt-20 transform transition-all duration-500 ease-in-out ${
           isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
