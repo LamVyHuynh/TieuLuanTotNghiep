@@ -225,7 +225,12 @@ function Cart() {
                       ✓
                     </button>
 
-                    <div className="h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-32 sm:w-32">
+                    <div
+                      className="h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-32 sm:w-32 cursor-pointer"
+                      onClick={() =>
+                        handleNavigate(`/detail-product/${item.id}`)
+                      }
+                    >
                       <img
                         src={
                           item.img ||
@@ -238,7 +243,12 @@ function Cart() {
 
                     <div className="flex-1 space-y-3">
                       <div className="flex items-start justify-between gap-3">
-                        <div>
+                        <div
+                          className="cursor-pointer"
+                          onClick={() =>
+                            handleNavigate(`/detail-product/${item.id}`)
+                          }
+                        >
                           <h3 className="text-xl font-bold tracking-[-0.03em] text-slate-900">
                             {item.name}
                           </h3>
