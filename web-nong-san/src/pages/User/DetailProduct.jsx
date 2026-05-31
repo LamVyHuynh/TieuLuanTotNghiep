@@ -305,6 +305,16 @@ function DetailProduct() {
 
                   <button
                     onClick={(e) => {
+                      // Kiểm tra token đăng nhập
+                      const token = localStorage.getItem("auth_token");
+                      if (!token) {
+                        showToast(
+                          "Vui lòng đăng nhập để mua hàng! 😥",
+                          "error",
+                        );
+                        setTimeout(() => handleNavigate("/login"), 1500);
+                        return;
+                      }
                       e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
 
                       // Đẩy sản phẩm vào Context.
