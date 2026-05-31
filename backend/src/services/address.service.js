@@ -27,6 +27,7 @@ async function addAddress(userId, addressData) {
     "SELECT COUNT(*) as total FROM user_addresses WHERE user_id=?";
   const [rows] = await pool.execute(checkQuery, [userId]);
   const addressCount = rows[0].total;
+  const { receiver_name, phone, address } = addressData;
 
   //Bước 2 quyết định mặc định địa chỉ hay không
   let final_to_set_default = 0; // Mặc định không phải là địa chỉ mặc định

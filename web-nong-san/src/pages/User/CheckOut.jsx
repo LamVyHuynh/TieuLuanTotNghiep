@@ -92,10 +92,16 @@ function CheckOut() {
   const [isLoadingAddress, setIsLoadingAddress] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // State quản lý Modal
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [isAddingNewAddr, setIsAddingNewAddr] = useState(false);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
+
+  // State quản lý Modal Xoá
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [newAddressText, setNewAddressText] = useState("");
 
@@ -189,26 +195,36 @@ function CheckOut() {
     }
   };
 
-  // --- API XOÁ ĐỊA CHỈ ---
-  const handleDeleteAddress = async (addressId, e) => {
-    e.stopPropagation(); // Ngăn sự kiện click chọn địa chỉ
-    if (!window.confirm("Bạn có chắc chắn muốn xoá địa chỉ này?")) return;
+  // --- XỬ LÝ MỞ MODAL XOÁ ---
+  const triggerDelete = (addressId, e) => {
+    e.stopPropagation();
+    setAddressToDelete(addressId);
+    setShowDeleteModal(true);
+  };
 
+  // --- API XOÁ ĐỊA CHỈ (Thực thi khi bấm Xác nhận trong Modal) ---
+  const executeDeleteAddress = async () => {
+    if (!addressToDelete) return;
+
+    setIsDeleting(true);
     try {
-      await axiosClient.delete(`/addresses/${addressId}`);
+      await axiosClient.delete(`/addresses/${addressToDelete}`);
       showToast("Đã xoá địa chỉ!", "success");
 
-      // Nếu khách xoá trúng cái địa chỉ đang chọn ở bên ngoài màn hình
-      if (selectedAddress?.id_address === addressId) {
-        setSelectedAddress(null); // Reset lại để hàm fetch tự chọn lại cái khác
+      if (selectedAddress?.id_address === addressToDelete) {
+        setSelectedAddress(null);
       }
 
-      await fetchAddresses(); // Cập nhật lại danh sách mới
+      await fetchAddresses();
+      setShowDeleteModal(false); // Đóng modal xoá
+      setAddressToDelete(null);
     } catch (error) {
       showToast(
         error.response?.data?.message || "Lỗi khi xoá địa chỉ!",
         "error",
       );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -265,7 +281,7 @@ function CheckOut() {
     } catch (error) {
       showToast(
         "Lỗi khi đặt hàng, vui lòng thử lại!",
-        error.response?.data?.message || "error",
+        error.message || "error",
       );
     } finally {
       setIsSubmitting(false);
@@ -574,12 +590,11 @@ function CheckOut() {
         </main>
       </div>
 
-      {/* ================= MODAL SỔ ĐỊA CHỈ (POPUP) ================= */}
+      {/* ================= MODAL SỔ ĐỊA CHỈ ================= */}
       {showAddressModal &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
             <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-lg overflow-hidden rounded-[2rem] bg-white shadow-2xl flex flex-col max-h-[85vh]">
-              {/* Header Modal */}
               <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 shrink-0">
                 <h3 className="text-xl font-black text-slate-900">
                   {isAddingNewAddr ? "Thêm địa chỉ mới" : "Sổ địa chỉ của bạn"}
@@ -595,10 +610,8 @@ function CheckOut() {
                 </button>
               </div>
 
-              {/* Body Modal */}
               <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
                 {isAddingNewAddr ? (
-                  /* FORM CHỈ NHẬP MỖI ĐỊA CHỈ */
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <label className="ml-1 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -635,10 +648,8 @@ function CheckOut() {
                     </div>
                   </div>
                 ) : (
-                  /* DANH SÁCH ĐỊA CHỈ TRONG SỔ */
                   <div className="space-y-4">
                     {addresses.map((addr) => (
-                      // CHÚ Ý: ĐÃ SỬA CHỖ NÀY THÀNH THẺ <div> THAY VÌ <button> ĐỂ TRÁNH LỖI LỒNG BUTTON
                       <div
                         key={addr.id_address}
                         className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition ${
@@ -647,7 +658,6 @@ function CheckOut() {
                             : "border-slate-100 hover:border-emerald-200 bg-white"
                         }`}
                       >
-                        {/* KHU VỰC BẤM ĐỂ CHỌN ĐỊA CHỈ */}
                         <div
                           className="flex-1 cursor-pointer"
                           onClick={() => {
@@ -670,17 +680,22 @@ function CheckOut() {
                                 Địa chỉ giao hàng
                               </h4>
                             </div>
+                            {selectedAddress?.id_address ===
+                              addr.id_address && (
+                              <CheckCircle2
+                                size={18}
+                                className="text-emerald-600 mr-2"
+                              />
+                            )}
                           </div>
                           <p className="text-sm text-slate-600 mt-2 ml-6 leading-relaxed pr-4">
                             {addr.address}
                           </p>
                         </div>
 
-                        {/* NÚT XOÁ ĐỊA CHỈ NẰM RIÊNG BIỆT */}
+                        {/* NÚT KÍCH HOẠT MODAL XOÁ */}
                         <button
-                          onClick={(e) =>
-                            handleDeleteAddress(addr.id_address, e)
-                          }
+                          onClick={(e) => triggerDelete(addr.id_address, e)}
                           className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition cursor-pointer shrink-0"
                           title="Xoá địa chỉ này"
                         >
@@ -700,6 +715,45 @@ function CheckOut() {
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {/* ================= MODAL XÁC NHẬN XOÁ ĐỊA CHỈ ================= */}
+      {showDeleteModal &&
+        createPortal(
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
+            <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-sm overflow-hidden rounded-[2rem] bg-white shadow-2xl p-6 text-center relative">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+                <Trash2 size={32} />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 mb-2">
+                Xoá địa chỉ này?
+              </h3>
+              <p className="text-sm text-slate-500 mb-6 px-2">
+                Bạn sẽ không thể khôi phục lại địa chỉ này sau khi xoá.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 py-3.5 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition cursor-pointer"
+                  disabled={isDeleting}
+                >
+                  Huỷ bỏ
+                </button>
+                <button
+                  onClick={executeDeleteAddress}
+                  className="flex-1 py-3.5 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition flex items-center justify-center cursor-pointer"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    "Xoá ngay"
+                  )}
+                </button>
               </div>
             </div>
           </div>,
@@ -748,7 +802,7 @@ function CheckOut() {
       {toast.show &&
         createPortal(
           <div
-            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 rounded-full px-5 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-5 ${toast.type === "success" ? "bg-emerald-600" : "bg-rose-500"}`}
+            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3 rounded-full px-5 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-5 ${toast.type === "success" ? "bg-emerald-600" : "bg-rose-500"}`}
           >
             {toast.type === "success" ? (
               <CheckCircle2 size={20} />

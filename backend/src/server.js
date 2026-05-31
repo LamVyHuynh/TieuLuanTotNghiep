@@ -71,7 +71,7 @@ app.use("/cart", cartRoutes);
 
 // gắn router địa chỉ
 
-app.use("/addresses", addressRoutes); //
+app.use("/addresses", addressRoutes);
 
 // Kiểm tra route
 app.get("/", (req, res) => {
