@@ -12,37 +12,30 @@ const {
   updateUserPassword,
 } = require("../services/auth.service");
 
-// Thư viện jsonwebtoken có 3 mục đích chính:
-//  1. Tạo token:  jsonwebtoken.sign() tạo ra token mới dựa trên payload (thông tin người dùng) và secret key (để đảm bảo tính bảo mật của token).
-//  Và còn thêm 1 chỉ số nữa là expiresIn để xác định thời gian hết hạn của token
-//  Khi đăng nhập thành công sẽ tạo ra jwt
-// 2. Xác thực token: jsonwebtoken.verify() được dùng để xác thực token đã tạo ra trước đó, xem nó có hợp lệ không?
-// backend nhận token từ client gửi lên từ frontend,
-// Kiểm tra xem chữ kí token có hợp lệ chưa
-// Token có hết hạng chưa
-// 3. giải mã token: jsonwebtoken.decode() được dùng để giải mã token mà không cần xác thực
-//  Nó sẽ trả về payload (đối tượng chức thông tin người dùng) mà không kiểm tra tính hợp lệ của token
 const jwt = require("jsonwebtoken");
+
+// 1. IMPORT MÁY DỊCH MÃ VÀO
+const { encodeId, decodeId } = require("../../utils/hashid.util");
+
 const register = async (req, res) => {
-  // Lấy dữ liệu người dùng từ request body (dữ liệu được gửi từ client qua postman)
   const userData = req.body;
 
-  // console.log("user data ở controller (postman gửi dữ liệu qua):", userData);
   try {
-    // Lấy kết quả xử lí từ service
     const result = await registerUser(userData);
 
-    // Kiểm tra kết quả trả về từ service xem nó có undefined / null hay không
     if (!result) {
       throw new Error("Kết quả trả về từ service không hợp lệ");
     }
-    // lệnh throw này dùng để thử lỗi, nếu gặp  thì tất cả những câu lệnh phía dưới nó đều không chạy
-    //  Nó sẽ dừng lại ngay lập tức và chuyển qua catch để xử lý lỗi
-    // throw new Error("This is a test error");
+
+    // 2. MÃ HOÁ ID TRƯỚC KHI GỬI VỀ CHO REACT
+    const safeUser = {
+      ...result,
+      id: encodeId(result.id),
+    };
 
     res.status(201).json({
       message: "Register successful",
-      data: result,
+      data: safeUser, // Trả về user có ID đã mã hoá
     });
   } catch (error) {
     if (
@@ -53,9 +46,7 @@ const register = async (req, res) => {
       error.message === "Số điện thoại phải có 10 hoặc 11 chữ số" ||
       error.message === "Email không hợp lệ"
     ) {
-      return res.status(400).json({
-        message: error.message,
-      });
+      return res.status(400).json({ message: error.message });
     }
     if (
       error.message === "Email đã tồn tại" ||
@@ -63,22 +54,14 @@ const register = async (req, res) => {
       error.message === "Role 'customer' không tồn tại" ||
       error.message === "userData is undefined"
     ) {
-      return res.status(409).json({
-        message: error.message,
-      });
+      return res.status(409).json({ message: error.message });
     }
-    res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 const login = async (req, res) => {
-  // Lấy dữ liệu đăng nhập từ request body (email và password)
   const { email, password } = req.body;
-
-  // Lấy ip và thông tin thiết bị
   const ip =
     req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   const userAgent = req.headers["user-agent"];
@@ -86,7 +69,6 @@ const login = async (req, res) => {
   try {
     const result = await loginUser(email, password);
 
-    // ghi log thành công
     await recordLoginLog({
       user_id: result.id,
       email: email,
@@ -95,40 +77,41 @@ const login = async (req, res) => {
       userAgent,
     });
 
-    // Tạo token JWT với payload chứa id và role của người dùng,
-    // secret key lấy từ biến môi trường JWT_SECRET,
-    //  Số ngắn 15 phút để tăng tính bảo mật (nếu token bị đánh cắp thì kẻ xấu chỉ có thể sử dụng trong 15 phút)
+    // LƯU Ý: JWT VẪN DÙNG ID THẬT ĐỂ MIDDLEWARE BÊN TRONG HỆ THỐNG XỬ LÝ CHO NHANH
+    // Client không đọc được cái token này (đã bị băm) nên cứ để số nguyên cho nhẹ.
     const accessToken = jwt.sign(
       { id: result.id, role: result.role_id },
       process.env.JWT_SECRET,
       { expiresIn: "15m" },
     );
 
-    // Tạo refresh toke với sống dài 7 ngày
     const refreshToken = jwt.sign(
-      {
-        id: result.id,
-        role: result.role_id,
-      },
+      { id: result.id, role: result.role_id },
       process.env.JWT_REFRESH_SECRET || "CaiNayLaSecretKhoaRefreshNheMay",
       { expiresIn: "7d" },
     );
 
     res.cookie("refreshToken", refreshToken, {
-      httpOnly: true, // Ngăn chặn JS truy cập (tránh hacker dùng XSS để đánh cắp token)
-      secure: false, // set thành true khi chạy https thật(production), để chỉ gửi cookie qua kết nối an toàn
-      sameSite: "lax", // Đảm bảo trình duyệt tự động đính kèm cookie khi gọi API domain
-      maxAge: 7 * 24 * 60 * 60 * 1000, // Thời gian sống của cookie (7 ngày)
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+
+    // 3. NHƯNG KHI GỬI THÔNG TIN BỀ MẶT CHO REACT THÌ PHẢI MÃ HOÁ
+    const safeUser = {
+      ...result,
+      id: encodeId(result.id),
+    };
+
     res.status(200).json({
       message: "Login successful",
-      token: accessToken, // Gửu accessToken cho frontend để lưu vào bộ nhớ tạm thời (ví dụ: localStorage, sessionStorage) và đính kèm vào header của những request sau này để xác thực
-      user: result,
+      token: accessToken,
+      user: safeUser,
     });
   } catch (error) {
-    // ghi log thất bại
     await recordLoginLog({
-      user_id: null, // thường không có id là lỗi
+      user_id: null,
       email: email,
       status: "failure",
       ip,
@@ -137,44 +120,29 @@ const login = async (req, res) => {
     });
 
     if (error.message === "Email hoặc mật khẩu không đúng") {
-      return res.status(400).json({
-        message: error.message,
-      });
+      return res.status(400).json({ message: error.message });
     }
-
-    // 1. Bắt lỗi tài khoản bị khóa (MỚI THÊM)
     if (
       error.message ===
       "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để biết thêm chi tiết."
     ) {
-      return res.status(403).json({
-        message: error.message,
-      });
+      return res.status(403).json({ message: error.message });
     }
-    // 2. Bắt lỗi sai thông tin đăng nhập
     if (error.message === "Email hoặc mật khẩu không đúng") {
-      return res.status(401).json({
-        message: error.message,
-      });
+      return res.status(401).json({ message: error.message });
     }
-    // 3. Bắt lỗi để trống thông tin
     if (error.message === "Email hoặc mật khẩu không được để trống") {
       return res.status(400).json({ message: error.message });
     }
-    // 4. Các lỗi server khác
-    res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 const logout = async (req, res) => {
   try {
-    // Xóa cookie refresh token ở client bằng cách gửi cookie rỗng với maxAge = 0
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: false, // Để true nếu dùng https
+      secure: false,
       sameSite: "lax",
     });
 
@@ -182,83 +150,83 @@ const logout = async (req, res) => {
       .status(200)
       .json({ message: "Đăng xuất thành công (Phiên làm việc đã kết thúc)" });
   } catch (error) {
-    res.status(500).json({
-      message: "Lỗi server khi logout",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({ message: "Lỗi server khi logout", error: error.message });
   }
 };
 
 const getMe = async (req, res) => {
   try {
-    const userId = req.user.id; // Thông tin được lấy từ middleware authenticateToken sau khi xác thực token thành công
+    const userId = req.user.id; // Lấy từ JWT nên nó đang là số thật
 
     const user = await getCurrentUserById(userId);
     if (!user) {
-      return res.status(404).json({
-        message: "User không tồn tại",
-      });
+      return res.status(404).json({ message: "User không tồn tại" });
     }
+
+    // 4. MÃ HOÁ ID TRƯỚC KHI TRẢ VỀ CHO REACT
+    const safeUser = {
+      ...user,
+      id: encodeId(user.id),
+    };
+
     res.status(200).json({
       message: "Lấy thông tin người dùng thành công",
-      user: user,
+      user: safeUser,
     });
   } catch (error) {
     if (
       error.message === "Token không tồn tại" ||
       error.message === "Token không hợp lệ, truy cập bị từ chối"
     ) {
-      return res.status(401).json({
-        message: error.message,
-      });
+      return res.status(401).json({ message: error.message });
     }
-    res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 const fetchAllLogs = async (req, res) => {
   try {
-    // Hứng param từ URL(ví dụ: /auth/login?page=2&limit=5).Nếu không có thì lấy mặt định là 1 và 5
     const page = req.query.page || 1;
     const limit = req.query.limit || 5;
 
-    // Truyền xuống service để lấy log với phân trang
     const result = await getAllLoginLogs(page, limit);
+
+    // 5. MÃ HOÁ DANH SÁCH LOG (Mã hoá user_id bên trong log)
+    const safeLogs = result.data.map((log) => ({
+      ...log,
+      id: encodeId(log.id), // Nếu log có id riêng thì mã hoá luôn
+      user_id: encodeId(log.user_id), // Mã hoá khóa ngoại
+    }));
+
     res.status(200).json({
       success: true,
-      data: result.data, // chứa mảng 5 cái log
-      total: result.total, // tổng số log trong database
-      stats: result.stats, // thống kê trạng thái (success, failure, critical)
+      data: safeLogs,
+      total: result.total,
+      stats: result.stats,
     });
   } catch (error) {
-    // Nếu sập, nó sẽ lọt vào đây và trả về 500 kèm chi tiết lỗi
-    res.status(500).json({
-      message: "Lỗi server khi lấy log",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({ message: "Lỗi server khi lấy log", error: error.message });
   }
 };
 
 const refreshToken = async (req, res) => {
   try {
-    // 1. Đọc refresh token từ cookie gửi lên
-    const refreshToken = req.cookies.refreshToken; // Lấy refresh token từ cookie
+    const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
       return res.status(401).json({
         message: "Không tìm thấy phiên đăng nhập cũ (Refresh Token missing)",
       });
     }
 
-    // 2. Xác thực refresh token
     jwt.verify(
       refreshToken,
       process.env.JWT_REFRESH_SECRET || "CaiNayLaSecretKhoaRefreshNheMay",
       (err, decoded) => {
         if (err) {
-          // Nếu refresh token hết hạn hoặc giả mạo thì đuổi cổ cho đăng
           return res.status(403).json({
             message:
               "Phiên đăng nhập đã hết hạn vui lòng đăng nhập lại (Invalid Refresh Token)",
@@ -288,15 +256,22 @@ const refreshToken = async (req, res) => {
   }
 };
 
-// Lấy danh sách tất cả người dùng (MỚI THÊM)
+// Lấy danh sách tất cả người dùng (Admin)
 const fetchAllUsers = async (req, res) => {
   try {
     const page = req.query.page || 1;
-    const limit = 10; // Giới hạn số người dùng trả về mỗi trang
+    const limit = 10;
     const result = await getAllUsers(page, limit);
+
+    // 6. MÃ HOÁ DANH SÁCH USER CHO ADMIN
+    const safeUsers = result.data.map((u) => ({
+      ...u,
+      id: encodeId(u.id),
+    }));
+
     res.status(200).json({
       message: "Lấy danh sách người dùng thành công",
-      data: result.data,
+      data: safeUsers,
       total: result.total,
       stats: result.stats,
     });
@@ -308,11 +283,15 @@ const fetchAllUsers = async (req, res) => {
   }
 };
 
-//Cập nhật trạng thái hoạt động của người dùng (MỚI THÊM)
+// Cập nhật trạng thái hoạt động của người dùng (Khóa / Mở Khóa)
 const toggleUserLock = async (req, res) => {
   try {
-    // Lấy userId từ params (ví dụ: /auth/users/:id/toggle-lock)
-    const userId = req.params.id;
+    // 7. GIẢI MÃ ID TỪ URL
+    const userId = decodeId(req.params.id);
+    if (!userId) {
+      return res.status(400).json({ message: "ID người dùng không hợp lệ" });
+    }
+
     const newStats = await toggleUserActiveStatus(userId);
     res.status(200).json({
       message: "Trạng thái người dùng đã được cập nhật",
@@ -320,11 +299,7 @@ const toggleUserLock = async (req, res) => {
     });
   } catch (error) {
     if (error.message === "Không tìm thấy người dùng") {
-      {
-        return res.status(404).json({
-          message: error.message,
-        });
-      }
+      return res.status(404).json({ message: error.message });
     }
     res.status(500).json({
       message: "Lỗi server khi cập nhật trạng thái người dùng",
@@ -333,88 +308,93 @@ const toggleUserLock = async (req, res) => {
   }
 };
 
-// xoá user trong trang admin
+// Xóa user trong trang admin
 const deleteUser = async (req, res) => {
   try {
-    const userId = req.params.id;
+    // 8. GIẢI MÃ ID TỪ URL
+    const userId = decodeId(req.params.id);
+    if (!userId) {
+      return res.status(400).json({ message: "ID người dùng không hợp lệ" });
+    }
+
     await deleteUserById(userId);
     res.status(200).json({
       message: "Người dùng đã được xoá thành công",
     });
   } catch (error) {
     if (error.message === "Không tìm thấy người dùng") {
-      {
-        return res.status(404).json({
-          message: error.message,
-        });
-      }
+      return res.status(404).json({ message: error.message });
     }
+    res
+      .status(500)
+      .json({ message: "Lỗi server khi xoá người dùng", error: error.message });
   }
 };
 
-// Cập nhật thông tin người dùng (MỚI THÊM)
+// Cập nhật thông tin người dùng
 const updateUser = async (req, res) => {
   try {
-    const userId = req.params.id;
-    const updateData = req.body; // Dữ liệu cập nhật được gửi từ client
+    // 9. GIẢI MÃ ID TỪ URL
+    const userId = decodeId(req.params.id);
+    if (!userId) {
+      return res.status(400).json({ message: "ID người dùng không hợp lệ" });
+    }
 
+    const updateData = req.body;
     const updateddUser = await updateUserById(userId, updateData);
+
+    // 10. MÃ HOÁ ID SAU KHI UPDATE XONG ĐỂ TRẢ VỀ
+    const safeUser = {
+      ...updateddUser,
+      id: encodeId(updateddUser.id),
+    };
+
     res.status(200).json({
       message: "Thông tin người dùng đã được cập nhật thành công",
-      user: updateddUser,
+      user: safeUser,
     });
   } catch (error) {
     if (error.message === "Không tìm thấy người dùng") {
-      {
-        return res.status(404).json({
-          message: error.message,
-        });
-      }
+      return res.status(404).json({ message: error.message });
     }
-    res.status(500).json({
-      message: "Lỗi server khi cập nhật thông tin người dùng",
-    });
+    res
+      .status(500)
+      .json({ message: "Lỗi server khi cập nhật thông tin người dùng" });
   }
 };
 
-// Cập nhật mật khẩu người dùng (MỚI THÊM)
+// Cập nhật mật khẩu người dùng
 const changePassword = async (req, res) => {
   try {
-    const userId = req.params.id;
+    // 11. GIẢI MÃ ID TỪ URL
+    const userId = decodeId(req.params.id);
+    if (!userId) {
+      return res.status(400).json({ message: "ID người dùng không hợp lệ" });
+    }
+
     const { new_password } = req.body;
 
     if (!new_password || new_password.length < 8) {
-      return res.status(400).json({
-        message: "Mật khẩu mới phải có ít nhất 8 ký tự",
-      });
+      return res
+        .status(400)
+        .json({ message: "Mật khẩu mới phải có ít nhất 8 ký tự" });
     }
 
-    // Gọi hàm service để cập nhật mật khẩu người dùng
     await updateUserPassword(userId, new_password);
     res.status(200).json({
       message: "Mật khẩu đã được cập nhật thành công",
     });
   } catch (error) {
-    if (error.message === "Không tìm thấy người dùng") {
-      {
-        return res.status(404).json({
-          message: error.message,
-        });
-      }
-    }
-    if (error.message === "Mật khẩu hiện tại không đúng") {
-      return res.status(400).json({
-        message: error.message,
-      });
-    }
-    if (error.message === "Mật khẩu mới phải có ít nhất 8 ký tự") {
-      return res.status(400).json({
-        message: error.message,
-      });
-    }
-    res.status(500).json({
-      message: "Lỗi server khi cập nhật mật khẩu người dùng",
-    });
+    if (error.message === "Không tìm thấy người dùng")
+      return res.status(404).json({ message: error.message });
+    if (error.message === "Mật khẩu hiện tại không đúng")
+      return res.status(400).json({ message: error.message });
+    if (error.message === "Mật khẩu mới phải có ít nhất 8 ký tự")
+      return res.status(400).json({ message: error.message });
+
+    res
+      .status(500)
+      .json({ message: "Lỗi server khi cập nhật mật khẩu người dùng" });
   }
 };
 

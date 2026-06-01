@@ -5,15 +5,24 @@ const {
   deleteAddress,
 } = require("../services/address.service");
 
+// 1. IMPORT MÁY DỊCH MÃ
+const { encodeId, decodeId } = require("../../utils/hashid.util");
+
 async function getDefaultAddressUser(req, res) {
   try {
-    // Lấy id usser từ token đã được xác thực
+    // Lấy id usser từ token đã được xác thực (ID thật)
     const userId = req.user.id;
 
     const defaultAddress = await getDefaultAddress(userId);
 
     if (defaultAddress) {
-      res.status(200).json({ success: true, data: defaultAddress });
+      // BỌC THÉP CHIỀU RA: Mã hoá id_address
+      const safeAddress = {
+        ...defaultAddress,
+        id_address: encodeId(defaultAddress.id_address),
+      };
+
+      res.status(200).json({ success: true, data: safeAddress });
     } else {
       res
         .status(404)
@@ -29,8 +38,15 @@ async function getDefaultAddressUser(req, res) {
 async function getAllAddressesUser(req, res) {
   try {
     const userId = req.user.id;
-    const address = await getAllAddresses(userId);
-    res.status(200).json({ success: true, data: address });
+    const addresses = await getAllAddresses(userId);
+
+    // BỌC THÉP CHIỀU RA: Mã hoá toàn bộ danh sách địa chỉ
+    const safeAddresses = addresses.map((addr) => ({
+      ...addr,
+      id_address: encodeId(addr.id_address),
+    }));
+
+    res.status(200).json({ success: true, data: safeAddresses });
   } catch (error) {
     console.error("Lỗi lấy tất cả địa chỉ:", error);
     res.status(500).json({ message: "Lỗi server khi lấy địa chỉ" });
@@ -41,23 +57,36 @@ async function getAllAddressesUser(req, res) {
 async function addAddressUser(req, res) {
   try {
     const userId = req.user.id;
-
     const addressData = req.body;
 
-    const newAddressId = await addAddress(userId, addressData);
-    res.status(201).json({ success: true, data: { id: newAddressId } });
+    const newAddressId = await addAddress(userId, addressData); // Trả về ID thật
+
+    // BỌC THÉP CHIỀU RA: Mã hoá ID vừa thêm mới
+    res
+      .status(201)
+      .json({ success: true, data: { id: encodeId(newAddressId) } });
   } catch (error) {
     console.error("Lỗi thêm địa chỉ mới:", error);
     res.status(500).json({ message: "Lỗi server khi thêm địa chỉ" });
   }
 }
 
-// hàm xoá địa chỉ vào controller
+// Hàm xoá địa chỉ vào controller
 const deleteAddressUser = async (req, res) => {
   try {
     const userId = req.user.id;
-    const addressId = req.params.id;
-    const isDeleted = await deleteAddress(addressId, userId);
+
+    // GIẢI MÃ CHIỀU VÀO TỪ URL (Chữ -> Số)
+    const realAddressId = decodeId(req.params.id);
+
+    if (!realAddressId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "ID địa chỉ không hợp lệ" });
+    }
+
+    const isDeleted = await deleteAddress(realAddressId, userId);
+
     if (isDeleted) {
       res.status(200).json({ success: true, message: "Địa chỉ đã được xoá" });
     } else {
@@ -70,6 +99,7 @@ const deleteAddressUser = async (req, res) => {
     res.status(500).json({ message: "Lỗi server khi xoá địa chỉ" });
   }
 };
+
 module.exports = {
   getDefaultAddressUser,
   getAllAddressesUser,

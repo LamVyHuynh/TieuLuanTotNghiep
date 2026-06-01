@@ -1,10 +1,11 @@
-const { ca, de } = require("zod/v4/locales");
 const {
   createCategory,
   getAllCategories,
   updateCategory,
   deleteCategory,
 } = require("../services/category.service");
+
+const { encodeId, decodeId } = require("../../utils/hashid.util");
 
 // Controller để thêm danh mục mới
 const createCategoryController = async (req, res) => {
@@ -19,12 +20,13 @@ const createCategoryController = async (req, res) => {
         .status(400)
         .json({ message: "Vui lòng cung cấp đầy đủ thông tin danh mục!" });
     }
-    const newCategoryId = await createCategory(categoryData);
+    const newCategoryId = await createCategory(categoryData); // Trả về ID thật (số)
+
     res.status(201).json({
       message: "Thêm danh mục thành công!",
-      categoryId: newCategoryId,
+      categoryId: encodeId(newCategoryId), // BỌC THÉP CHIỀU RA
       categoryData: {
-        id: newCategoryId,
+        id: encodeId(newCategoryId), // BỌC THÉP CHIỀU RA
         ...categoryData,
       },
     });
@@ -40,10 +42,17 @@ const createCategoryController = async (req, res) => {
 // Hiển thị danh sách danh mục
 const getAllCategoriesController = async (req, res) => {
   try {
-    const categories = await getAllCategories();
+    const categories = await getAllCategories(); // Lấy từ DB ra id thật
+
+    // BỌC THÉP CHIỀU RA: Lặp qua và mã hoá toàn bộ id_category
+    const safeCategories = categories.map((cat) => ({
+      ...cat,
+      id_category: encodeId(cat.id_category),
+    }));
+
     res.status(200).json({
       message: "Lấy danh sách danh mục thành công!",
-      categories: categories,
+      categories: safeCategories, // Trả mảng đã mã hoá
     });
   } catch (error) {
     console.error("Lỗi lấy danh sách danh mục:", error);
@@ -57,14 +66,21 @@ const getAllCategoriesController = async (req, res) => {
 // Cập nhật thông tin danh mục
 const updateCategoryController = async (req, res) => {
   try {
-    const categoryId = req.params.id;
+    // DỊCH MÃ CHIỀU VÀO TỪ URL (Chữ -> Số)
+    const categoryId = decodeId(req.params.id);
+
+    if (!categoryId) {
+      return res.status(400).json({ message: "ID danh mục không hợp lệ!" });
+    }
+
     const categoryData = req.body;
-    const updateDataCategory = await updateCategory(categoryId, categoryData);
+    const updateDataCategory = await updateCategory(categoryId, categoryData); // Chọc xuống DB bằng Số
+
     if (updateDataCategory) {
       res.status(200).json({
         message: "Cập nhật danh mục thành công!",
         categoryData: {
-          id: categoryId,
+          id: req.params.id, // Trả lại cái ID bằng chữ cho Frontend nó dùng
           ...categoryData,
         },
       });
@@ -85,12 +101,19 @@ const updateCategoryController = async (req, res) => {
 // Hàm xoá danh mục
 const deleteCategoryController = async (req, res) => {
   try {
-    const categoryId = req.params.id;
-    const deleteDataCategory = await deleteCategory(categoryId);
+    // DỊCH MÃ CHIỀU VÀO TỪ URL (Chữ -> Số)
+    const categoryId = decodeId(req.params.id);
+
+    if (!categoryId) {
+      return res.status(400).json({ message: "ID danh mục không hợp lệ!" });
+    }
+
+    const deleteDataCategory = await deleteCategory(categoryId); // Xóa bằng Số
+
     if (deleteDataCategory) {
       res.status(200).json({
         message: "Xoá danh mục thành công!",
-        deletedCategoryId: categoryId,
+        deletedCategoryId: req.params.id, // Trả về ID chữ để FE biết đường xóa UI
       });
     } else {
       res.status(404).json({
@@ -105,6 +128,7 @@ const deleteCategoryController = async (req, res) => {
     });
   }
 };
+
 module.exports = {
   createCategoryController,
   getAllCategoriesController,

@@ -6,6 +6,9 @@ const {
   getProductById,
 } = require("../services/product.service");
 
+// Đổi lại tên hàm import cho đúng với file utils của mày nhé
+const { encodeId, decodeId } = require("../../utils/hashid.util");
+
 const addProduct = async (req, res) => {
   try {
     const productData = req.body;
@@ -18,9 +21,14 @@ const addProduct = async (req, res) => {
       });
     }
 
-    // 2. Ép kiểu dữ liệu để an toàn cho SQL
+    // LƯU Ý: Nếu lúc thêm, React gửi id_category là chuỗi Hash, thì mày phải decodeId(productData.id_category) ở đây.
+    // Tạm thời tao giữ nguyên ép kiểu số cho mày:
     const cleanProductData = {
       ...productData,
+      id_category:
+        typeof productData.id_category === "string"
+          ? decodeId(productData.id_category) || productData.id_category
+          : productData.id_category,
       price: parseFloat(productData.price),
       discount_price: productData.discount_price
         ? parseFloat(productData.discount_price)
@@ -32,14 +40,14 @@ const addProduct = async (req, res) => {
       fat: parseFloat(productData.fat) || 0,
     };
 
-    // 3. Gọi service để lưu vào DB
+    // 3. Gọi service để lưu vào DB (nhận về ID thật)
     const newProductId = await createProduct(cleanProductData);
 
-    // 4. Trả về kết quả
+    // 4. MÃ HOÁ ID TRƯỚC KHI TRẢ VỀ CHO REACT
     res.status(201).json({
       message:
         "Thêm sản phẩm thành công! Database đã nhận đủ chỉ số dinh dưỡng.",
-      productId: newProductId,
+      productId: encodeId(newProductId), // Encode chỗ này!
     });
   } catch (error) {
     console.error("Lỗi thêm sản phẩm:", error);
@@ -52,10 +60,18 @@ const addProduct = async (req, res) => {
 
 const getProducts = async (req, res) => {
   try {
-    const products = await getAllProducts();
+    const products = await getAllProducts(); // Trả về mảng chứa id thật
+
+    // BỌC THÉP CHIỀU RA: Mã hoá toàn bộ id_product (và id_category)
+    const safeProducts = products.map((item) => ({
+      ...item,
+      id_product: encodeId(item.id_product),
+      id_category: encodeId(item.id_category),
+    }));
+
     res.status(200).json({
       message: "Lấy danh sách sản phẩm thành công!",
-      products,
+      products: safeProducts, // Trả mảng đã mã hoá về
     });
   } catch (error) {
     res
@@ -67,12 +83,15 @@ const getProducts = async (req, res) => {
 // Xoá sản phẩm
 const deleteSanPham = async (req, res) => {
   try {
-    const productId = req.params.id;
+    const productId = decodeId(req.params.id); // DỊCH CHIỀU VÀO TỪ URL
+    if (!productId)
+      return res.status(400).json({ message: "ID không hợp lệ!" });
+
     const success = await deleteProduct(productId);
     if (success) {
       res.status(200).json({
         message: "Xoá sản phẩm thành công!",
-        deletedProductId: productId, // Trả về ID để frontend cập nhật UI tức thì
+        deletedProductId: req.params.id, // Trả về lại cái ID chuỗi để UI biết đường xoá
       });
     } else {
       res.status(404).json({ message: "Không tìm thấy sản phẩm để xoá!" });
@@ -86,15 +105,24 @@ const deleteSanPham = async (req, res) => {
 
 const updateInfoProduct = async (req, res) => {
   try {
-    const productId = req.params.id;
+    const productId = decodeId(req.params.id); // DỊCH CHIỀU VÀO TỪ URL
+    if (!productId)
+      return res.status(400).json({ message: "ID không hợp lệ!" });
+
     const productData = req.body;
 
-    // Gọi service cập nhật
-    const success = await updateProduct(productId, productData);
+    // LƯU Ý: Decode id_category nếu client gửi lên chữ
+    const safeUpdateData = { ...productData };
+    if (typeof safeUpdateData.id_category === "string") {
+      safeUpdateData.id_category =
+        decodeId(safeUpdateData.id_category) || safeUpdateData.id_category;
+    }
+
+    const success = await updateProduct(productId, safeUpdateData);
     if (success) {
       res.status(200).json({
         message: "Cập nhật sản phẩm thành công!",
-        data: { id_product: productId, ...productData }, // Trả về data mới để frontend đồng bộ
+        data: { id_product: req.params.id, ...productData }, // Trả về ID chuỗi cho React
       });
     } else {
       res.status(404).json({ message: "Không tìm thấy sản phẩm để cập nhật!" });
@@ -109,14 +137,25 @@ const updateInfoProduct = async (req, res) => {
 
 const getProductDetail = async (req, res) => {
   try {
-    const { id } = req.params;
-    const product = await getProductById(id); // Trả về 1 object sản phẩm
+    const realProductID = decodeId(req.params.id); // DỊCH CHIỀU VÀO TỪ URL
 
-    // Vì service đã trả về rows[0], nên product sẽ là dữ liệu thật hoặc undefined
+    if (!realProductID) {
+      return res.status(400).json({ message: "ID sản phẩm không hợp lệ!" });
+    }
+
+    const product = await getProductById(realProductID);
+
     if (product) {
+      // BỌC THÉP CHIỀU RA: Mã hoá ID trước khi gửi cho FrontEnd
+      const safeProduct = {
+        ...product,
+        id_product: encodeId(product.id_product),
+        id_category: encodeId(product.id_category),
+      };
+
       res.status(200).json({
         message: "Lấy chi tiết sản phẩm thành công!",
-        product: product, // Trả nguyên cái object đi luôn
+        product: safeProduct,
       });
     } else {
       res.status(404).json({ message: "Không tìm thấy sản phẩm!" });

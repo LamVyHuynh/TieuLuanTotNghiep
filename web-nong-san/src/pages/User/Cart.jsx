@@ -1,4 +1,5 @@
-import React, { useContext, useMemo, useState, useEffect } from "react";
+import React, { useContext, useMemo, useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom"; // QUAN TRỌNG: Vũ khí tối thượng
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -9,6 +10,7 @@ import {
   ShoppingBasket,
   Trash2,
   CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { CartContext } from "../../context/CartContext.jsx";
 import { CheckoutContext } from "../../context/CheckoutContext.jsx";
@@ -21,47 +23,52 @@ function Cart() {
   const location = useLocation();
 
   const [selectIdItem, setSelectIdItem] = useState([]);
-  const [showError, setShowError] = useState(false);
 
   // =================================================================
-  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG THÔNG MINH
+  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
   // =================================================================
   const [isExiting, setIsExiting] = useState(true);
-  const [slideDirection, setSlideDirection] = useState("-translate-x-12"); // Mặc định trượt từ trái sang
+  const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
   useEffect(() => {
     const resetAnimation = setTimeout(() => {
       setIsExiting(false);
     }, 10);
-
     return () => clearTimeout(resetAnimation);
   }, [location.pathname]);
 
   const handleNavigate = (path) => {
     if (location.pathname === path) return;
-
-    // LOGIC THÔNG MINH ĐIỀU HƯỚNG VUỐT:
-    // Nếu đi lùi (Quay lại hoặc Về trang chủ) -> Vuốt màn hình sang Phải
     if (path === -1 || path === "/") {
       setSlideDirection("translate-x-12");
     } else {
-      // Nếu đi tới (Checkout thanh toán) -> Vuốt màn hình sang Trái
       setSlideDirection("-translate-x-12");
     }
-
-    setIsExiting(true); // Bật hiệu ứng
+    setIsExiting(true);
     setTimeout(() => {
       if (path === -1) navigate(-1);
       else navigate(path);
-    }, 400); // Chuyển trang thực sự sau 400ms
+    }, 400);
   };
 
+  // =================================================================
+  // STATE TOAST & MODAL
+  // =================================================================
   const [itemToDelete, setItemToDelete] = useState(null);
   const [toast, setToast] = useState({
     show: false,
     message: "",
     type: "success",
   });
+  const toastTimerRef = useRef(null); // Tránh giật khi bấm liên tục
+
+  const showToast = (message, type = "success") => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ show: true, message, type });
+    toastTimerRef.current = setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 2500);
+  };
 
   const handleSelectProduct = (id) => {
     setSelectIdItem((prev) =>
@@ -91,29 +98,22 @@ function Cart() {
   const shippingFee = selectedProducts.length > 0 ? 20000 : 0;
   const finalTotal = Math.max(subtotal - discount + shippingFee, 0);
 
+  // =================================================================
+  // XỬ LÝ CHỐT ĐƠN
+  // =================================================================
   const handleCheckout = () => {
     if (selectedProducts.length === 0) {
-      setShowError(true);
-      setTimeout(() => setShowError(false), 3000);
+      showToast("Bạn chưa chọn sản phẩm nào để thanh toán kìa!", "error");
       return;
     }
-
     addToPayment(selectedProducts);
-    handleNavigate("/checkout"); // Sẽ tự trượt sang trái do logic ở trên
-  };
-
-  const showToast = (message, type = "success") => {
-    setToast({ show: true, message, type });
-    setTimeout(
-      () => setToast({ show: false, message: "", type: "success" }),
-      2500,
-    );
+    handleNavigate("/checkout");
   };
 
   const confirmRemove = async () => {
     if (itemToDelete) {
       await removeProductCart(itemToDelete.id);
-      showToast(`Đã xoá ${itemToDelete.name} khỏi giỏ!`);
+      showToast(`Đã xoá ${itemToDelete.name} khỏi giỏ!`, "success");
       setItemToDelete(null);
     }
   };
@@ -121,9 +121,6 @@ function Cart() {
   const allSelected =
     cartItems.length > 0 && selectIdItem.length === cartItems.length;
 
-  // =================================================================
-  // GIAO DIỆN KHI GIỎ HÀNG TRỐNG
-  // =================================================================
   if (cartItems.length === 0) {
     return (
       <div
@@ -163,9 +160,6 @@ function Cart() {
     );
   }
 
-  // =================================================================
-  // GIAO DIỆN KHI GIỎ HÀNG CÓ ĐỒ
-  // =================================================================
   return (
     <>
       <div
@@ -363,50 +357,58 @@ function Cart() {
               </div>
             </aside>
           </div>
-
-          {showError && (
-            <div className="fixed bottom-7 left-1/2 z-50 -translate-x-1/2 rounded-full bg-rose-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(225,29,72,0.35)] animate-in slide-in-from-bottom-5">
-              Bạn chưa chọn sản phẩm nào để thanh toán kìa!
-            </div>
-          )}
         </div>
       </div>
 
-      {/* MODAL XÁC NHẬN XOÁ (ĐƯỢC ĐƯA RA NGOÀI ĐỂ KHÔNG BỊ TRƯỢT THEO TRANG) */}
-      {itemToDelete && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl text-center animate-in zoom-in-95 duration-200">
-            <div className="mx-auto w-12 h-12 bg-rose-50 rounded-full flex items-center justify-center mb-4">
-              <Trash2 className="text-rose-500" size={24} />
+      {/* DÙNG PORTAL BẮN THẲNG RA DOCUMENT.BODY */}
+      {itemToDelete &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl text-center animate-in zoom-in-95 duration-200">
+              <div className="mx-auto w-12 h-12 bg-rose-50 rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="text-rose-500" size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-zinc-900">Xoá sản phẩm?</h3>
+              <p className="text-sm text-zinc-500 mt-2 mb-6">
+                Bạn có chắc muốn xoá <b>{itemToDelete.name}</b> ra khỏi giỏ
+                không?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setItemToDelete(null)}
+                  className="flex-1 py-2.5 rounded-xl bg-zinc-100 font-semibold text-zinc-700 cursor-pointer hover:bg-zinc-200 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={confirmRemove}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-600 font-semibold text-white cursor-pointer hover:bg-rose-700 transition-colors"
+                >
+                  Xoá
+                </button>
+              </div>
             </div>
-            <h3 className="text-lg font-bold text-zinc-900">Xoá sản phẩm?</h3>
-            <p className="text-sm text-zinc-500 mt-2 mb-6">
-              Bạn có chắc muốn xoá <b>{itemToDelete.name}</b> ra khỏi giỏ không?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setItemToDelete(null)}
-                className="flex-1 py-2.5 rounded-xl bg-zinc-100 font-semibold text-zinc-700 cursor-pointer hover:bg-zinc-200 transition-colors"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={confirmRemove}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 font-semibold text-white cursor-pointer hover:bg-rose-700 transition-colors"
-              >
-                Xoá
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
-      {/* TOAST THÔNG BÁO KẾT QUẢ */}
-      {toast.show && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-3 rounded-full bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-10">
-          <CheckCircle2 size={20} /> {toast.message}
-        </div>
-      )}
+      {/* DÙNG PORTAL BẮN THẲNG RA DOCUMENT.BODY */}
+      {toast.show &&
+        createPortal(
+          <div
+            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3 rounded-full px-6 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-10 ${
+              toast.type === "error" ? "bg-rose-500" : "bg-emerald-600"
+            }`}
+          >
+            {toast.type === "error" ? (
+              <XCircle size={20} />
+            ) : (
+              <CheckCircle2 size={20} />
+            )}
+            {toast.message}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

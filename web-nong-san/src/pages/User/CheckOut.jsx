@@ -23,6 +23,7 @@ import {
   User,
   Phone,
   Trash2,
+  CheckCircle2,
 } from "lucide-react";
 import { CheckoutContext } from "../../context/CheckoutContext";
 import { useAuth } from "../../context/AuthContext";
@@ -272,7 +273,7 @@ function CheckOut() {
       await new Promise((resolve) => setTimeout(resolve, 1200));
 
       setShowQRModal(false);
-      showToast("Đặt hàng thành công! Đang chuyển trang...", "success");
+      showToast("Đặt hàng thành công! Sang trang đơn hàng...", "success");
 
       setTimeout(() => {
         handleNavigate("/order");
