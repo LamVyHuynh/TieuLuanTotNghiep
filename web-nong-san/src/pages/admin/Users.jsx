@@ -8,7 +8,6 @@ import {
   Search,
   UserPlus,
   Users,
-  Store,
   Lock,
   Edit,
   Trash2,

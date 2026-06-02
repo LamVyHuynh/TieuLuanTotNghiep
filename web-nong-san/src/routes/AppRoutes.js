@@ -16,7 +16,7 @@ import LogsPage from "../pages/admin/LogsPage";
 import UserLayout from "../layouts/UserLayout";
 import AdminLayout from "../layouts/AdminLayout";
 import ProtectedRoute from "./ProtectedRoute";
-
+import AddressPage from "../pages/admin/Address";
 const publicRoutes = [
   {
     // path :"/", element UserLayout là dùng dùng để bọc nguyên lại
@@ -44,6 +44,7 @@ const publicRoutes = [
         children: [
           { index: true, element: Dashboard },
           { path: "users", element: Users },
+          { path: "addresses", element: AddressPage },
           { path: "products", element: Products },
           { path: "categories", element: CategoriesPage },
           { path: "orders", element: Orders },

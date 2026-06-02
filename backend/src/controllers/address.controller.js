@@ -3,10 +3,12 @@ const {
   getAllAddresses,
   addAddress,
   deleteAddress,
+  getAllAddressesForAdmin,
 } = require("../services/address.service");
 
 // 1. IMPORT MÁY DỊCH MÃ
 const { encodeId, decodeId } = require("../../utils/hashid.util");
+const { get } = require("../routes/address.routes");
 
 async function getDefaultAddressUser(req, res) {
   try {
@@ -100,9 +102,27 @@ const deleteAddressUser = async (req, res) => {
   }
 };
 
+// Trang admin: lấy tất cả địa chỉ của tất cả người dùng
+async function getAdminAllAddresses(req, res) {
+  try {
+    const addresses = await getAllAddressesForAdmin();
+
+    const safeAddresses = addresses.map((addr) => ({
+      ...addr,
+      id_address: encodeId(addr.id_address),
+      user_id: encodeId(addr.user_id),
+    }));
+    res.status(200).json({ success: true, data: safeAddresses });
+  } catch (error) {
+    console.error("Lỗi lấy tất cả địa chỉ cho admin:", error);
+
+    res.status(500).json({ message: "Lỗi server khi lấy địa chỉ" });
+  }
+}
 module.exports = {
   getDefaultAddressUser,
   getAllAddressesUser,
   addAddressUser,
   deleteAddressUser,
+  getAdminAllAddresses,
 };
