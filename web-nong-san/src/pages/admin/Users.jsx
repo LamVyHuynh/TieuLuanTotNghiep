@@ -879,9 +879,15 @@ function UsersPage() {
                       </td>
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                          <span
-                            className={`h-2 w-2 rounded-full ${status.color}`}
-                          />
+                          {/* Nếu đang hoạt động thì cho nháy nháy màu xanh, bị khoá thì chấm đỏ đứng im */}
+                          {user.is_active === 1 || user.is_active === true ? (
+                            <span className="flex h-2.5 w-2.5 relative">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                          ) : (
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                          )}
                           {status.name}
                         </div>
                       </td>
