@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   MapPin,
   Phone,
@@ -9,7 +9,8 @@ import {
   Trash2,
   X,
   Save,
-  AlertTriangle,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -29,6 +30,24 @@ function AddressPage() {
     address: "",
     is_default: 0,
   });
+
+  // =================================================================
+  // TOAST THÔNG BÁO (THAY THẾ ALERT PHÈN)
+  // =================================================================
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success", // "success" hoặc "error"
+  });
+  const toastTimerRef = useRef(null);
+
+  const showToast = (message, type = "success") => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ show: true, message, type });
+    toastTimerRef.current = setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 2500);
+  };
 
   const fetchAddresses = async () => {
     try {
@@ -61,9 +80,9 @@ function AddressPage() {
       );
       setIsDeleteModalOpen(false);
       fetchAddresses(); // Load lại data
-      alert("Xóa thành công!");
+      showToast("Đã xóa địa chỉ thành công!");
     } catch (error) {
-      alert("Lỗi khi xoá địa chỉ!" + error.message);
+      showToast("Lỗi khi xoá địa chỉ: " + error.message, "error");
     }
   };
 
@@ -89,31 +108,52 @@ function AddressPage() {
       );
       setIsEditModalOpen(false);
       fetchAddresses(); // Load lại data
-      alert("Cập nhật thành công!");
+      showToast("Cập nhật địa chỉ thành công!");
     } catch (error) {
-      alert("Lỗi cập nhật địa chỉ!", error.message);
+      showToast("Lỗi cập nhật địa chỉ: " + error.message, "error");
     }
   };
 
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center p-8">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent"></div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent"></div>
+          <p className="font-semibold text-slate-500">
+            Đang tải dữ liệu địa chỉ...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-8 animate-in fade-in duration-500">
+    <div className="p-6 md:p-8 animate-in fade-in duration-500 relative">
+      {/* HEADER TỔNG QUAN */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
             <MapPin className="text-emerald-600" size={28} /> Quản lý Địa Chỉ
             Giao Hàng
           </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Hiển thị toàn bộ địa chỉ mà khách hàng đã thiết lập trên hệ thống
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 border border-slate-200 shadow-sm">
+          <span className="flex h-3 w-3 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </span>
+          <span className="text-sm font-bold text-slate-700">
+            Tổng cộng:{" "}
+            <span className="text-emerald-600">{addresses.length}</span> địa chỉ
+          </span>
         </div>
       </div>
 
+      {/* BẢNG DỮ LIỆU */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-600">
@@ -133,7 +173,10 @@ function AddressPage() {
                     colSpan="5"
                     className="px-6 py-12 text-center text-slate-500"
                   >
-                    Chưa có địa chỉ nào
+                    <Home className="mx-auto h-12 w-12 text-slate-300 mb-3" />
+                    <p className="text-base font-semibold">
+                      Chưa có địa chỉ nào trên hệ thống
+                    </p>
                   </td>
                 </tr>
               ) : (
@@ -162,11 +205,15 @@ function AddressPage() {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 font-semibold text-slate-700">
                           <User size={14} className="text-slate-400" />
-                          {addr.receiver_name || "Trống"}
+                          {addr.receiver_name || (
+                            <span className="italic text-slate-400">Trống</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 text-slate-500">
                           <Phone size={14} className="text-slate-400" />
-                          {addr.phone || "Trống"}
+                          {addr.phone || (
+                            <span className="italic text-slate-400">Trống</span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -200,14 +247,14 @@ function AddressPage() {
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => openEditModal(addr)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
                           title="Sửa"
                         >
                           <Edit size={18} />
                         </button>
                         <button
                           onClick={() => openDeleteModal(addr)}
-                          className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                          className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                           title="Xoá"
                         >
                           <Trash2 size={18} />
@@ -222,24 +269,24 @@ function AddressPage() {
         </div>
       </div>
 
-      {/* MODAL SỬA */}
+      {/* MODAL SỬA ĐỊA CHỈ */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50">
-              <h3 className="font-bold text-lg text-slate-800">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-5 border-b border-zinc-100 bg-zinc-50/50">
+              <h3 className="font-bold text-lg text-zinc-800">
                 Sửa thông tin địa chỉ
               </h3>
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700"
+                className="text-zinc-400 hover:text-zinc-700 transition"
               >
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleEdit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                <label className="block text-sm font-semibold text-zinc-700 mb-1.5">
                   Tên người nhận
                 </label>
                 <input
@@ -248,11 +295,11 @@ function AddressPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, receiver_name: e.target.value })
                   }
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                <label className="block text-sm font-semibold text-zinc-700 mb-1.5">
                   Số điện thoại
                 </label>
                 <input
@@ -261,11 +308,11 @@ function AddressPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, phone: e.target.value })
                   }
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                <label className="block text-sm font-semibold text-zinc-700 mb-1.5">
                   Địa chỉ chi tiết
                 </label>
                 <textarea
@@ -275,10 +322,10 @@ function AddressPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, address: e.target.value })
                   }
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition"
                 ></textarea>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pt-2">
                 <input
                   type="checkbox"
                   id="is_default"
@@ -293,22 +340,22 @@ function AddressPage() {
                 />
                 <label
                   htmlFor="is_default"
-                  className="text-sm font-medium text-slate-700 cursor-pointer"
+                  className="text-sm font-medium text-zinc-700 cursor-pointer"
                 >
                   Đặt làm địa chỉ mặc định
                 </label>
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100 mt-6">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
+                  className="px-5 py-2.5 text-sm font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm"
+                  className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition cursor-pointer"
                 >
                   <Save size={16} /> Lưu thay đổi
                 </button>
@@ -318,35 +365,49 @@ function AddressPage() {
         </div>
       )}
 
-      {/* MODAL XÓA */}
+      {/* MODAL XÓA ĐỊA CHỈ (Chuẩn Style Giỏ Hàng) */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 text-center p-6">
-            <div className="w-14 h-14 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle size={28} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl text-center animate-in zoom-in-95 duration-200">
+            <div className="mx-auto w-12 h-12 bg-rose-50 rounded-full flex items-center justify-center mb-4">
+              <Trash2 className="text-rose-500" size={24} />
             </div>
-            <h3 className="font-bold text-xl text-slate-800 mb-2">
-              Xác nhận xoá?
-            </h3>
-            <p className="text-slate-500 text-sm mb-6">
-              Bạn có chắc chắn muốn xoá địa chỉ này khỏi hệ thống? Hành động này
-              không thể hoàn tác.
+            <h3 className="text-lg font-bold text-zinc-900">Xoá địa chỉ?</h3>
+            <p className="text-sm text-zinc-500 mt-2 mb-6">
+              Bạn có chắc muốn xoá địa chỉ của{" "}
+              <b>{selectedAddress?.user_name}</b> khỏi hệ thống không?
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="flex-1 py-2.5 font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl"
+                className="flex-1 py-2.5 rounded-xl bg-zinc-100 font-semibold text-zinc-700 cursor-pointer hover:bg-zinc-200 transition-colors"
               >
                 Hủy
               </button>
               <button
                 onClick={handleDelete}
-                className="flex-1 py-2.5 font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-sm"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 font-semibold text-white cursor-pointer hover:bg-rose-700 transition-colors"
               >
-                Xoá ngay
+                Xoá
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* TOAST THÔNG BÁO */}
+      {toast.show && (
+        <div
+          className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 rounded-full px-6 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-10 ${
+            toast.type === "error" ? "bg-rose-500" : "bg-emerald-600"
+          }`}
+        >
+          {toast.type === "error" ? (
+            <XCircle size={20} />
+          ) : (
+            <CheckCircle2 size={20} />
+          )}
+          {toast.message}
         </div>
       )}
     </div>
