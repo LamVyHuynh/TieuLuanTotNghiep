@@ -6,6 +6,8 @@ const {
   addAddressUser,
   deleteAddressUser,
   getAdminAllAddresses,
+  updateAddressForAdminController,
+  deleteAddressForAdminController,
 } = require("../controllers/address.controller");
 const { authenticateToken } = require("../middlewares/auth.middleware");
 
@@ -23,5 +25,8 @@ router.delete("/:id", authenticateToken, deleteAddressUser);
 
 // Route admin: lấy tất cả địa chỉ của tất cả người dùng
 router.get("/admin/users-addresses", authenticateToken, getAdminAllAddresses);
+
+router.put("/admin/:id", authenticateToken, updateAddressForAdminController);
+router.delete("/admin/:id", authenticateToken, deleteAddressForAdminController);
 
 module.exports = router;

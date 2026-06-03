@@ -3,6 +3,8 @@ const {
   getAllAddresses,
   addAddress,
   deleteAddress,
+  updateAddressAdmin,
+  deleteAddressAdmin,
   getAllAddressesForAdmin,
 } = require("../services/address.service");
 
@@ -102,6 +104,47 @@ const deleteAddressUser = async (req, res) => {
   }
 };
 
+// Hàm cập nhật địa chỉ
+const updateAddressForAdminController = async (req, res) => {
+  try {
+    const realAddressId = decodeId(req.params.id);
+    if (!realAddressId)
+      return res
+        .status(400)
+        .json({ success: false, message: "ID không hợp lệ" });
+
+    const isUpdated = await updateAddressAdmin(realAddressId, req.body);
+    if (isUpdated)
+      res.status(200).json({ success: true, message: "Cập nhật thành công" });
+    else
+      res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy địa chỉ" });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
+const deleteAddressForAdminController = async (req, res) => {
+  try {
+    const realAddressId = decodeId(req.params.id);
+    if (!realAddressId)
+      return res
+        .status(400)
+        .json({ success: false, message: "ID không hợp lệ" });
+
+    const isDeleted = await deleteAddressAdmin(realAddressId);
+    if (isDeleted)
+      res.status(200).json({ success: true, message: "Đã xoá địa chỉ" });
+    else
+      res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy địa chỉ" });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
 // Trang admin: lấy tất cả địa chỉ của tất cả người dùng
 async function getAdminAllAddresses(req, res) {
   try {
@@ -124,5 +167,7 @@ module.exports = {
   getAllAddressesUser,
   addAddressUser,
   deleteAddressUser,
+  updateAddressForAdminController,
+  deleteAddressForAdminController,
   getAdminAllAddresses,
 };

@@ -56,6 +56,29 @@ async function deleteAddress(addressId, userId) {
   return result.affectedRows > 0;
 }
 
+// Cập nhật địa chỉ của người dùng
+async function updateAddressAdmin(addressId, addressData) {
+  const { receiver_name, phone, address, is_default } = addressData;
+  const updateQuery = `UPDATE user_addresses SET receiver_name = ?, phone = ?, address = ?, is_default = ? WHERE id_address = ?`;
+  const [result] = await pool.execute(updateQuery, [
+    receiver_name || null,
+    phone || null,
+    address,
+    is_default,
+    addressId,
+  ]);
+  return result.affectedRows > 0;
+}
+
+// Hàm xoá địa chỉ cho admin
+async function deleteAddressAdmin(addressId) {
+  const [result] = await pool.execute(
+    "DELETE FROM user_addresses WHERE id_address = ?",
+    [addressId],
+  );
+  return result.affectedRows > 0;
+}
+
 // Trang admin: lấy tất cả địa chỉ của tất cả người dùng
 
 async function getAllAddressesForAdmin() {
@@ -68,5 +91,7 @@ module.exports = {
   getAllAddresses,
   addAddress,
   deleteAddress,
+  updateAddressAdmin,
+  deleteAddressAdmin,
   getAllAddressesForAdmin,
 };

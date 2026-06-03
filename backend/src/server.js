@@ -70,7 +70,6 @@ app.use("/cart", cartRoutes);
 // app.use("/login", authRoutes);
 
 // gắn router địa chỉ
-
 app.use("/addresses", addressRoutes);
 
 // Kiểm tra route
