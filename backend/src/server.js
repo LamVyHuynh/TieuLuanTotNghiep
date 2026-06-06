@@ -27,6 +27,8 @@ const cartRoutes = require("./routes/cart.routes");
 // Import router địa chỉ
 const addressRoutes = require("./routes/address.routes");
 
+// import router đơn hàng
+const orderRoutes = require("./routes/order.routes");
 // Import cookie-parser để đọc cookie từ request header
 const cookieParser = require("cookie-parser");
 
@@ -71,6 +73,9 @@ app.use("/cart", cartRoutes);
 
 // gắn router địa chỉ
 app.use("/addresses", addressRoutes);
+
+// gắn router đơn hàng
+app.use("/orders", orderRoutes);
 
 // Kiểm tra route
 app.get("/", (req, res) => {
