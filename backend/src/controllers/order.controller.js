@@ -1,5 +1,9 @@
-const { createOrderTransaction } = require("../services/order.service");
+const {
+  createOrderTransaction,
+  getOrdersByUserId,
+} = require("../services/order.service");
 const { encodeId, decodeId } = require("../../utils/hashid.util");
+const { get } = require("../routes/auth.routes");
 
 const createOrder = async (req, res) => {
   try {
@@ -76,6 +80,29 @@ const createOrder = async (req, res) => {
   }
 };
 
+// Controller lấy đơn hàng theo user (dùng cho trang Lịch sử đơn hàng)
+const getOrdersHistory = async (req, res) => {
+  try {
+    const userId = req.user.id; // Lấy ID người dùng từ token đã xác thực
+    const orders = await getOrdersByUserId(userId);
+    res.status(200).json({
+      success: true,
+      orders: orders.map((order) => ({
+        ...order,
+        id_order: encodeId(order.id_order), // Mã hóa ID đơn hàng trước khi gửi về client
+      })),
+    });
+  } catch (error) {
+    console.error("Lỗi lấy lịch sử đơn hàng:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy lịch sử đơn hàng",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createOrder,
+  getOrdersHistory,
 };

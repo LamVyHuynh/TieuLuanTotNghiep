@@ -254,34 +254,45 @@ function CheckOut() {
     executeOrder();
   };
 
+  // --- THỰC THI GỌI API BACKEND ĐỂ CHỐT ĐƠN ---
   const executeOrder = async () => {
     setIsSubmitting(true);
     try {
+      // Chuẩn bị Payload y chang tên biến mà Controller của mày mong đợi
       const orderPayload = {
-        fullName: currentUser?.full_name,
+        full_name: currentUser?.full_name,
         phone: currentUser?.phone,
         address: selectedAddress.address,
         note: note,
-        paymentMethod: paymentMethod,
-        items: checkoutList,
-        totalAmount: total,
+        payment_method: paymentMethod,
+        total_amount: total,
+        // Map lại mảng items cho chuẩn (đặc biệt là cái id_product)
+        items: checkoutList.map((item) => ({
+          id_product: item.id_product, // ID HashID bọc thép
+          name: item.name, // Nhớ gửi cả name lên để lưu order_items
+          quantity: item.quantity,
+          price: item.price,
+        })),
       };
 
       console.log("Dữ liệu gửi chốt đơn:", orderPayload);
 
-      // TODO: Viết API POST /orders/create và gọi ở đây
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      // Gọi API thực tế xuống Backend
+      await axiosClient.post("/orders/checkout", orderPayload);
 
       setShowQRModal(false);
       showToast("Đặt hàng thành công! Sang trang đơn hàng...", "success");
 
+      // Đợi Toast chạy xong thì chuyển hướng qua Lịch sử mua hàng
       setTimeout(() => {
         handleNavigate("/order");
       }, 1500);
     } catch (error) {
+      console.error("Lỗi đặt hàng:", error);
+      // Bắt lỗi Hết hàng hoặc Thiếu thông tin từ Backend trả về
       showToast(
-        "Lỗi khi đặt hàng, vui lòng thử lại!",
-        error.message || "error",
+        error.response?.data?.message || "Lỗi khi đặt hàng, vui lòng thử lại!",
+        "error",
       );
     } finally {
       setIsSubmitting(false);
@@ -291,7 +302,11 @@ function CheckOut() {
   if (!product) {
     return (
       <div
-        className={`mx-auto max-w-[560px] px-4 py-20 text-center sm:px-6 lg:px-10 transform transition-all duration-500 ease-in-out ${isExiting ? `${slideDirection} opacity-0` : "translate-x-0 opacity-100"}`}
+        className={`mx-auto max-w-[560px] px-4 py-20 text-center sm:px-6 lg:px-10 transform transition-all duration-500 ease-in-out ${
+          isExiting
+            ? `${slideDirection} opacity-0`
+            : "translate-x-0 opacity-100"
+        }`}
       >
         <div className="mx-auto mb-5 flex h-[84px] w-[84px] items-center justify-center rounded-full border-4 border-slate-200 text-4xl text-slate-400">
           :(
@@ -315,7 +330,11 @@ function CheckOut() {
   return (
     <>
       <div
-        className={`min-h-screen bg-[#f6f8f4] text-slate-900 transform transition-all duration-500 ease-in-out ${isExiting ? `${slideDirection} opacity-0` : "translate-x-0 opacity-100"}`}
+        className={`min-h-screen bg-[#f6f8f4] text-slate-900 transform transition-all duration-500 ease-in-out ${
+          isExiting
+            ? `${slideDirection} opacity-0`
+            : "translate-x-0 opacity-100"
+        }`}
       >
         <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur-md">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-10">
@@ -573,7 +592,9 @@ function CheckOut() {
 
                 <div className="p-6">
                   <button
-                    className={`flex items-center justify-center gap-2 w-full cursor-pointer rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] py-4 text-lg font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.22)] transition hover:scale-[1.02] ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""}`}
+                    className={`flex items-center justify-center gap-2 w-full cursor-pointer rounded-xl bg-[linear-gradient(135deg,#006e1c_0%,#4caf50_100%)] py-4 text-lg font-bold text-white shadow-[0_18px_35px_rgba(5,150,105,0.22)] transition hover:scale-[1.02] ${
+                      isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+                    }`}
                     disabled={isSubmitting}
                     onClick={handlePlaceOrder}
                   >
@@ -781,7 +802,11 @@ function CheckOut() {
                 <button
                   onClick={executeOrder}
                   disabled={isSubmitting}
-                  className={`w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-md transition cursor-pointer ${isSubmitting ? "bg-slate-400" : "bg-[#a50064] hover:bg-[#80004d]"}`}
+                  className={`w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-md transition cursor-pointer ${
+                    isSubmitting
+                      ? "bg-slate-400"
+                      : "bg-[#a50064] hover:bg-[#80004d]"
+                  }`}
                 >
                   {isSubmitting ? "Đang xử lý..." : "Tôi đã chuyển khoản xong"}
                 </button>
@@ -795,7 +820,9 @@ function CheckOut() {
       {toast.show &&
         createPortal(
           <div
-            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3 rounded-full px-5 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-5 ${toast.type === "success" ? "bg-emerald-600" : "bg-rose-500"}`}
+            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3 rounded-full px-5 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-5 ${
+              toast.type === "success" ? "bg-emerald-600" : "bg-rose-500"
+            }`}
           >
             {toast.type === "success" ? (
               <CheckCircle2 size={20} />

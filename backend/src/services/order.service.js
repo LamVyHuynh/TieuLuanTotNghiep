@@ -61,6 +61,50 @@ async function createOrderTransaction(userId, orderData, items) {
   }
 }
 
+// Hàm lấy dữ liệu đơn hàng theo từng user (dùng cho trang Lịch sử đơn hàng)
+// Hàm lấy dữ liệu đơn hàng + chi tiết sản phẩm theo từng user
+async function getOrdersByUserId(userId) {
+  // BƯỚC 1: Lấy danh sách các đơn hàng của thằng User này
+  const orderQuery = `
+    SELECT id_order, total_amount, status, created_at 
+    FROM orders 
+    WHERE user_id = ? 
+    ORDER BY created_at DESC
+  `;
+  const [orders] = await pool.execute(orderQuery, [userId]);
+
+  // NẾU KHÔNG CÓ ĐƠN NÀO -> Trả về mảng rỗng luôn cho lẹ, khỏi làm tiếp
+  if (orders.length === 0) {
+    return [];
+  }
+
+  // BƯỚC 2: Rút trích ra một mảng chỉ chứa các ID đơn hàng (Ví dụ: [125, 126, 127])
+  const orderIds = orders.map((order) => order.id_order);
+
+  // BƯỚC 3: Quét 1 phát lấy ra TOÀN BỘ order_items thuộc về các ID ở trên
+  // Tạo ra chuỗi dấu ? tương ứng với số lượng đơn hàng (Ví dụ: "?, ?, ?")
+  const placeholders = orderIds.map(() => "?").join(",");
+  const itemQuery = `
+    SELECT id_order, id_product, product_name, quantity, price 
+    FROM order_items 
+    WHERE id_order IN (${placeholders})
+  `;
+  // Truyền mảng orderIds vào để thay thế cho các dấu ?
+  const [items] = await pool.execute(itemQuery, orderIds);
+
+  // BƯỚC 4: Lắp ráp đồ chơi - Nhét các items vào đúng cái bụng của đơn hàng chứa nó
+  const finalOrders = orders.map((order) => {
+    return {
+      ...order,
+      // Lọc ra những món hàng có id_order khớp với đơn hàng đang lặp
+      items: items.filter((item) => item.id_order === order.id_order),
+    };
+  });
+
+  return finalOrders;
+}
+
 module.exports = {
   createOrderTransaction,
+  getOrdersByUserId,
 };
