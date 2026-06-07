@@ -134,7 +134,7 @@ function Order() {
             <p className="text-slate-500">Bạn chưa có đơn hàng nào.</p>
             <button
               onClick={() => handleNavigate("/")}
-              className="mt-4 text-emerald-600 font-bold hover:underline"
+              className="mt-4 text-emerald-600 font-bold hover:underline cursor-pointer"
             >
               Mua sắm ngay!
             </button>

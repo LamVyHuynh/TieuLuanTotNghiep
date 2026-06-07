@@ -1,6 +1,7 @@
 const {
   createOrderTransaction,
   getOrdersByUserId,
+  getAllOrdersForAdmin,
 } = require("../services/order.service");
 const { encodeId, decodeId } = require("../../utils/hashid.util");
 const { get } = require("../routes/auth.routes");
@@ -102,7 +103,29 @@ const getOrdersHistory = async (req, res) => {
   }
 };
 
+// lấy đơn hàng của admin
+const getAllOrdersAdmin = async (req, res) => {
+  try {
+    const orders = await getAllOrdersForAdmin();
+    res.status(200).json({
+      success: true,
+      orders: orders.map((order) => ({
+        ...order,
+        id_order: encodeId(order.id_order), // Mã hóa ID đơn hàng trước khi gửi về client
+      })),
+    });
+  } catch (error) {
+    console.error("Lỗi lấy tất cả đơn hàng cho admin:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy tất cả đơn hàng cho admin",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrdersHistory,
+  getAllOrdersAdmin,
 };

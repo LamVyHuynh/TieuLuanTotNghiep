@@ -104,7 +104,43 @@ async function getOrdersByUserId(userId) {
   return finalOrders;
 }
 
+// Lấy tất cả các đơn hàng của admin
+async function getAllOrdersForAdmin() {
+  // 1. Lấy tất cả đơn hàng từ mới nhất đến cũ nhất
+  const orderQuery = `
+    SELECT id_order, full_name, payment_method, total_amount, status, created_at 
+    FROM orders 
+    ORDER BY created_at DESC
+  `;
+  const [orders] = await pool.execute(orderQuery);
+
+  if (orders.length === 0) {
+    return [];
+  }
+
+  // Gom tất cả các ID đơn hàng lại
+  const orderIds = orders.map((order) => order.id_order);
+  const placeholders = orderIds.map(() => "?").join(",");
+
+  // lấy tất cả món hàng thuộc về các đơn hàng trên
+  const itemQuery = `
+    SELECT id_order, product_name, quantity 
+    FROM order_items 
+    WHERE id_order IN (${placeholders})
+  `;
+  const [items] = await pool.execute(itemQuery, orderIds);
+
+  // Lắp ráp lại đơn hàng với món hàng
+  const finalOrders = orders.map((order) => {
+    return {
+      ...order,
+      items: items.filter((item) => item.id_order === order.id_order),
+    };
+  });
+  return finalOrders;
+}
 module.exports = {
   createOrderTransaction,
   getOrdersByUserId,
+  getAllOrdersForAdmin,
 };
