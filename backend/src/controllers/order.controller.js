@@ -2,6 +2,7 @@ const {
   createOrderTransaction,
   getOrdersByUserId,
   getAllOrdersForAdmin,
+  updateOrderStatus,
 } = require("../services/order.service");
 const { encodeId, decodeId } = require("../../utils/hashid.util");
 const { get } = require("../routes/auth.routes");
@@ -124,8 +125,52 @@ const getAllOrdersAdmin = async (req, res) => {
   }
 };
 
+// Hàm cập nhật trạng thái đơn hàng (dùng cho admin)
+const updateOrderStatusAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const realOrderId = decodeId(id);
+    if (!realOrderId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Mã đơn hàng không hợp lệ!" });
+    }
+
+    const validStatuses = [
+      "pending",
+      "processing",
+      "shipping",
+      "completed",
+      "cancelled",
+    ];
+    if (!validStatuses.includes(status)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Trạng thái đơn hàng không hợp lệ!" });
+    }
+
+    // Gọi Service để cập nhật trạng thái đơn hàng
+    await updateOrderStatus(realOrderId, status);
+
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật trạng thái đơn hàng thành công!",
+    });
+  } catch (error) {
+    console.error("Lỗi cập nhật trạng thái đơn hàng:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi cập nhật trạng thái đơn hàng",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrdersHistory,
   getAllOrdersAdmin,
+  updateOrderStatusAdmin,
 };

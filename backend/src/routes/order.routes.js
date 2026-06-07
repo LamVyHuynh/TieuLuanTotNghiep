@@ -5,6 +5,7 @@ const {
   createOrder,
   getOrdersHistory,
   getAllOrdersAdmin,
+  updateOrderStatusAdmin,
 } = require("../controllers/order.controller");
 
 // Route để tạo đơn hàng mới
@@ -15,5 +16,8 @@ router.get("/history", authenticateToken, getOrdersHistory);
 
 // Route để lấy tất cả đơn hàng cho admin
 router.get("/admin/all", authenticateToken, getAllOrdersAdmin);
+
+// Route để cập nhật trạng thái đơn hàng (dùng cho admin)
+router.put("/admin/:id/status", authenticateToken, updateOrderStatusAdmin);
 
 module.exports = router;

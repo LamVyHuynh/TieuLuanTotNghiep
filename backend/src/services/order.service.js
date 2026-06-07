@@ -139,8 +139,44 @@ async function getAllOrdersForAdmin() {
   });
   return finalOrders;
 }
+
+// Hàm cập nhật trạng thái đơn hàng (dùng cho admin)
+async function updateOrderStatus(orderId, newStatus) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // Cập nhật trạng thái đơn hàng
+    const updateOrderStatusQuery = `UPDATE orders SET status = ? WHERE id_order = ?`;
+    await conn.execute(updateOrderStatusQuery, [newStatus, orderId]);
+
+    if (newStatus === "cancelled") {
+      // Lấy danh sách tất cả các món hàng
+      const [items] = await conn.execute(
+        `SELECT id_product, quantity FROM order_items WHERE id_order = ?`,
+        [orderId],
+      );
+
+      // trả lại số lượng sản phẩm vào kho
+      for (const item of items) {
+        await conn.execute(
+          `UPDATE product SET stock_quantity = stock_quantity + ? WHERE id_product = ?`,
+          [item.quantity, item.id_product],
+        );
+      }
+    }
+    await conn.commit();
+    return true;
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
+}
 module.exports = {
   createOrderTransaction,
   getOrdersByUserId,
   getAllOrdersForAdmin,
+  updateOrderStatus,
 };
