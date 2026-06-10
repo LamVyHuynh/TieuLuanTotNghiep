@@ -4,10 +4,9 @@ const {
   getAllOrdersForAdmin,
   updateOrderStatus,
   getDashboardStats,
+  getDetailReport,
 } = require("../services/order.service");
 const { encodeId, decodeId } = require("../../utils/hashid.util");
-const { get } = require("../routes/auth.routes");
-const { ca } = require("zod/v4/locales");
 
 const createOrder = async (req, res) => {
   try {
@@ -200,10 +199,23 @@ const getDashboardReview = async (req, res) => {
   }
 };
 
+// Nhớ import getDetailedReports từ service lên trên cùng nhé!
+const getReportsAdmin = async (req, res) => {
+  try {
+    const data = await getDetailReport();
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server khi lấy báo cáo" });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrdersHistory,
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
   getDashboardReview,
+  getReportsAdmin,
 };

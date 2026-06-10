@@ -7,6 +7,7 @@ const {
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
   getDashboardReview,
+  getReportsAdmin,
 } = require("../controllers/order.controller");
 
 // Route để tạo đơn hàng mới
@@ -23,5 +24,8 @@ router.put("/admin/:id/status", authenticateToken, updateOrderStatusAdmin);
 
 // Route để lấy thống kê đánh giá cho dashboard admin
 router.get("/admin/dashboard", authenticateToken, getDashboardReview);
+
+// Route để lấy báo cáo chi tiết cho admin
+router.get("/admin/reports", authenticateToken, getReportsAdmin);
 
 module.exports = router;

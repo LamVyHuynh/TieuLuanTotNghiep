@@ -230,10 +230,112 @@ async function getDashboardStats() {
     throw error;
   }
 }
+
+// Báo cáo chi tiết doanh thu theo tháng (dùng cho admin)
+async function getDetailReport() {
+  try {
+    // 1.Tính giá trị đơn hàng trung bình (AOV)
+    const aovQuery = `SELECT AVG(total_amount) AS aov FROM orders WHERE status != 'cancelled'`;
+
+    // 2. Tính tỷ lệ huỷ đơn hàng
+    const cancelQuery = `SELECT 
+        COUNT(*) AS total_orders, 
+        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled_orders 
+      FROM orders`;
+
+    // 3. Cơ cấu thanh toán
+    const paymentQuery = `
+      SELECT payment_method, COUNT(*) AS count 
+      FROM orders 
+      GROUP BY payment_method
+    `;
+
+    // Đếm đơn hàng dùng phương thức thanh toán COD
+    const codCountQuery = `SELECT COUNT(*) AS cod_count FROM orders WHERE payment_method = 'cod'`;
+
+    // Đếm đơn hàng dùng phương thức thanh toán momo
+    const momoCountQuery = `SELECT COUNT(*) AS momo_count FROM orders WHERE payment_method = 'momo'`;
+
+    // Đếm đơn hàng dùng phương thức thanh toán chuyển khoản
+    const bankCountQuery = `SELECT COUNT(*) AS bank_count FROM orders WHERE payment_method = 'bank'`;
+
+    // 4. Top 5 Khách hàng VIP (Mua nhiều tiền nhất)
+    const vipQuery = `
+      SELECT full_name, COUNT(*) AS total_orders, SUM(total_amount) AS total_spent 
+      FROM orders 
+      WHERE status != 'cancelled' AND user_id IS NOT NULL 
+      GROUP BY user_id, full_name 
+      ORDER BY total_spent DESC 
+      LIMIT 5
+    `;
+
+    // 5. Doanh thu theo từng tháng trong năm
+    const monthlyRevenueQuery = `
+      SELECT MONTH(created_at) AS month, SUM(total_amount) AS total_revenue, COUNT(id_order) AS total_orders
+      FROM orders 
+      WHERE status != 'cancelled' AND YEAR(created_at) = YEAR(CURDATE())
+      GROUP BY MONTH(created_at)
+      ORDER BY month
+    `;
+
+    // 6. Doanh thu theo từng loại sản phẩm
+    const productRevenueQuery = `
+      SELECT oi.product_name, SUM(oi.quantity * oi.price) AS revenue 
+      FROM order_items oi 
+      JOIN orders o ON oi.id_order = o.id_order 
+      WHERE o.status != 'cancelled' 
+      GROUP BY oi.id_product, oi.product_name 
+      ORDER BY revenue DESC
+    `;
+
+    const [
+      [aovRes],
+      [cancelRes],
+      [paymentRes],
+      [vipRes],
+      [monthlyRaw],
+      [productRaw],
+      [codCountRes],
+      [momoCountRes],
+      [bankCountRes],
+    ] = await Promise.all([
+      pool.execute(aovQuery),
+      pool.execute(cancelQuery),
+      pool.execute(paymentQuery),
+      pool.execute(vipQuery),
+      pool.execute(monthlyRevenueQuery),
+      pool.execute(productRevenueQuery),
+      pool.execute(codCountQuery),
+      pool.execute(momoCountQuery),
+      pool.execute(bankCountQuery),
+    ]);
+
+    const totalOrders = cancelRes[0]?.total_orders || 0;
+    const cancelledOrders = cancelRes[0]?.cancelled_orders || 0;
+    const cancelRate =
+      totalOrders > 0 ? ((cancelledOrders / totalOrders) * 100).toFixed(1) : 0;
+
+    return {
+      aov: aovRes[0]?.aov || 0,
+      cancelRate: cancelRate,
+      payments: paymentRes, // Mảng các phương thức thanh toán
+      vips: vipRes, // Mảng Top VIP
+      monthlyRevenue: monthlyRaw,
+      productRevenue: productRaw,
+      codCount: codCountRes[0]?.cod_count || 0,
+      momoCount: momoCountRes[0]?.momo_count || 0,
+      bankCount: bankCountRes[0]?.bank_count || 0,
+    };
+  } catch (error) {
+    console.error("Lỗi lấy báo cáo chi tiết:", error);
+    throw error;
+  }
+}
 module.exports = {
   createOrderTransaction,
   getOrdersByUserId,
   getAllOrdersForAdmin,
   updateOrderStatus,
   getDashboardStats,
+  getDetailReport,
 };

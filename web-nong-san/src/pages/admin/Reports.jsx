@@ -1,289 +1,322 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  BarChart3,
-  ClipboardList,
-  Coffee,
-  Cookie,
-  Egg,
-  Leaf,
-  LogOut,
+  ArrowDownToLine,
+  CreditCard,
+  Truck,
   Package,
-  Settings,
   ShoppingBag,
-  Store,
+  TrendingDown,
   TrendingUp,
-  Users,
+  UserCheck,
+  UserX,
+  Wallet,
+  RefreshCcw,
 } from "lucide-react";
-
-const revenueBars = [50, 75, 60, 82, 68, 86, 100];
-
-const categoryData = [
-  { name: "Thực phẩm tươi", percent: "42%", color: "bg-emerald-600" },
-  { name: "Đồ khô", percent: "28%", color: "bg-amber-500" },
-  { name: "Thực phẩm bổ sung", percent: "15%", color: "bg-lime-600" },
-  { name: "Khác", percent: "15%", color: "bg-slate-300" },
-];
-
-const topProducts = [
-  { name: "Trứng gà organic (12 quả)", category: "Sữa & trứng", orders: "1,240", revenue: "$14,880", icon: Egg },
-  { name: "Mật ong hoa rừng 500g", category: "Đồ khô", orders: "982", revenue: "$12,766", icon: Package },
-  { name: "Kale thủy canh mix", category: "Thực phẩm tươi", orders: "855", revenue: "$6,840", icon: Leaf },
-  { name: "Cà phê rang vừa", category: "Đồ uống", orders: "720", revenue: "$18,000", icon: Coffee },
-  { name: "Yến mạch không gluten 1kg", category: "Ngũ cốc", orders: "640", revenue: "$5,120", icon: Cookie },
-];
+import axiosClient from "../../api/axiosClient";
 
 function ReportsPage() {
-  const [period, setPeriod] = useState("monthly");
+  const [isLoading, setIsLoading] = useState(true);
+  const [reportData, setReportData] = useState({
+    aov: 0,
+    cancelRate: 0,
+    payments: [],
+    vips: [],
+    codCount: 0, // 🚀 Thêm vào để hứng data thật từ Backend
+    momoCount: 0, // 🚀 Thêm vào để hứng data thật từ Backend
+    bankCount: 0, // 🚀 Thêm vào để hứng data thật từ Backend
+  });
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await axiosClient.get("/orders/admin/reports");
+        if (response.data.success) {
+          setReportData(response.data.data);
+        }
+      } catch (error) {
+        console.error("Lỗi lấy báo cáo:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchReports();
+  }, []);
+
+  // 🚀 LOGIC ĐẾM VÀ TÍNH % ĐỘNG THEO COD, MOMO, BANK THẬT
+  const codCount = Number(reportData.codCount || 0);
+  const momoCount = Number(reportData.momoCount || 0);
+  const bankCount = Number(reportData.bankCount || 0);
+
+  // Tổng số đơn của 3 loại cộng lại trực tiếp
+  const totalPaymentOrders = codCount + momoCount + bankCount;
+
+  // Hàm tính % tự động dựa trên số lượng đếm được
+  const getPaymentPercent = (count) => {
+    if (totalPaymentOrders === 0) return 0;
+    return Math.round((count / totalPaymentOrders) * 100);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-emerald-600">
+        <RefreshCcw size={40} className="animate-spin mb-4" />
+        <p className="font-bold text-lg">
+          Đang phân tích dữ liệu chuyên sâu...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8">
-          <header className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      {/* HEADER */}
+      <header className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h2 className="mb-2 text-3xl font-black tracking-[-0.04em] text-slate-900">
+            Báo cáo Tổng hợp (All-time)
+          </h2>
+          <p className="max-w-2xl text-sm leading-6 text-slate-500">
+            Phân tích tỷ lệ hủy, giá trị đơn hàng trung bình và hành vi khách
+            hàng (Real-time).
+          </p>
+        </div>
+        <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <ArrowDownToLine size={14} /> Xuất File CSV
+        </button>
+      </header>
+
+      {/* DÒNG 1: 4 CHỈ SỐ KINH DOANH CỐT LÕI */}
+      <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <article className="rounded-xl border border-slate-200/70 bg-white p-6 shadow-sm">
+          <div className="flex justify-between items-start">
             <div>
-              <h2 className="mb-2 text-3xl font-black tracking-[-0.04em] text-slate-900">
-                Báo cáo chiến lược
-              </h2>
-              <p className="max-w-2xl text-sm leading-6 text-slate-500">
-                Phân tích hiệu suất HealthyGO, xu hướng tăng trưởng và hiệu quả
-                tồn kho thông qua dữ liệu thời gian thực.
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1">
+                Giá trị ĐH Trung bình (AOV)
               </p>
+              <h4 className="text-2xl font-black text-slate-900">
+                {Math.round(reportData.aov).toLocaleString("vi-VN")}đ
+              </h4>
             </div>
-
-            <div className="inline-flex rounded-xl bg-[#eef2eb] p-1">
-              {[
-                 { id: "daily", label: "Ngày" },
-                 { id: "monthly", label: "Tháng" },
-                 { id: "yearly", label: "Năm" },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  className={`cursor-pointer rounded-lg px-6 py-2 text-xs font-bold uppercase tracking-[0.18em] transition ${
-                    period === item.id
-                      ? "bg-white text-emerald-700 shadow-sm"
-                      : "text-slate-500 hover:text-emerald-700"
-                  }`}
-                  onClick={() => setPeriod(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
+            <div className="p-2 bg-emerald-100 rounded-lg text-emerald-700">
+              <ShoppingBag size={20} />
             </div>
-          </header>
+          </div>
+          <div className="mt-4 flex items-center text-xs font-bold text-emerald-600">
+            <TrendingUp size={14} className="mr-1" /> Dữ liệu thực tế
+          </div>
+        </article>
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-            <section className="rounded-xl border border-slate-200/70 bg-white p-8 xl:col-span-8">
-              <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <article className="rounded-xl border border-slate-200/70 bg-white p-6 shadow-sm">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1">
+                Tỷ lệ Hủy/Bom hàng
+              </p>
+              <h4
+                className={`text-2xl font-black ${reportData.cancelRate > 10 ? "text-rose-600" : "text-emerald-600"}`}
+              >
+                {reportData.cancelRate}%
+              </h4>
+            </div>
+            <div className="p-2 bg-rose-100 rounded-lg text-rose-700">
+              <UserX size={20} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-xs font-bold text-slate-500">
+            {reportData.cancelRate > 10 ? (
+              <>
+                <TrendingUp size={14} className="mr-1 text-rose-500" /> Cần chú
+                ý xử lý
+              </>
+            ) : (
+              <>
+                <TrendingDown size={14} className="mr-1 text-emerald-500" />{" "}
+                Đang ở mức an toàn
+              </>
+            )}
+          </div>
+        </article>
+
+        <article className="rounded-xl border border-slate-200/70 bg-white p-6 shadow-sm opacity-80">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1">
+                Tỷ lệ giữ chân khách
+              </p>
+              <h4 className="text-2xl font-black text-slate-900">68.5%</h4>
+            </div>
+            <div className="p-2 bg-blue-100 rounded-lg text-blue-700">
+              <UserCheck size={20} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-xs font-bold text-slate-400">
+            Đang cập nhật thuật toán
+          </div>
+        </article>
+
+        <article className="rounded-xl border border-slate-200/70 bg-white p-6 shadow-sm opacity-80">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1">
+                Phí Ship TB / Đơn
+              </p>
+              <h4 className="text-2xl font-black text-slate-900">22.000đ</h4>
+            </div>
+            <div className="p-2 bg-amber-100 rounded-lg text-amber-700">
+              <Truck size={20} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-xs font-bold text-slate-400">
+            Đang cập nhật API GHTK
+          </div>
+        </article>
+      </div>
+
+      {/* DÒNG 2: THANH TOÁN & KHÁCH HÀNG VIP */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* CƠ CẤU THANH TOÁN */}
+        <section className="rounded-xl border border-slate-200/70 bg-white p-8">
+          <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900 mb-1">
+            Cơ cấu Thanh toán
+          </h3>
+          <p className="mb-8 text-sm text-slate-500">
+            Tỷ lệ lựa chọn thanh toán trên tổng số {totalPaymentOrders} đơn hàng
+            đã mua
+          </p>
+
+          <div className="space-y-4">
+            {/* VÍ MOMO */}
+            <div className="p-4 rounded-xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition relative overflow-hidden">
+              <div
+                className="absolute left-0 top-0 bottom-0 bg-pink-50 transition-all duration-500"
+                style={{ width: `${getPaymentPercent(momoCount)}%` }}
+              ></div>
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="p-3 bg-pink-100 text-pink-600 rounded-lg">
+                  <Wallet size={20} />
+                </div>
                 <div>
-                  <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900">
-                    Xu hướng doanh thu
-                  </h3>
-                  <p className="text-sm text-slate-500">
-                    Hiệu suất doanh thu thuần trong giai đoạn đã chọn
+                  <p className="font-bold text-slate-900">Ví điện tử (MoMo)</p>
+                  <p className="text-xs font-bold text-pink-600">
+                    Số lượng: {momoCount} đơn hàng
                   </p>
                 </div>
-
-                <div className="text-right">
-                  <span className="text-2xl font-black tracking-[-0.03em] text-emerald-700">
-                    $142,840.00
-                  </span>
-                  <div className="mt-1 inline-flex items-center text-xs font-bold text-lime-700">
-                    <TrendingUp size={14} className="mr-1" />
-                    +12.4% so với tháng trước
-                  </div>
-                </div>
               </div>
-
-              <div className="relative flex h-64 items-end justify-between gap-2 px-2">
-                <div className="pointer-events-none absolute inset-0 flex flex-col justify-between py-2 opacity-20">
-                  {[1, 2, 3, 4].map((line) => (
-                    <div key={line} className="w-full border-b border-slate-300" />
-                  ))}
-                </div>
-
-                {revenueBars.map((value, index) => (
-                  <div
-                    key={index}
-                    className="relative h-full w-full rounded-t-lg bg-emerald-100/70"
-                  >
-                    <div
-                      className="absolute bottom-0 w-full rounded-t-lg bg-emerald-600 transition-all hover:brightness-110"
-                      style={{ height: `${value}%` }}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-4 flex justify-between px-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                {['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7'].map((month) => (
-                  <span key={month}>{month}</span>
-                ))}
-              </div>
-            </section>
-
-            <section className="rounded-xl border border-slate-200/70 bg-white p-8 xl:col-span-4">
-              <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900">
-                Doanh thu theo danh mục
-              </h3>
-              <p className="mb-8 text-sm text-slate-500">
-                Tỷ trọng doanh thu theo loại sản phẩm
-              </p>
-
-              <div className="relative mb-8 flex justify-center">
-                <div className="relative flex h-48 w-48 items-center justify-center rounded-full border-[18px] border-emerald-600">
-                  <div className="absolute inset-[-18px] rounded-full border-[18px] border-transparent border-r-lime-500 border-t-amber-500 rotate-45" />
-                  <div className="text-center">
-                    <span className="block text-2xl font-black tracking-[-0.03em] text-slate-900">
-                      85%
-                    </span>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                      Organic
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <ul className="space-y-3">
-                {categoryData.map((item) => (
-                  <li key={item.name} className="flex items-center justify-between">
-                    <div className="flex items-center text-sm font-medium text-slate-700">
-                      <span className={`mr-2 h-3 w-3 rounded-full ${item.color}`} />
-                      {item.name}
-                    </div>
-                    <span className="text-sm font-bold text-slate-900">
-                      {item.percent}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section className="rounded-xl border border-slate-200/70 bg-white p-8 xl:col-span-7">
-              <div className="mb-8 flex items-center justify-between">
-                <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900">
-                  Top 5 sản phẩm bán chạy nhất
-                </h3>
-                 <button className="cursor-pointer text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 transition hover:underline">
-                  Xuất CSV
-                </button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-                      <th className="pb-4">Sản phẩm</th>
-                      <th className="pb-4">Danh mục</th>
-                      <th className="pb-4">Đơn hàng</th>
-                      <th className="pb-4 text-right">Doanh thu</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {topProducts.map((product) => {
-                      const Icon = product.icon;
-                      return (
-                        <tr key={product.name} className="transition hover:bg-[#f7faf6]">
-                          <td className="py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eef2eb] text-emerald-700">
-                                <Icon size={18} />
-                              </div>
-                              <span className="text-sm font-semibold text-slate-900">
-                                {product.name}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-4 text-sm text-slate-500">
-                            {product.category}
-                          </td>
-                          <td className="py-4 text-sm font-bold text-slate-900">
-                            {product.orders}
-                          </td>
-                          <td className="py-4 text-right text-sm font-bold text-slate-900">
-                            {product.revenue}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section className="flex flex-col gap-6 xl:col-span-5">
-              <article className="relative flex flex-1 flex-col justify-between overflow-hidden rounded-xl bg-emerald-700 p-8 text-white">
-                <div className="relative z-10">
-                  <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-white/80">
-                    Cộng đồng khách hàng
-                  </span>
-                  <h3 className="mb-4 text-3xl font-black tracking-[-0.04em]">
-                    Tăng trưởng khách hàng
-                  </h3>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-black tracking-[-0.05em]">
-                      24.8k
-                    </span>
-                    <span className="inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-sm font-bold">
-                      <TrendingUp size={14} className="mr-1" />
-                      18%
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-8 flex h-24 items-end gap-1">
-                  {[30, 45, 40, 60, 75, 90, 100].map((value, index) => (
-                    <div
-                      key={index}
-                      className="flex-1 rounded-sm bg-white/60"
-                      style={{ height: `${value}%` }}
-                    />
-                  ))}
-                </div>
-
-                <div className="absolute -bottom-12 -right-12 h-48 w-48 rounded-full bg-white/5 blur-3xl" />
-              </article>
-
-              <article className="rounded-xl border border-slate-200/70 bg-[#eef2eb] p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                      Tỷ lệ giữ chân
-                    </span>
-                    <h4 className="text-2xl font-black tracking-[-0.03em] text-slate-900">
-                      76.4%
-                    </h4>
-                  </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-lime-100 text-lime-700">
-                    <TrendingUp size={18} />
-                  </div>
-                </div>
-
-                <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                  <div className="h-full w-[76%] rounded-full bg-lime-600" />
-                </div>
-                <p className="mt-3 text-xs font-medium text-slate-500">
-                  +2.1% cải thiện trong quý này
-                </p>
-              </article>
-            </section>
-          </div>
-
-          <footer className="mt-12 border-t border-slate-200 bg-slate-50 px-2 py-8">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                © 2024 HealthyGO Organic. All rights reserved.
-              </p>
-              <div className="flex flex-wrap gap-6">
-                {['Liên hệ', 'Vận chuyển', 'Hoàn trả', 'Chính sách bảo mật'].map((item) => (
-                  <a
-                    key={item}
-                    href="#"
-                    className="text-xs uppercase tracking-[0.18em] text-slate-400 transition hover:text-emerald-600"
-                  >
-                    {item}
-                  </a>
-                ))}
-              </div>
+              <h4 className="text-xl font-black relative z-10 text-pink-600">
+                {getPaymentPercent(momoCount)}%
+              </h4>
             </div>
-          </footer>
+
+            {/* CHUYỂN KHOẢN NGÂN HÀNG */}
+            <div className="p-4 rounded-xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition relative overflow-hidden">
+              <div
+                className="absolute left-0 top-0 bottom-0 bg-blue-50 transition-all duration-500"
+                style={{ width: `${getPaymentPercent(bankCount)}%` }}
+              ></div>
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
+                  <CreditCard size={20} />
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900">
+                    Chuyển khoản (Bank)
+                  </p>
+                  <p className="text-xs font-bold text-blue-600">
+                    Số lượng: {bankCount} đơn hàng
+                  </p>
+                </div>
+              </div>
+              <h4 className="text-xl font-black relative z-10 text-blue-600">
+                {getPaymentPercent(bankCount)}%
+              </h4>
+            </div>
+
+            {/* TIỀN MẶT COD */}
+            <div className="p-4 rounded-xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition relative overflow-hidden">
+              <div
+                className="absolute left-0 top-0 bottom-0 bg-emerald-50 transition-all duration-500"
+                style={{ width: `${getPaymentPercent(codCount)}%` }}
+              ></div>
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="p-3 bg-emerald-100 text-emerald-600 rounded-lg">
+                  <Package size={20} />
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900">Tiền mặt (COD)</p>
+                  <p className="text-xs font-bold text-emerald-600">
+                    Số lượng: {codCount} đơn hàng
+                  </p>
+                </div>
+              </div>
+              <h4 className="text-xl font-black relative z-10 text-emerald-600">
+                {getPaymentPercent(codCount)}%
+              </h4>
+            </div>
+          </div>
+        </section>
+
+        {/* TOP VIP CUSTOMERS */}
+        <section className="rounded-xl border border-slate-200/70 bg-white p-8">
+          <h3 className="text-xl font-black tracking-[-0.03em] text-slate-900 mb-1">
+            Bảng Vàng VIP
+          </h3>
+          <p className="mb-6 text-sm text-slate-500">
+            Top 5 khách hàng chi tiêu nhiều nhất hệ thống
+          </p>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                  <th className="pb-3">Khách hàng</th>
+                  <th className="pb-3 text-center">Số đơn đã giao</th>
+                  <th className="pb-3 text-right">Tổng chi tiêu</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {reportData.vips.length > 0 ? (
+                  reportData.vips.map((vip, i) => (
+                    <tr key={i} className="hover:bg-slate-50 transition">
+                      <td className="py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-black text-xs uppercase shadow-sm">
+                            {vip.full_name?.charAt(0) || "U"}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">
+                              {vip.full_name}
+                            </p>
+                            {i === 0 && (
+                              <span className="text-[10px] font-bold text-amber-500">
+                                🏆 KHÁCH HÀNG KIM CƯƠNG
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 text-center text-sm font-bold text-slate-700">
+                        {vip.total_orders} đơn
+                      </td>
+                      <td className="py-4 text-right text-sm font-black text-emerald-600">
+                        {Number(vip.total_spent).toLocaleString("vi-VN")}đ
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="3"
+                      className="py-8 text-center text-sm text-slate-500"
+                    >
+                      Chưa có đủ dữ liệu khách hàng.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
