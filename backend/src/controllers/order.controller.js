@@ -187,6 +187,7 @@ const getDashboardReview = async (req, res) => {
         totalUsers: stats.totalUsers,
         bestSellingProducts: stats.bestSellingProducts,
         recentOrders: secureRecentOrders,
+        monthlyRevenue: stats.monthlyRevenue,
       },
     });
   } catch (error) {

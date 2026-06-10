@@ -177,58 +177,53 @@ async function updateOrderStatus(orderId, newStatus) {
 
 async function getDashboardStats() {
   try {
-    // 1. Tổng doanh thu (Sửa lại Alias đồng bộ là total_revenue)
-    const revenueQuery = `
-      SELECT SUM(total_amount) AS total_revenue 
-      FROM orders 
-      WHERE status != 'cancelled'
-    `;
-
-    // 2. Tổng số đơn hàng
+    const revenueQuery = `SELECT SUM(total_amount) AS total_revenue FROM orders WHERE status != 'cancelled'`;
     const ordersCountQuery = `SELECT COUNT(*) AS total_orders FROM orders`;
-
-    // 3. Tổng số người dùng
     const usersCountQuery = `SELECT COUNT(*) AS total_users FROM users WHERE role_id = 2`;
+    const recentOrdersQuery = `SELECT id_order, full_name, total_amount, status, created_at FROM orders ORDER BY created_at DESC LIMIT 5`;
+    const bestSellingQuery = `SELECT product_name, SUM(quantity) AS total_sold FROM order_items GROUP BY id_product, product_name ORDER BY total_sold DESC LIMIT 5`;
 
-    // 4. Lấy 5 đơn hàng mới nhất
-    const recentOrdersQuery = `
-      SELECT id_order, full_name, total_amount, status, created_at 
+    // 🚀 ĐÃ THÊM LỆNH ĐẾM SỐ ĐƠN HÀNG: COUNT(id_order) as total_orders
+    const monthlyRevenueQuery = `
+      SELECT MONTH(created_at) AS month, SUM(total_amount) AS total_revenue, COUNT(id_order) AS total_orders
       FROM orders 
-      ORDER BY created_at DESC 
-      LIMIT 5
+      WHERE status != 'cancelled' AND YEAR(created_at) = YEAR(CURDATE()) 
+      GROUP BY MONTH(created_at) 
+      ORDER BY month
     `;
 
-    // 5. Sản phẩm bán chạy nhất
-    const bestSellingQuery = `
-      SELECT product_name, SUM(quantity) AS total_sold 
-      FROM order_items 
-      GROUP BY id_product, product_name
-      ORDER BY total_sold DESC 
-      LIMIT 5
-    `;
-
-    // Chạy song song 5 lệnh SQL
     const [
       [revenueResult],
       [ordersCountResult],
       [usersCountResult],
       [recentOrders],
       [bestSellingProducts],
+      [monthlyRaw],
     ] = await Promise.all([
       pool.execute(revenueQuery),
       pool.execute(ordersCountQuery),
       pool.execute(usersCountQuery),
       pool.execute(recentOrdersQuery),
       pool.execute(bestSellingQuery),
+      pool.execute(monthlyRevenueQuery),
     ]);
 
-    // Trả về map chính xác 100% với tên cột của SQL trả về
+    // 🚀 Gom thành mảng Object chứa cả tiền và số lượng đơn
+    const finalMonthlyStats = Array.from({ length: 12 }, (_, index) => {
+      const monthData = monthlyRaw.find((m) => m.month === index + 1);
+      return {
+        revenue: monthData ? Number(monthData.total_revenue) : 0,
+        orders: monthData ? Number(monthData.total_orders) : 0,
+      };
+    });
+
     return {
       totalRevenue: revenueResult[0].total_revenue || 0,
       totalOrders: ordersCountResult[0].total_orders || 0,
       totalUsers: usersCountResult[0].total_users || 0,
       recentOrders: recentOrders,
       bestSellingProducts: bestSellingProducts,
+      monthlyRevenue: finalMonthlyStats, // Mảng Object mới
     };
   } catch (error) {
     console.error("Lỗi thực thi SQL trong Service:", error);

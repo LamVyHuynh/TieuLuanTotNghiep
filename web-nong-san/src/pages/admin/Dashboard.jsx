@@ -19,22 +19,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import axiosClient from "../../api/axiosClient";
 
-const chartHeights = [
-  "h-[40%]",
-  "h-[55%]",
-  "h-[45%]",
-  "h-[70%]",
-  "h-[60%]",
-  "h-[85%]",
-  "h-[75%]",
-  "h-[95%]",
-  "h-[80%]",
-  "h-[65%]",
-  "h-[50%]",
-  "h-[70%]",
-];
-
-// Hàm lấy cấu hình màu sắc trạng thái
 const getStatusConfig = (status) => {
   switch (status) {
     case "pending":
@@ -58,17 +42,16 @@ function Dashboard() {
   const adminMenuRef = useRef(null);
   const { currentUser, logout, loading: authLoading } = useAuth();
 
-  // State chứa dữ liệu Dashboard
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalOrders: 0,
     totalUsers: 0,
     recentOrders: [],
     bestSellingProducts: [],
+    monthlyRevenue: Array(12).fill({ revenue: 0, orders: 0 }), // Mảng object
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
-  // Xử lý click ra ngoài menu
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -82,7 +65,6 @@ function Dashboard() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Gọi API lấy dữ liệu thống kê
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
@@ -108,11 +90,16 @@ function Dashboard() {
   if (authLoading)
     return (
       <p className="p-10 text-center font-bold text-emerald-600">
-        Đang kiểm tra quyền truy cập...
+        Đang kiểm tra...
       </p>
     );
 
-  // Cấu hình 3 thẻ KPI tự động nhận Data
+  // 🚀 TÍNH TOÁN ĐỈNH CỘT: Trích xuất mảng tiền ra để tìm Max
+  const monthlyDataArray =
+    stats.monthlyRevenue || Array(12).fill({ revenue: 0, orders: 0 });
+  const maxMonthlyRevenue = Math.max(...monthlyDataArray.map((m) => m.revenue));
+  const currentMonthIndex = new Date().getMonth();
+
   const kpis = [
     {
       label: "Tổng doanh thu",
@@ -149,7 +136,7 @@ function Dashboard() {
           <input
             type="text"
             placeholder="Tìm analytics, đơn hàng hoặc sản phẩm..."
-            className="w-full border-none bg-transparent p-0 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+            className="w-full border-none bg-transparent p-0 text-sm text-slate-700 focus:outline-none focus:ring-0"
           />
         </div>
 
@@ -164,7 +151,6 @@ function Dashboard() {
             ref={adminMenuRef}
           >
             <button
-              type="button"
               onClick={() => setShowAdminMenu((prev) => !prev)}
               className="flex cursor-pointer items-center gap-3 rounded-2xl px-2 py-1 transition hover:bg-slate-50"
             >
@@ -181,24 +167,19 @@ function Dashboard() {
               </div>
               <ChevronDown size={16} className="text-slate-400" />
             </button>
-
             <div
-              className={`absolute right-0 top-[calc(100%+10px)] z-50 w-56 origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${
-                showAdminMenu
-                  ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-                  : "pointer-events-none -translate-y-2 scale-95 opacity-0"
-              }`}
+              className={`absolute right-0 top-[calc(100%+10px)] z-50 w-56 origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${showAdminMenu ? "pointer-events-auto translate-y-0 scale-100 opacity-100" : "pointer-events-none -translate-y-2 scale-95 opacity-0"}`}
             >
-              <button className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+              <button className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50">
                 <UserRound size={16} className="text-slate-400" /> Cập nhật
                 thông tin
               </button>
-              <button className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+              <button className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50">
                 <KeyRound size={16} className="text-slate-400" /> Đổi mật khẩu
               </button>
               <button
                 onClick={handleLogoutAdmin}
-                className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-rose-600 hover:bg-rose-50"
               >
                 <LogOut size={16} className="text-rose-500" /> Đăng xuất
               </button>
@@ -219,7 +200,8 @@ function Dashboard() {
               Tổng quan hiệu suất
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Dữ liệu thời gian thực từ Database.
+              Báo cáo tổng hợp doanh thu, đơn hàng và người dùng đăng ký trong
+              năm
             </p>
           </section>
 
@@ -239,7 +221,6 @@ function Dashboard() {
                   : item.accent === "amber"
                     ? "bg-amber-500"
                     : "bg-lime-600";
-
               return (
                 <article
                   key={item.label}
@@ -280,14 +261,12 @@ function Dashboard() {
                   Sản phẩm Bán chạy nhất
                 </p>
                 <h3 className="mt-1 text-xl font-black tracking-[-0.03em] line-clamp-1">
-                  {stats.bestSellingProducts &&
-                  stats.bestSellingProducts.length > 0
+                  {stats.bestSellingProducts?.length > 0
                     ? stats.bestSellingProducts[0].product_name
                     : "Chưa có dữ liệu"}
                 </h3>
                 <p className="mt-2 text-sm text-white/80 font-semibold">
-                  {stats.bestSellingProducts &&
-                  stats.bestSellingProducts.length > 0
+                  {stats.bestSellingProducts?.length > 0
                     ? `Đã bán ${stats.bestSellingProducts[0].total_sold} phần`
                     : "---"}
                 </p>
@@ -297,30 +276,61 @@ function Dashboard() {
           </section>
 
           <section className="grid grid-cols-1 gap-8 xl:grid-cols-3">
-            {/* CHART (Vẫn giữ UI tĩnh mồi cho đẹp) */}
+            {/* 🚀 CHART ĐỘNG VỚI CUSTOM TOOLTIP */}
             <article className="rounded-xl border border-slate-200/70 bg-white p-8 shadow-sm xl:col-span-2">
               <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h4 className="text-lg font-black tracking-[-0.03em] text-slate-900">
-                    Xu hướng doanh thu
+                    Xu hướng doanh thu {new Date().getFullYear()}
                   </h4>
                   <p className="text-xs text-slate-500">
-                    Giao diện mẫu (Chưa gắn API)
+                    Doanh thu gộp theo từng tháng
                   </p>
                 </div>
-                <select className="rounded-lg border-none bg-slate-100 py-2 pl-3 pr-8 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-100 outline-none">
-                  <option>12 tháng gần nhất</option>
-                  <option>6 tháng gần nhất</option>
-                </select>
               </div>
-              <div className="flex h-64 items-end justify-between gap-2 border-b border-slate-100 px-2 pb-2">
-                {chartHeights.map((height, index) => (
-                  <div
-                    key={index}
-                    className={`w-full rounded-t-lg ${index === 7 ? "bg-emerald-600" : "bg-slate-100"} ${height}`}
-                  />
-                ))}
+
+              <div className="flex h-64 items-end justify-between gap-3 border-b border-slate-100 px-2 pb-2">
+                {monthlyDataArray.map((data, index) => {
+                  const heightPercent =
+                    maxMonthlyRevenue > 0
+                      ? Math.max((data.revenue / maxMonthlyRevenue) * 100, 2)
+                      : 2;
+                  const isCurrentMonth = currentMonthIndex === index;
+
+                  return (
+                    <div
+                      key={index}
+                      className="group relative w-full h-full flex items-end justify-center"
+                    >
+                      {/* Tooltip hiển thị khi Hover */}
+                      <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs rounded-lg py-2 px-3 pointer-events-none whitespace-nowrap z-10 shadow-lg">
+                        <p className="font-bold mb-1 text-emerald-400">
+                          Tháng {index + 1}
+                        </p>
+                        <p>
+                          Doanh thu: {data.revenue.toLocaleString("vi-VN")}đ
+                        </p>
+                        <p className="text-slate-300">
+                          Đơn hàng: {data.orders} đơn
+                        </p>
+                        {/* Mũi tên trỏ xuống của Tooltip */}
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                      </div>
+
+                      {/* Cột Biểu Đồ */}
+                      <div
+                        className={`w-full rounded-t-lg transition-all duration-700 ease-out cursor-pointer ${
+                          isCurrentMonth
+                            ? "bg-emerald-600 hover:bg-emerald-700"
+                            : "bg-slate-200 hover:bg-emerald-300"
+                        }`}
+                        style={{ height: `${heightPercent}%` }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
+
               <div className="mt-4 flex justify-between px-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
                 {[
                   "Th1",
@@ -335,10 +345,12 @@ function Dashboard() {
                   "Th10",
                   "Th11",
                   "Th12",
-                ].map((month) => (
+                ].map((month, idx) => (
                   <span
                     key={month}
-                    className={month === "Th8" ? "text-emerald-700" : ""}
+                    className={
+                      currentMonthIndex === idx ? "text-emerald-700" : ""
+                    }
                   >
                     {month}
                   </span>
@@ -346,14 +358,13 @@ function Dashboard() {
               </div>
             </article>
 
-            {/* DANH SÁCH BÁN CHẠY (Thay cho tồn kho) */}
+            {/* DANH SÁCH BÁN CHẠY */}
             <article className="rounded-xl border border-slate-200/70 bg-white p-8 shadow-sm">
               <h4 className="mb-6 text-lg font-black tracking-[-0.03em] text-slate-900">
                 Top 5 Bán Chạy Nhất
               </h4>
               <div className="space-y-6">
-                {stats.bestSellingProducts &&
-                stats.bestSellingProducts.length > 0 ? (
+                {stats.bestSellingProducts?.length > 0 ? (
                   stats.bestSellingProducts.map((item, index) => (
                     <div key={index} className="flex gap-4 items-center">
                       <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center font-black text-slate-400">
@@ -401,7 +412,6 @@ function Dashboard() {
                 Xem tất cả <ChevronRight size={16} />
               </button>
             </div>
-
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-left">
                 <thead className="bg-slate-50/70">
@@ -423,7 +433,7 @@ function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {stats.recentOrders && stats.recentOrders.length > 0 ? (
+                  {stats.recentOrders?.length > 0 ? (
                     stats.recentOrders.map((order) => {
                       const statusConf = getStatusConfig(order.status);
                       return (
@@ -476,7 +486,7 @@ function Dashboard() {
                         colSpan="5"
                         className="px-8 py-10 text-center text-sm text-slate-500"
                       >
-                        Chưa có đơn hàng nào trong hệ thống.
+                        Chưa có đơn hàng nào.
                       </td>
                     </tr>
                   )}
