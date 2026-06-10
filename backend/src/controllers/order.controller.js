@@ -3,9 +3,11 @@ const {
   getOrdersByUserId,
   getAllOrdersForAdmin,
   updateOrderStatus,
+  getDashboardStats,
 } = require("../services/order.service");
 const { encodeId, decodeId } = require("../../utils/hashid.util");
 const { get } = require("../routes/auth.routes");
+const { ca } = require("zod/v4/locales");
 
 const createOrder = async (req, res) => {
   try {
@@ -168,9 +170,39 @@ const updateOrderStatusAdmin = async (req, res) => {
   }
 };
 
+const getDashboardReview = async (req, res) => {
+  try {
+    const stats = await getDashboardStats();
+
+    // Chuyển đổi dữ liệu để phù hợp với yêu cầu của frontend
+    const secureRecentOrders = stats.recentOrders.map((order) => ({
+      ...order,
+      id_order: encodeId(order.id_order), // Mã hóa ID đơn hàng trước khi gửi về client
+    }));
+    res.status(200).json({
+      success: true,
+      data: {
+        totalOrders: stats.totalOrders,
+        totalRevenue: stats.totalRevenue,
+        totalUsers: stats.totalUsers,
+        bestSellingProducts: stats.bestSellingProducts,
+        recentOrders: secureRecentOrders,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi lấy thống kê dashboard:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy thống kê dashboard",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrdersHistory,
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
+  getDashboardReview,
 };

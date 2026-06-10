@@ -174,9 +174,71 @@ async function updateOrderStatus(orderId, newStatus) {
     conn.release();
   }
 }
+
+async function getDashboardStats() {
+  try {
+    // 1. Tổng doanh thu (Sửa lại Alias đồng bộ là total_revenue)
+    const revenueQuery = `
+      SELECT SUM(total_amount) AS total_revenue 
+      FROM orders 
+      WHERE status != 'cancelled'
+    `;
+
+    // 2. Tổng số đơn hàng
+    const ordersCountQuery = `SELECT COUNT(*) AS total_orders FROM orders`;
+
+    // 3. Tổng số người dùng
+    const usersCountQuery = `SELECT COUNT(*) AS total_users FROM users WHERE role_id = 2`;
+
+    // 4. Lấy 5 đơn hàng mới nhất
+    const recentOrdersQuery = `
+      SELECT id_order, full_name, total_amount, status, created_at 
+      FROM orders 
+      ORDER BY created_at DESC 
+      LIMIT 5
+    `;
+
+    // 5. Sản phẩm bán chạy nhất
+    const bestSellingQuery = `
+      SELECT product_name, SUM(quantity) AS total_sold 
+      FROM order_items 
+      GROUP BY id_product, product_name
+      ORDER BY total_sold DESC 
+      LIMIT 5
+    `;
+
+    // Chạy song song 5 lệnh SQL
+    const [
+      [revenueResult],
+      [ordersCountResult],
+      [usersCountResult],
+      [recentOrders],
+      [bestSellingProducts],
+    ] = await Promise.all([
+      pool.execute(revenueQuery),
+      pool.execute(ordersCountQuery),
+      pool.execute(usersCountQuery),
+      pool.execute(recentOrdersQuery),
+      pool.execute(bestSellingQuery),
+    ]);
+
+    // Trả về map chính xác 100% với tên cột của SQL trả về
+    return {
+      totalRevenue: revenueResult[0].total_revenue || 0,
+      totalOrders: ordersCountResult[0].total_orders || 0,
+      totalUsers: usersCountResult[0].total_users || 0,
+      recentOrders: recentOrders,
+      bestSellingProducts: bestSellingProducts,
+    };
+  } catch (error) {
+    console.error("Lỗi thực thi SQL trong Service:", error);
+    throw error;
+  }
+}
 module.exports = {
   createOrderTransaction,
   getOrdersByUserId,
   getAllOrdersForAdmin,
   updateOrderStatus,
+  getDashboardStats,
 };
