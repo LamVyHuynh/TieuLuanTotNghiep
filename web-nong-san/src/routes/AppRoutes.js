@@ -1,6 +1,5 @@
 import Home from "../pages/User/Home";
 import Cart from "../pages/User/Cart";
-import Tracking from "../pages/User/Tracking";
 import DetailProduct from "../pages/User/DetailProduct";
 import CheckOut from "../pages/User/CheckOut";
 import Login from "../pages/Login";
@@ -26,7 +25,7 @@ const publicRoutes = [
     children: [
       { index: true, element: Home },
       { path: "cart", element: Cart },
-      { path: "tracking", element: Tracking },
+
       { path: "detail-product/:id", element: DetailProduct },
       { path: "checkout", element: CheckOut },
       { path: "login", element: Login },

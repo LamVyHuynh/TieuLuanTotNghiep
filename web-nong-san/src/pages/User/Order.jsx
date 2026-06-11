@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   CalendarDays,
-  ChevronRight,
-  Clock3,
   Package,
   Wallet,
   ArrowLeft,
@@ -229,15 +227,6 @@ function Order() {
                     </span>
                   </div>
                 </div>
-
-                <button
-                  className="cursor-pointer mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 transition-all duration-300 hover:bg-emerald-100"
-                  onClick={() => handleNavigate(`/tracking/${order.id_order}`)}
-                >
-                  <Clock3 size={16} />
-                  Xem theo dõi đơn hàng
-                  <ChevronRight size={16} />
-                </button>
               </article>
             );
           })
