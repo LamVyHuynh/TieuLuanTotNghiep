@@ -34,12 +34,27 @@ const createOrder = async (req, res) => {
     }
 
     // BỌC THÉP CHIỀU VÀO: Giải mã id_product từ mảng items mà React gửi lên
+    // BỌC THÉP CHIỀU VÀO: Phân biệt ID số và ID mã hóa
     const decodedItems = items.map((item) => {
-      const realProductId = decodeId(item.id_product);
-      console.log("Decoded product ID:", realProductId);
-      if (!realProductId) {
-        throw new Error("ID sản phẩm không hợp lệ: " + item.id_product);
+      const productId = item.id_product;
+
+      if (!productId) {
+        throw new Error("Lỗi giỏ hàng: Không tìm thấy ID của sản phẩm!");
       }
+
+      let realProductId;
+
+      // KIỂM TRA: Nếu là số thì lấy luôn, nếu là chữ thì mới decodeId
+      if (typeof productId === "number" || !isNaN(productId)) {
+        realProductId = Number(productId);
+      } else {
+        realProductId = decodeId(productId);
+      }
+
+      if (!realProductId) {
+        throw new Error("ID sản phẩm không hợp lệ: " + productId);
+      }
+
       return {
         ...item,
         id_product: realProductId,

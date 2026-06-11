@@ -268,9 +268,6 @@ function Home() {
                                 `Đã thêm ${item.name} vào giỏ! 🥰`,
                                 "success",
                               );
-                              setTimeout(() => {
-                                handleNavigate("/cart");
-                              }, 1200);
                             } else {
                               showToast(
                                 "Vui lòng đăng nhập để mua hàng! 😥",

@@ -268,7 +268,7 @@ function CheckOut() {
         total_amount: total,
         // Map lại mảng items cho chuẩn (đặc biệt là cái id_product)
         items: checkoutList.map((item) => ({
-          id_product: item.id_product, // ID HashID bọc thép
+          id_product: item.id_product || item.id, // ID HashID bọc thép
           name: item.name, // Nhớ gửi cả name lên để lưu order_items
           quantity: item.quantity,
           price: item.price,
