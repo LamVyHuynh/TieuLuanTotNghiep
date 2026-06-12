@@ -1,4 +1,7 @@
 const pool = require("../config/db");
+// 🚀 THÊM MỚI: Import hàm tạo thông báo từ service mới tạo
+const { createNotification } = require("./notification.service");
+
 async function createOrderTransaction(userId, orderData, items) {
   // Lấy 1 connection riêng biệt từ pool để chạy về Transaction
   const conn = await pool.getConnection();
@@ -165,6 +168,58 @@ async function updateOrderStatus(orderId, newStatus) {
         );
       }
     }
+
+    // =========================================================================
+    // 🚀 NÂNG CẤP: ĐOẠN TỰ ĐỘNG BẮN THÔNG BÁO HIỆN TÊN SẢN PHẨM THỰC TẾ
+    // =========================================================================
+
+    // 1. Lấy thông tin user_id VÀ gộp tên tất cả các món ăn trong đơn hàng lại bằng GROUP_CONCAT
+    const [orderRows] = await conn.execute(
+      `SELECT 
+          o.user_id, 
+          GROUP_CONCAT(oi.product_name SEPARATOR ', ') as product_names 
+       FROM orders o
+       LEFT JOIN order_items oi ON o.id_order = oi.id_order
+       WHERE o.id_order = ?
+       GROUP BY o.id_order`,
+      [orderId],
+    );
+
+    const orderDataForNoti = orderRows[0];
+
+    if (orderDataForNoti && orderDataForNoti.user_id) {
+      const userId = orderDataForNoti.user_id;
+      const productNames = orderDataForNoti.product_names || "sản phẩm";
+
+      // Khống chế độ dài chuỗi tên sản phẩm tối đa 40 ký tự để không làm tràn vỡ UI bong bóng thông báo
+      const shortProductNames =
+        productNames.length > 40
+          ? productNames.substring(0, 40) + "..."
+          : productNames;
+
+      let title = "Trạng thái đơn hàng";
+      let msg = `Đơn hàng chứa [${shortProductNames}] của bạn vừa có cập nhật mới từ hệ thống.`;
+
+      // 2. Thiết lập tiêu đề và nội dung linh hoạt theo từng sự thay đổi trạng thái
+      if (newStatus === "processing") {
+        title = "Đơn hàng đã được duyệt! 🎉";
+        msg = `Tuyệt vời! Đơn hàng chứa [${shortProductNames}] của bạn đã được cửa hàng xác nhận và bắt đầu chuẩn bị chế biến.`;
+      } else if (newStatus === "shipping") {
+        title = "Đơn hàng đang giao đến bạn! 🚚";
+        msg = `Các món ăn ngon [${shortProductNames}] trong đơn hàng của bạn đã được bàn giao cho shipper. Bạn vui lòng chú ý điện thoại nhé!`;
+      } else if (newStatus === "completed") {
+        title = "Giao hàng thành công! 🥰";
+        msg = `Đơn hàng chứa [${shortProductNames}] của bạn đã hoàn thành xuất sắc. Chúc bạn có một bữa ăn ngon miệng và healthy!`;
+      } else if (newStatus === "cancelled") {
+        title = "Đơn hàng của bạn đã bị hủy 😥";
+        msg = `Rất tiếc, đơn hàng chứa [${shortProductNames}] đã bị hủy bỏ. Vui lòng kiểm tra lại hoặc liên hệ CSKH để được hỗ trợ kịp thời.`;
+      }
+
+      // 3. Đẩy lệnh ghi vào bảng notifications nằm trong cùng khối Transaction
+      const insertNotiQuery = `INSERT INTO notifications (user_id, title, message) VALUES (?, ?, ?)`;
+      await conn.execute(insertNotiQuery, [userId, title, msg]);
+    }
+
     await conn.commit();
     return true;
   } catch (error) {
@@ -331,6 +386,7 @@ async function getDetailReport() {
     throw error;
   }
 }
+
 module.exports = {
   createOrderTransaction,
   getOrdersByUserId,

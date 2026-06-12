@@ -16,20 +16,27 @@ import {
   EyeOff,
   Save,
   History,
+  Bell, // 🚀 THÊM MỚI: Icon Chuông
 } from "lucide-react";
 import axiosClient from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
-// Vỏ hàng
 import { CartContext } from "../context/CartContext";
 
 function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // 🚀 THÊM MỚI: State quản lý menu thông báo
+  const [showNotiMenu, setShowNotiMenu] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+
   const navigate = useNavigate();
   const location = useLocation();
 
   const { currentUser, logout, loading, refetchUser } = useAuth();
   const userMenuRef = useRef(null);
+  const notiMenuRef = useRef(null); // 🚀 THÊM MỚI: Ref tắt popup thông báo
 
   const { cartItems, fetchCart, setCartItems } = useContext(CartContext);
 
@@ -37,15 +44,62 @@ function UserLayout() {
   // ĐỒNG BỘ GIỎ HÀNG KHI LOGIN / LOGOUT
   // =================================================================
   useEffect(() => {
-    // Nếu có user đăng nhập -> Gọi API lấy giỏ hàng mới nhất
     if (currentUser && fetchCart) {
       fetchCart();
     }
-    // Nếu bị văng ra (đăng xuất) -> Xoá sạch giỏ hàng trên giao diện
     if (!currentUser && setCartItems) {
       setCartItems([]);
     }
-  }, [currentUser, fetchCart, setCartItems]); // Đã nhét đủ dependency để tắt cảnh báo vàng
+  }, [currentUser, fetchCart, setCartItems]);
+
+  // =================================================================
+  // 🚀 THÊM MỚI: FAKE REAL-TIME LẤY THÔNG BÁO
+  // =================================================================
+  useEffect(() => {
+    if (!currentUser) return; // Chưa đăng nhập thì dẹp, khỏi quét
+
+    const fetchNotifications = async () => {
+      try {
+        const res = await axiosClient.get("/notifications");
+        if (res.data.success) {
+          const list = res.data.data;
+          setNotifications(list);
+          const unread = list.filter((n) => Number(n.is_read) === 0).length;
+          setUnreadCount(unread);
+        }
+      } catch (error) {
+        console.error("Lỗi lấy thông báo:", error);
+      }
+    };
+
+    fetchNotifications(); // 1. Gọi ngay khi vừa load web
+
+    // 2. FAKE REAL-TIME: 15s quét 1 lần ngầm
+    const intervalId = setInterval(() => {
+      fetchNotifications();
+    }, 15000);
+
+    return () => clearInterval(intervalId);
+  }, [currentUser]);
+
+  // Hàm khi bấm vào một thông báo cụ thể
+  const handleReadNotification = async (notiId) => {
+    try {
+      await axiosClient.put(`/notifications/${notiId}/read`);
+      // Update lại UI ngay lập tức cho mượt
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id_notification === notiId ? { ...n, is_read: 1 } : n,
+        ),
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      // Chuyển tới trang Lịch sử mua hàng
+      setShowNotiMenu(false);
+      handleNavigate("/order");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   // =================================================================
   // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
@@ -127,10 +181,7 @@ function UserLayout() {
       });
       setIsEditProfileOpen(false);
       showToast("success", "Cập nhật thông tin thành công! 🥰");
-
-      if (refetchUser) {
-        await refetchUser();
-      }
+      if (refetchUser) await refetchUser();
     } catch (error) {
       showToast(
         "error",
@@ -165,10 +216,7 @@ function UserLayout() {
       });
       setIsChangePwdOpen(false);
       showToast("success", "Đổi mật khẩu thành công! 🥰");
-
-      if (refetchUser) {
-        await refetchUser();
-      }
+      if (refetchUser) await refetchUser();
     } catch (error) {
       showToast(
         "error",
@@ -187,6 +235,9 @@ function UserLayout() {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
       }
+      if (notiMenuRef.current && !notiMenuRef.current.contains(event.target)) {
+        setShowNotiMenu(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -200,15 +251,11 @@ function UserLayout() {
 
   const handleLogout = async () => {
     await logout();
-    // Ép giỏ hàng trên UI về mảng rỗng ngay lập tức
-    if (setCartItems) {
-      setCartItems([]);
-    }
+    if (setCartItems) setCartItems([]);
     setShowUserMenu(false);
     navigate("/");
   };
 
-  // Tính tổng số lượng sản phẩm trong giỏ hàng
   const totalItemsCart = cartItems
     ? cartItems.reduce((total, item) => total + item.quantity, 0)
     : 0;
@@ -217,10 +264,9 @@ function UserLayout() {
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-emerald-500/20 relative overflow-x-hidden">
-      {/* HEADER THEO THIẾT KẾ MỚI (Tối giản, trong suốt, gộp chung) */}
+      {/* HEADER */}
       <nav className="fixed top-0 w-full z-40 bg-white/90 backdrop-blur-xl border-b border-zinc-100 shadow-sm transition-all h-16 flex items-center">
         <div className="flex justify-between items-center px-4 w-full max-w-7xl mx-auto gap-4">
-          {/* Logo - Bấm vào thì về Home mượt mà */}
           <button
             onClick={() => handleNavigate("/")}
             className="text-xl font-black tracking-tighter text-emerald-600 shrink-0 no-underline cursor-pointer"
@@ -228,7 +274,6 @@ function UserLayout() {
             HealthyGO
           </button>
 
-          {/* Search Bar (Desktop) */}
           <div className="hidden md:flex flex-1 max-w-xl mx-4 relative">
             <Search
               size={18}
@@ -244,9 +289,7 @@ function UserLayout() {
             />
           </div>
 
-          {/* Các nút Menu bên phải */}
           <div className="flex items-center gap-2 md:gap-4 text-sm font-medium tracking-tight">
-            {/* Lịch sử mua hàng */}
             <button
               onClick={() => handleNavigate("/order")}
               className="hidden lg:flex text-zinc-500 hover:text-emerald-600 transition-colors items-center gap-1.5 no-underline cursor-pointer"
@@ -258,13 +301,88 @@ function UserLayout() {
               <Search size={20} />
             </button>
 
-            {/* Giỏ hàng */}
+            {currentUser && (
+              <div className="relative" ref={notiMenuRef}>
+                <button
+                  onClick={() => {
+                    setShowNotiMenu(!showNotiMenu);
+                    setShowUserMenu(false);
+                  }}
+                  className="p-2 hover:bg-zinc-100 text-zinc-700 transition-colors rounded-full relative flex items-center cursor-pointer"
+                >
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1.5 bg-rose-500 text-white w-2.5 h-2.5 rounded-full border border-white" />
+                  )}
+                </button>
+
+                <div
+                  className={`absolute right-0 top-[calc(100%+10px)] w-80 origin-top-right overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${
+                    showNotiMenu
+                      ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                      : "pointer-events-none -translate-y-2 scale-95 opacity-0"
+                  }`}
+                >
+                  <div className="px-4 py-3 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
+                    <h3 className="font-black text-zinc-800">Thông báo</h3>
+                    {unreadCount > 0 && (
+                      <span className="text-[10px] font-bold bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full uppercase">
+                        {unreadCount} chưa đọc
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="max-h-[350px] overflow-y-auto custom-scrollbar flex flex-col">
+                    {notifications.length === 0 ? (
+                      <div className="p-6 text-center text-zinc-400 text-sm">
+                        Bạn chưa có thông báo nào.
+                      </div>
+                    ) : (
+                      notifications.map((noti) => (
+                        <button
+                          key={noti.id_notification}
+                          onClick={() =>
+                            handleReadNotification(noti.id_notification)
+                          }
+                          className={`flex flex-col items-start gap-1 p-4 border-b border-zinc-50 text-left transition hover:bg-zinc-50 cursor-pointer ${
+                            Number(noti.is_read) === 0
+                              ? "bg-emerald-50/30"
+                              : "opacity-70"
+                          }`}
+                        >
+                          <div className="flex justify-between w-full items-center">
+                            <span
+                              className={`font-bold text-sm ${
+                                Number(noti.is_read) === 0
+                                  ? "text-emerald-700"
+                                  : "text-zinc-700"
+                              }`}
+                            >
+                              {noti.title}
+                            </span>
+                            {Number(noti.is_read) === 0 && (
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                            )}
+                          </div>
+                          <span className="text-xs text-zinc-500 line-clamp-2">
+                            {noti.message}
+                          </span>
+                          <span className="text-[10px] text-zinc-400 font-medium mt-1">
+                            {new Date(noti.created_at).toLocaleString("vi-VN")}
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button
               onClick={() => handleNavigate("/cart")}
               className="p-2 hover:bg-zinc-100 text-zinc-700 transition-colors rounded-full relative flex items-center cursor-pointer no-underline"
             >
               <ShoppingBag size={20} />
-              {/* Số lượng sản phẩm trong giỏ hàng */}
               {totalItemsCart > 0 && (
                 <span className="absolute top-0.5 right-0.5 bg-emerald-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white box-content">
                   {totalItemsCart}
@@ -276,7 +394,10 @@ function UserLayout() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   type="button"
-                  onClick={() => setShowUserMenu((prev) => !prev)}
+                  onClick={() => {
+                    setShowUserMenu((prev) => !prev);
+                    setShowNotiMenu(false);
+                  }}
                   className="flex items-center gap-1.5 p-1 pl-3 pr-2 bg-zinc-100 hover:bg-zinc-200 transition-colors rounded-full cursor-pointer text-zinc-700 font-semibold text-sm"
                 >
                   <span className="max-w-[100px] truncate">
@@ -337,7 +458,6 @@ function UserLayout() {
         </div>
       </nav>
 
-      {/* BODY CHÍNH - GẮN HIỆU ỨNG TRƯỢT VÀO ĐÂY */}
       <main
         className={`pt-20 transform transition-all duration-500 ease-in-out ${
           isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
@@ -346,7 +466,6 @@ function UserLayout() {
         <Outlet />
       </main>
 
-      {/* ================= NÚT GIỎ HÀNG NỔI MOBILE ================= */}
       <button
         onClick={() => handleNavigate("/cart")}
         className="md:hidden fixed bottom-6 right-6 bg-emerald-600 text-white w-14 h-14 rounded-full shadow-[0_10px_25px_rgba(5,150,105,0.3)] flex items-center justify-center z-50 hover:bg-emerald-700 transition-colors cursor-pointer"
@@ -359,7 +478,7 @@ function UserLayout() {
         )}
       </button>
 
-      {/* ================= MODAL CẬP NHẬT THÔNG TIN CÁ NHÂN ================= */}
+      {/* MODAL CẬP NHẬT THÔNG TIN */}
       {isEditProfileOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm transition-all duration-300">
           <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
@@ -442,7 +561,11 @@ function UserLayout() {
                   <button
                     type="submit"
                     disabled={isEditing}
-                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${isEditing ? "bg-zinc-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700"}`}
+                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${
+                      isEditing
+                        ? "bg-zinc-400 cursor-not-allowed"
+                        : "bg-emerald-600 hover:bg-emerald-700"
+                    }`}
                   >
                     {isEditing ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -459,7 +582,7 @@ function UserLayout() {
         </div>
       )}
 
-      {/* ================= MODAL ĐỔI MẬT KHẨU CÁ NHÂN ================= */}
+      {/* MODAL ĐỔI MẬT KHẨU */}
       {isChangePwdOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm transition-all duration-300">
           <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
@@ -517,7 +640,11 @@ function UserLayout() {
                   <button
                     type="submit"
                     disabled={isChangingPwd}
-                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${isChangingPwd ? "bg-zinc-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"}`}
+                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${
+                      isChangingPwd
+                        ? "bg-zinc-400 cursor-not-allowed"
+                        : "bg-indigo-600 hover:bg-indigo-700"
+                    }`}
                   >
                     {isChangingPwd ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -534,7 +661,7 @@ function UserLayout() {
         </div>
       )}
 
-      {/* ================= KHUNG THÔNG BÁO Ở GIỮA ================= */}
+      {/* TOAST THÔNG BÁO Ở GIỮA */}
       {toast.show && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div
@@ -542,10 +669,16 @@ function UserLayout() {
             onClick={closeToast}
           ></div>
           <div
-            className={`relative w-full max-w-sm rounded-[2.5rem] bg-white overflow-hidden shadow-2xl border-2 ${toast.type === "success" ? "border-emerald-500" : "border-rose-400"}`}
+            className={`relative w-full max-w-sm rounded-[2.5rem] bg-white overflow-hidden shadow-2xl border-2 ${
+              toast.type === "success"
+                ? "border-emerald-500"
+                : "border-rose-400"
+            }`}
           >
             <div
-              className={`p-8 flex flex-col items-center text-center relative ${toast.type === "success" ? "bg-emerald-500" : "bg-rose-500"}`}
+              className={`p-8 flex flex-col items-center text-center relative ${
+                toast.type === "success" ? "bg-emerald-500" : "bg-rose-500"
+              }`}
             >
               <button
                 onClick={closeToast}

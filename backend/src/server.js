@@ -29,6 +29,10 @@ const addressRoutes = require("./routes/address.routes");
 
 // import router đơn hàng
 const orderRoutes = require("./routes/order.routes");
+
+// imoport router thông báo
+const notificationRoutes = require("./routes/notification.routes");
+
 // Import cookie-parser để đọc cookie từ request header
 const cookieParser = require("cookie-parser");
 
@@ -76,6 +80,9 @@ app.use("/addresses", addressRoutes);
 
 // gắn router đơn hàng
 app.use("/orders", orderRoutes);
+
+// gắn router thông báo
+app.use("/notifications", notificationRoutes);
 
 // Kiểm tra route
 app.get("/", (req, res) => {
