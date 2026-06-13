@@ -16,7 +16,9 @@ import {
   EyeOff,
   Save,
   History,
-  Bell, // 🚀 THÊM MỚI: Icon Chuông
+  Bell,
+  Trash2,
+  BellRing, // Icon cái chuông lúc trống
 } from "lucide-react";
 import axiosClient from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
@@ -26,7 +28,7 @@ function UserLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  // 🚀 THÊM MỚI: State quản lý menu thông báo
+  // 🚀 STATE QUẢN LÝ MENU THÔNG BÁO
   const [showNotiMenu, setShowNotiMenu] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
@@ -36,7 +38,7 @@ function UserLayout() {
 
   const { currentUser, logout, loading, refetchUser } = useAuth();
   const userMenuRef = useRef(null);
-  const notiMenuRef = useRef(null); // 🚀 THÊM MỚI: Ref tắt popup thông báo
+  const notiMenuRef = useRef(null);
 
   const { cartItems, fetchCart, setCartItems } = useContext(CartContext);
 
@@ -53,10 +55,10 @@ function UserLayout() {
   }, [currentUser, fetchCart, setCartItems]);
 
   // =================================================================
-  // 🚀 THÊM MỚI: FAKE REAL-TIME LẤY THÔNG BÁO
+  // 🚀 FAKE REAL-TIME LẤY THÔNG BÁO
   // =================================================================
   useEffect(() => {
-    if (!currentUser) return; // Chưa đăng nhập thì dẹp, khỏi quét
+    if (!currentUser) return;
 
     const fetchNotifications = async () => {
       try {
@@ -72,9 +74,8 @@ function UserLayout() {
       }
     };
 
-    fetchNotifications(); // 1. Gọi ngay khi vừa load web
+    fetchNotifications();
 
-    // 2. FAKE REAL-TIME: 15s quét 1 lần ngầm
     const intervalId = setInterval(() => {
       fetchNotifications();
     }, 15000);
@@ -82,22 +83,63 @@ function UserLayout() {
     return () => clearInterval(intervalId);
   }, [currentUser]);
 
-  // Hàm khi bấm vào một thông báo cụ thể
+  // Hàm khi bấm vào một thông báo cụ thể (Đọc + Chuyển hướng)
   const handleReadNotification = async (notiId) => {
     try {
       await axiosClient.put(`/notifications/${notiId}/read`);
-      // Update lại UI ngay lập tức cho mượt
       setNotifications((prev) =>
         prev.map((n) =>
           n.id_notification === notiId ? { ...n, is_read: 1 } : n,
         ),
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
-      // Chuyển tới trang Lịch sử mua hàng
       setShowNotiMenu(false);
       handleNavigate("/order");
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  // Hàm xoá 1 thông báo
+  const handleDeleteNotification = async (notiId) => {
+    try {
+      await axiosClient.delete(`/notifications/${notiId}`);
+      setNotifications((prev) =>
+        prev.filter((n) => n.id_notification !== notiId),
+      );
+      // Cập nhật lại số lượng chưa đọc nếu cái vừa bị xoá là cái chưa đọc
+      setUnreadCount((prev) => {
+        const deletedNoti = notifications.find(
+          (n) => n.id_notification === notiId,
+        );
+        if (deletedNoti && Number(deletedNoti.is_read) === 0) {
+          return Math.max(0, prev - 1);
+        }
+        return prev;
+      });
+    } catch (error) {
+      console.error("Lỗi khi xoá thông báo:", error);
+    }
+  };
+
+  // 🚀 HÀM XOÁ TẤT CẢ THÔNG BÁO (MỚI)
+  const handleDeleteAllNotifications = async () => {
+    if (notifications.length === 0) return;
+    try {
+      // Ép giao diện giấu đi trước cho mượt (Optimistic UI Update)
+      const oldNotifications = [...notifications];
+      setNotifications([]);
+      setUnreadCount(0);
+      setShowNotiMenu(false);
+
+      // Gọi API xóa toàn bộ ngầm (Dùng vòng lặp gọi API đơn)
+      await Promise.all(
+        oldNotifications.map((noti) =>
+          axiosClient.delete(`/notifications/${noti.id_notification}`),
+        ),
+      );
+    } catch (error) {
+      console.error("Lỗi khi xoá tất cả thông báo:", error);
     }
   };
 
@@ -145,7 +187,7 @@ function UserLayout() {
   };
 
   // =================================================================
-  // CẬP NHẬT THÔNG TIN CÁ NHÂN
+  // CẬP NHẬT THÔNG TIN CÁ NHÂN & ĐỔI MK (GIỮ NGUYÊN)
   // =================================================================
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -165,9 +207,8 @@ function UserLayout() {
     setIsEditProfileOpen(true);
   };
 
-  const handleEditChange = (e) => {
+  const handleEditChange = (e) =>
     setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
-  };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
@@ -192,9 +233,6 @@ function UserLayout() {
     }
   };
 
-  // =================================================================
-  // ĐỔI MẬT KHẨU
-  // =================================================================
   const [isChangePwdOpen, setIsChangePwdOpen] = useState(false);
   const [isChangingPwd, setIsChangingPwd] = useState(false);
   const [showNewPwd, setShowNewPwd] = useState(false);
@@ -227,9 +265,7 @@ function UserLayout() {
     }
   };
 
-  // =================================================================
   // CÁC EFFECT & HÀM KHÁC
-  // =================================================================
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -240,14 +276,10 @@ function UserLayout() {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = () => {
-    console.log("Tìm kiếm với từ khóa:", searchTerm);
-  };
+  const handleSearch = () => console.log("Tìm kiếm với từ khóa:", searchTerm);
 
   const handleLogout = async () => {
     await logout();
@@ -264,6 +296,23 @@ function UserLayout() {
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-emerald-500/20 relative overflow-x-hidden">
+      {/* 🚀 CSS THANH CUỘN CHO DROPDOWN THÔNG BÁO */}
+      <style>{`
+        .noti-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .noti-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .noti-scrollbar::-webkit-scrollbar-thumb {
+          background: #e4e4e7;
+          border-radius: 10px;
+        }
+        .noti-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #d4d4d8;
+        }
+      `}</style>
+
       {/* HEADER */}
       <nav className="fixed top-0 w-full z-40 bg-white/90 backdrop-blur-xl border-b border-zinc-100 shadow-sm transition-all h-16 flex items-center">
         <div className="flex justify-between items-center px-4 w-full max-w-7xl mx-auto gap-4">
@@ -301,6 +350,7 @@ function UserLayout() {
               <Search size={20} />
             </button>
 
+            {/* 🚀 CHUÔNG THÔNG BÁO VỚI GIAO DIỆN MỚI */}
             {currentUser && (
               <div className="relative" ref={notiMenuRef}>
                 <button
@@ -312,72 +362,112 @@ function UserLayout() {
                 >
                   <Bell size={20} />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1.5 bg-rose-500 text-white w-2.5 h-2.5 rounded-full border border-white" />
+                    <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 border border-white"></span>
+                    </span>
                   )}
                 </button>
 
                 <div
-                  className={`absolute right-0 top-[calc(100%+10px)] w-80 origin-top-right overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${
+                  className={`absolute right-0 top-[calc(100%+10px)] w-80 origin-top-right overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.15)] transition-all duration-300 ${
                     showNotiMenu
                       ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-                      : "pointer-events-none -translate-y-2 scale-95 opacity-0"
+                      : "pointer-events-none -translate-y-4 scale-95 opacity-0"
                   }`}
                 >
-                  <div className="px-4 py-3 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
-                    <h3 className="font-black text-zinc-800">Thông báo</h3>
+                  {/* Header Thông báo */}
+                  <div className="px-5 py-4 border-b border-zinc-100/80 bg-zinc-50/50 flex justify-between items-center sticky top-0 z-10 backdrop-blur-md">
+                    <h3 className="font-black text-zinc-800 tracking-tight">
+                      Thông báo
+                    </h3>
                     {unreadCount > 0 && (
-                      <span className="text-[10px] font-bold bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full uppercase">
+                      <span className="text-[10px] font-black bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full uppercase tracking-widest">
                         {unreadCount} chưa đọc
                       </span>
                     )}
                   </div>
 
-                  <div className="max-h-[350px] overflow-y-auto custom-scrollbar flex flex-col">
+                  {/* List Thông báo */}
+                  {/* List Thông báo */}
+                  <div className="max-h-[320px] overflow-y-auto noti-scrollbar flex flex-col bg-white">
                     {notifications.length === 0 ? (
-                      <div className="p-6 text-center text-zinc-400 text-sm">
-                        Bạn chưa có thông báo nào.
+                      <div className="p-10 flex flex-col items-center text-center text-zinc-400">
+                        <div className="w-14 h-14 bg-zinc-50 rounded-full flex items-center justify-center mb-3">
+                          <BellRing size={24} className="text-zinc-300" />
+                        </div>
+                        <p className="text-sm font-medium">
+                          Bạn chưa có thông báo nào.
+                        </p>
                       </div>
                     ) : (
                       notifications.map((noti) => (
-                        <button
+                        <div
                           key={noti.id_notification}
                           onClick={() =>
                             handleReadNotification(noti.id_notification)
                           }
-                          className={`flex flex-col items-start gap-1 p-4 border-b border-zinc-50 text-left transition hover:bg-zinc-50 cursor-pointer ${
+                          className={`group relative flex items-center gap-3 p-4 border-b border-zinc-50 text-left transition-colors cursor-pointer pr-10 ${
                             Number(noti.is_read) === 0
-                              ? "bg-emerald-50/30"
-                              : "opacity-70"
+                              ? "bg-emerald-50/20 hover:bg-emerald-50/40"
+                              : "hover:bg-zinc-50"
                           }`}
                         >
-                          <div className="flex justify-between w-full items-center">
-                            <span
-                              className={`font-bold text-sm ${
-                                Number(noti.is_read) === 0
-                                  ? "text-emerald-700"
-                                  : "text-zinc-700"
-                              }`}
-                            >
-                              {noti.title}
-                            </span>
+                          {/* Dấu chấm xanh nếu chưa đọc */}
+                          <div className="w-2 shrink-0 flex justify-center">
                             {Number(noti.is_read) === 0 && (
-                              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 block"></span>
                             )}
                           </div>
-                          <span className="text-xs text-zinc-500 line-clamp-2">
-                            {noti.message}
-                          </span>
-                          <span className="text-[10px] text-zinc-400 font-medium mt-1">
-                            {new Date(noti.created_at).toLocaleString("vi-VN")}
-                          </span>
-                        </button>
+
+                          <div className="flex-1">
+                            <h4
+                              className={`text-sm mb-0.5 line-clamp-1 pr-2 ${Number(noti.is_read) === 0 ? "font-bold text-emerald-800" : "font-semibold text-zinc-700"}`}
+                            >
+                              {noti.title}
+                            </h4>
+                            <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed pr-2">
+                              {noti.message}
+                            </p>
+                            <span className="block text-[10px] text-zinc-400 font-medium mt-1.5">
+                              {new Date(noti.created_at).toLocaleString(
+                                "vi-VN",
+                              )}
+                            </span>
+                          </div>
+
+                          {/* 🚀 NÚT X (XOÁ 1 ITEM) NẰM GIỮA MÀN HÌNH */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteNotification(noti.id_notification);
+                            }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-7 h-7 text-zinc-300 hover:text-rose-500 hover:bg-rose-50 rounded-full opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                            title="Xoá thông báo"
+                          >
+                            <X size={16} strokeWidth={2.5} />
+                          </button>
+                        </div>
                       ))
                     )}
                   </div>
+
+                  {/* 🚀 Nút Xoá Tất Cả (Nằm dưới cùng) */}
+                  {notifications.length > 0 && (
+                    <div className="p-3 border-t border-zinc-100 bg-white sticky bottom-0 z-10">
+                      <button
+                        onClick={handleDeleteAllNotifications}
+                        className="w-full py-2.5 text-[11px] font-bold uppercase tracking-widest text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Trash2 size={14} /> Xóa tất cả
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
+            {/* Giỏ hàng */}
             <button
               onClick={() => handleNavigate("/cart")}
               className="p-2 hover:bg-zinc-100 text-zinc-700 transition-colors rounded-full relative flex items-center cursor-pointer no-underline"
@@ -390,6 +480,7 @@ function UserLayout() {
               )}
             </button>
 
+            {/* User Menu */}
             {currentUser ? (
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -458,6 +549,7 @@ function UserLayout() {
         </div>
       </nav>
 
+      {/* BODY CHÍNH */}
       <main
         className={`pt-20 transform transition-all duration-500 ease-in-out ${
           isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
@@ -661,7 +753,7 @@ function UserLayout() {
         </div>
       )}
 
-      {/* TOAST THÔNG BÁO Ở GIỮA */}
+      {/* KHUNG THÔNG BÁO Ở GIỮA */}
       {toast.show && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div

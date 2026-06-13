@@ -31,7 +31,24 @@ const markAsRead = async (req, res) => {
   }
 };
 
+// Xoá thông báo
+const deleteNotification = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const notificationId = req.params.id; // Lấy ID trên URL
+
+    await notiService.DeleteNotification(notificationId, userId);
+
+    res.status(200).json({ success: true, message: "Đã xoá thông báo." });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server khi xoá thông báo." });
+  }
+};
+
 module.exports = {
   getNotifications,
   markAsRead,
+  deleteNotification,
 };
