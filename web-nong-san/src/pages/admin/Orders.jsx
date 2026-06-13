@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   BarChart3,
-  ChevronLeft,
-  ChevronRight,
   Download,
   Search,
   Star,
@@ -13,6 +11,9 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
+  MapPin, // Icon định vị cho địa chỉ
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -25,7 +26,6 @@ const statusTabs = [
   "Đã hủy",
 ];
 
-// Hàm tiện ích để dịch trạng thái và lấy màu Badge
 const getStatusConfig = (status) => {
   switch (status) {
     case "pending":
@@ -65,7 +65,6 @@ const getPaymentMethod = (method) => {
   return method;
 };
 
-// Dữ liệu giả cho 3 cái thẻ Insight ở dưới
 const insights = [
   {
     title: "Hiệu quả giao hàng",
@@ -104,7 +103,12 @@ function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
 
-  // State Toast Thông báo
+  // =================================================================
+  // 🚀 STATE QUẢN LÝ PHÂN TRANG (PAGINATION)
+  // =================================================================
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Chốt 10 đơn trên 1 trang
+
   const [toast, setToast] = useState({
     show: false,
     message: "",
@@ -120,7 +124,6 @@ function OrdersPage() {
     }, 2500);
   };
 
-  // Gọi API lấy toàn bộ đơn hàng
   useEffect(() => {
     const fetchAdminOrders = async () => {
       try {
@@ -135,7 +138,6 @@ function OrdersPage() {
     fetchAdminOrders();
   }, []);
 
-  // --- HÀM XỬ LÝ CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG ---
   const handleUpdateStatus = async (orderId, newStatus) => {
     if (newStatus === "cancelled") {
       const confirm = window.confirm(
@@ -165,6 +167,7 @@ function OrdersPage() {
     }
   };
 
+  // Lọc đơn hàng theo Tab và Search
   const filteredOrders = orders.filter((order) => {
     const statusConfig = getStatusConfig(order.status);
     const matchesTab =
@@ -177,8 +180,37 @@ function OrdersPage() {
     return matchesTab && matchesSearch;
   });
 
+  // 🚀 LOGIC PHÂN TRANG
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchTerm]);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+
   return (
-    <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8">
+    <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 overflow-hidden">
+      {/* 🚀 CSS THANH KÉO NGANG CHO BẢNG */}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 10px; /* Làm dày thêm xíu cho dễ kéo */
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #e2e8f0;
+          border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #94a3b8;
+          border-radius: 8px;
+          border: 2px solid #e2e8f0;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #64748b;
+        }
+      `}</style>
+
       <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className="mb-2 text-3xl font-black tracking-[-0.04em] text-slate-900">
@@ -237,7 +269,6 @@ function OrdersPage() {
           </div>
         </article>
 
-        {/* Tổng doanh thu */}
         <article className="relative overflow-hidden rounded-xl bg-emerald-700 p-6 text-white xl:col-span-4">
           <div className="relative z-10">
             <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-lime-100">
@@ -259,26 +290,29 @@ function OrdersPage() {
         </article>
       </section>
 
-      {/* BẢNG QUẢN LÝ ĐƠN HÀNG */}
-      <section className="overflow-hidden rounded-2xl bg-[#eef2eb] shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] border-collapse text-left">
+      {/* BẢNG QUẢN LÝ ĐƠN HÀNG - ĐÃ FIX KHUNG CHỨA ĐỂ HIỆN THANH CUỘN */}
+      <section className="overflow-hidden rounded-2xl bg-[#eef2eb] shadow-sm flex flex-col w-full max-w-[calc(100vw-2rem)] md:max-w-[calc(100vw-18rem)] lg:max-w-none">
+        <div className="w-full overflow-x-auto custom-scrollbar pb-3">
+          <table className="w-full min-w-[1500px] border-collapse text-left">
             <thead>
-              <tr className="bg-slate-200/70 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-                <th className="px-6 py-4">Mã đơn</th>
-                <th className="px-6 py-4">Khách hàng</th>
-                <th className="px-6 py-4 w-[250px]">Sản phẩm</th>
-                <th className="px-6 py-4">Ngày đặt</th>
-                <th className="px-6 py-4">Tổng tiền</th>
-                <th className="px-6 py-4">Trạng thái</th>
-                <th className="px-6 py-4 text-right">Hành động (Duyệt)</th>
+              <tr className="bg-slate-200/70 text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">
+                <th className="px-5 py-4 w-[100px]">Mã đơn</th>
+                <th className="px-5 py-4 w-[180px]">Khách hàng</th>
+                <th className="px-5 py-4 w-[220px]">Nơi giao</th>
+                <th className="px-5 py-4 w-[250px]">Sản phẩm</th>
+                <th className="px-5 py-4 w-[120px]">Tạm tính</th>
+                <th className="px-5 py-4 w-[100px]">Giảm giá</th>
+                <th className="px-5 py-4 w-[100px]">Phí Ship</th>
+                <th className="px-5 py-4 w-[140px]">Tổng thanh toán</th>
+                <th className="px-5 py-4 text-center w-[120px]">Trạng thái</th>
+                <th className="px-5 py-4 text-right w-[140px]">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200/60">
               {loading ? (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="10"
                     className="py-20 text-center text-emerald-600"
                   >
                     <RefreshCcw
@@ -288,57 +322,93 @@ function OrdersPage() {
                     <p className="font-bold">Đang tải danh sách đơn hàng...</p>
                   </td>
                 </tr>
-              ) : filteredOrders.length === 0 ? (
+              ) : currentOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-20 text-center text-slate-500">
+                  <td colSpan="10" className="py-20 text-center text-slate-500">
                     Không tìm thấy đơn hàng nào phù hợp.
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((order, index) => {
+                currentOrders.map((order, index) => {
                   const statusConf = getStatusConfig(order.status);
                   const isLocked =
                     updatingId === order.id_order ||
                     order.status === "cancelled" ||
                     order.status === "completed";
 
+                  const subtotal = order.items
+                    ? order.items.reduce(
+                        (acc, item) => acc + Number(item.price) * item.quantity,
+                        0,
+                      )
+                    : 0;
+                  const shippingFee =
+                    order.items && order.items.length > 0 ? 20000 : 0;
+                  const discount =
+                    order.items && order.items.length > 0 ? 15000 : 0;
+
                   return (
                     <tr
                       key={order.id_order}
                       className={`${
                         index % 2 === 0 ? "bg-white" : "bg-[#f8faf7]"
-                      } transition hover:bg-[#f2f6f0]`}
+                      } transition hover:bg-[#f2f6f0] align-top`}
                     >
-                      <td className="px-6 py-5 font-mono text-xs font-bold text-emerald-700">
+                      {/* Mã đơn */}
+                      <td className="px-5 py-5 font-mono text-xs font-bold text-emerald-700">
                         #{order.id_order}
+                        <div className="mt-2 text-[10px] text-slate-400 font-sans tracking-tight">
+                          {new Date(order.created_at).toLocaleDateString(
+                            "vi-VN",
+                          )}
+                        </div>
                       </td>
 
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs uppercase shrink-0">
+                      {/* Khách hàng */}
+                      <td className="px-5 py-5">
+                        <div className="flex items-start gap-3">
+                          <div className="h-8 w-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs uppercase shrink-0 mt-0.5">
                             {order.full_name?.charAt(0) || "U"}
                           </div>
                           <div>
                             <p className="text-sm font-bold text-slate-900 line-clamp-1">
                               {order.full_name}
                             </p>
-                            <p className="text-xs font-medium text-slate-500">
+                            <p className="text-xs font-medium text-slate-500 mt-0.5">
                               {getPaymentMethod(order.payment_method)}
                             </p>
                           </div>
                         </div>
                       </td>
 
-                      <td className="px-6 py-5">
-                        <div className="flex flex-col gap-1 text-sm text-slate-600">
+                      {/* Nơi giao */}
+                      <td className="px-5 py-5">
+                        <div className="flex items-start gap-2 text-sm text-slate-600">
+                          <MapPin
+                            size={16}
+                            className="shrink-0 mt-0.5 text-slate-400"
+                          />
+                          <span className="line-clamp-3 leading-relaxed">
+                            {order.address || (
+                              <span className="italic text-slate-400">
+                                Không có địa chỉ
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Sản phẩm */}
+                      <td className="px-5 py-5">
+                        <div className="flex flex-col gap-1.5 text-sm text-slate-600">
                           {order.items && order.items.length > 0 ? (
                             order.items.map((item, i) => (
                               <p
                                 key={i}
-                                className="line-clamp-1 text-xs font-medium"
+                                className="line-clamp-2 text-xs font-medium leading-relaxed"
                               >
                                 • {item.product_name}{" "}
-                                <span className="text-slate-400">
+                                <span className="text-slate-400 whitespace-nowrap">
                                   (x{item.quantity})
                                 </span>
                               </p>
@@ -351,32 +421,41 @@ function OrdersPage() {
                         </div>
                       </td>
 
-                      <td className="px-6 py-5 text-sm text-slate-500 font-medium">
-                        {new Date(order.created_at).toLocaleDateString(
-                          "vi-VN",
-                          {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                          },
-                        )}
+                      {/* Tạm tính (Giá gốc) */}
+                      <td className="px-5 py-5 text-sm font-semibold text-slate-600">
+                        {subtotal.toLocaleString("vi-VN")}đ
                       </td>
 
-                      <td className="px-6 py-5 text-sm font-black text-amber-600">
-                        {Number(order.total_amount).toLocaleString("vi-VN")}đ
+                      {/* Giảm giá */}
+                      <td className="px-5 py-5 text-sm font-bold text-emerald-600">
+                        {discount > 0
+                          ? `-${discount.toLocaleString("vi-VN")}đ`
+                          : "0đ"}
                       </td>
 
-                      {/* CỘT HIỂN THỊ TRẠNG THÁI (BADGE) */}
-                      <td className="px-6 py-5">
+                      {/* Phí ship */}
+                      <td className="px-5 py-5 text-sm font-semibold text-slate-600">
+                        +{shippingFee.toLocaleString("vi-VN")}đ
+                      </td>
+
+                      {/* Tổng thanh toán */}
+                      <td className="px-5 py-5">
+                        <span className="text-base font-black text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100">
+                          {Number(order.total_amount).toLocaleString("vi-VN")}đ
+                        </span>
+                      </td>
+
+                      {/* Trạng thái */}
+                      <td className="px-5 py-5 text-center">
                         <span
-                          className={`inline-flex rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] ${statusConf.className}`}
+                          className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] ${statusConf.className}`}
                         >
                           {statusConf.text}
                         </span>
                       </td>
 
-                      {/* CỘT DROPDOWN ĐỂ ADMIN DUYỆT ĐƠN */}
-                      <td className="px-6 py-5 text-right">
+                      {/* Hành động */}
+                      <td className="px-5 py-5 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {updatingId === order.id_order && (
                             <Loader2
@@ -390,7 +469,7 @@ function OrdersPage() {
                               handleUpdateStatus(order.id_order, e.target.value)
                             }
                             disabled={isLocked}
-                            className={`rounded-lg border px-3 py-1.5 text-xs font-bold outline-none transition ${
+                            className={`rounded-lg border px-3 py-2 text-xs font-bold outline-none transition ${
                               isLocked
                                 ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-70"
                                 : "bg-white text-slate-700 border-slate-300 hover:border-emerald-400 focus:border-emerald-500 cursor-pointer shadow-sm hover:shadow"
@@ -401,7 +480,7 @@ function OrdersPage() {
                             </option>
                             <option
                               value="processing"
-                              className="font-semibold "
+                              className="font-semibold"
                             >
                               Xác nhận
                             </option>
@@ -424,6 +503,47 @@ function OrdersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* 🚀 ĐIỀU HƯỚNG PHÂN TRANG */}
+        {!loading && totalPages > 1 && (
+          <div className="flex justify-center px-6 py-4 bg-white border-t border-slate-200/60">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 transition cursor-pointer"
+              >
+                <ChevronLeft size={16} strokeWidth={2.5} />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (num) => (
+                  <button
+                    key={num}
+                    onClick={() => setCurrentPage(num)}
+                    className={`h-9 w-9 rounded-lg text-sm font-bold flex items-center justify-center transition cursor-pointer ${
+                      currentPage === num
+                        ? "bg-emerald-600 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ),
+              )}
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 transition cursor-pointer"
+              >
+                <ChevronRight size={16} strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* INSIGHTS */}

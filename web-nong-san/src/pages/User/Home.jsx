@@ -254,12 +254,33 @@ function Home() {
                       </p>
 
                       <div className="flex justify-between items-center mt-1">
-                        <span className="text-zinc-900 font-black text-lg">
-                          {Number(item.price).toLocaleString("vi-VN")}đ
-                        </span>
+                        {/* KHU VỰC HIỂN THỊ GIÁ */}
+                        <div className="flex items-end gap-1.5 flex-wrap">
+                          {item.discount_price &&
+                          Number(item.discount_price) > 0 ? (
+                            <>
+                              {/* Có giảm giá: Hiện giá giảm to, giá gốc nhỏ + gạch chéo */}
+                              <span className="text-zinc-900 font-black text-lg leading-none">
+                                {Number(item.discount_price).toLocaleString(
+                                  "vi-VN",
+                                )}
+                                đ
+                              </span>
+                              <span className="text-xs text-zinc-400 font-semibold line-through mb-[2px]">
+                                {Number(item.price).toLocaleString("vi-VN")}đ
+                              </span>
+                            </>
+                          ) : (
+                            /* Không có giảm giá: Chỉ hiện giá gốc to */
+                            <span className="text-zinc-900 font-black text-lg leading-none">
+                              {Number(item.price).toLocaleString("vi-VN")}đ
+                            </span>
+                          )}
+                        </div>
 
+                        {/* NÚT THÊM VÀO GIỎ HÀNG (GIỮ NGUYÊN) */}
                         <button
-                          className="bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer"
+                          className="bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer shrink-0"
                           onClick={async (e) => {
                             e.stopPropagation();
                             const success = await addToCart(item.id_product, 1);

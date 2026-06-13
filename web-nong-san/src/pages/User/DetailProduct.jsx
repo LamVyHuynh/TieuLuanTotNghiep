@@ -123,7 +123,13 @@ function DetailProduct() {
     );
   }
 
-  const totalPrice = product.price * quantity;
+  // 🚀 LOGIC CHỐT GIÁ THỰC TẾ (Lấy giá giảm nếu có, không thì lấy giá gốc)
+  const activePrice =
+    product.discount_price && Number(product.discount_price) > 0
+      ? Number(product.discount_price)
+      : Number(product.price);
+
+  const totalPrice = activePrice * quantity; // Tạm tính bằng giá thực tế x số lượng
 
   const handleIncrease = () => {
     if (quantity < (product.stock || 50)) {
@@ -188,13 +194,30 @@ function DetailProduct() {
                     "Món ăn thanh đạm, giàu dinh dưỡng, phù hợp cho mọi chế độ ăn kiêng. Nguyên liệu chuẩn Organic 100%."}
                 </p>
 
-                <div className="mt-5 flex flex-wrap items-center gap-3">
-                  <span className="text-3xl font-black tracking-[-0.04em] text-emerald-700 sm:text-4xl">
-                    {Number(product.price).toLocaleString("vi-VN")}đ
-                    <span className="ml-1 text-base font-medium text-slate-400">
-                      / {product.unit || "Phần"}
+                {/* 🚀 KHU VỰC HIỆN GIÁ CỦA SẢN PHẨM CHÍNH */}
+                <div className="mt-5 flex flex-wrap items-end gap-3">
+                  {product.discount_price &&
+                  Number(product.discount_price) > 0 ? (
+                    <>
+                      <span className="text-4xl font-black tracking-[-0.04em] text-emerald-700 sm:text-5xl leading-none">
+                        {Number(product.discount_price).toLocaleString("vi-VN")}
+                        đ
+                        <span className="ml-2 text-base font-medium text-slate-400 normal-case tracking-normal">
+                          / {product.unit || "Phần"}
+                        </span>
+                      </span>
+                      <span className="text-xl font-bold text-slate-400 line-through mb-1">
+                        {Number(product.price).toLocaleString("vi-VN")}đ
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-4xl font-black tracking-[-0.04em] text-emerald-700 sm:text-5xl leading-none">
+                      {Number(product.price).toLocaleString("vi-VN")}đ
+                      <span className="ml-2 text-base font-medium text-slate-400 normal-case tracking-normal">
+                        / {product.unit || "Phần"}
+                      </span>
                     </span>
-                  </span>
+                  )}
                 </div>
               </div>
 
@@ -305,7 +328,6 @@ function DetailProduct() {
 
                   <button
                     onClick={(e) => {
-                      // Kiểm tra token đăng nhập
                       const token = localStorage.getItem("auth_token");
                       if (!token) {
                         showToast(
@@ -315,18 +337,17 @@ function DetailProduct() {
                         setTimeout(() => handleNavigate("/login"), 1500);
                         return;
                       }
-                      e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+                      e.stopPropagation();
 
-                      // Đẩy sản phẩm vào Context.
-                      // LƯU Ý: Phải bọc trong mảng [...] vì trang Checkout đang dùng checkoutList.map()
+                      // Đẩy sản phẩm vào Context Checkout (BỌC GIÁ ĐÃ GIẢM LẠI ĐỂ QUA BILL KHÔNG BỊ SAI)
                       addToPayment([
                         {
                           ...product,
+                          price: activePrice, // 🚀 Cực kỳ quan trọng: Ghi đè giá gốc bằng giá active
                           quantity,
                         },
                       ]);
 
-                      // Lụm! Chuyển thẳng sang trang thanh toán (có hiệu ứng trượt sang trái)
                       handleNavigate("/checkout");
                     }}
                     className="cursor-pointer rounded-xl bg-[#dfe4dc] px-5 py-4 text-base font-bold text-slate-900 transition hover:-translate-y-0.5 hover:bg-[#d4dad1]"
@@ -362,12 +383,31 @@ function DetailProduct() {
                     />
                   </div>
                   <div className="px-2">
-                    <h3 className="text-lg font-black tracking-[-0.03em] text-slate-900 line-clamp-1">
+                    <h3 className="text-lg font-black tracking-[-0.03em] text-slate-900 line-clamp-1 mb-1">
                       {item.name}
                     </h3>
-                    <p className="mt-1 text-emerald-700 font-black text-lg">
-                      {Number(item.price).toLocaleString("vi-VN")}đ
-                    </p>
+
+                    {/* 🚀 KHU VỰC HIỆN GIÁ CỦA SẢN PHẨM GỢI Ý */}
+                    <div className="flex items-end gap-1.5 flex-wrap mt-1">
+                      {item.discount_price &&
+                      Number(item.discount_price) > 0 ? (
+                        <>
+                          <span className="text-emerald-700 font-black text-lg leading-none">
+                            {Number(item.discount_price).toLocaleString(
+                              "vi-VN",
+                            )}
+                            đ
+                          </span>
+                          <span className="text-xs text-slate-400 font-semibold line-through mb-[2px]">
+                            {Number(item.price).toLocaleString("vi-VN")}đ
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-emerald-700 font-black text-lg leading-none">
+                          {Number(item.price).toLocaleString("vi-VN")}đ
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </article>
               ))}

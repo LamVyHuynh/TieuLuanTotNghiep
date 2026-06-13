@@ -111,7 +111,7 @@ async function getOrdersByUserId(userId) {
 async function getAllOrdersForAdmin() {
   // 1. Lấy tất cả đơn hàng từ mới nhất đến cũ nhất
   const orderQuery = `
-    SELECT id_order, full_name, payment_method, total_amount, status, created_at 
+    SELECT id_order, full_name, address, payment_method, total_amount, status, created_at 
     FROM orders 
     ORDER BY created_at DESC
   `;
@@ -127,7 +127,7 @@ async function getAllOrdersForAdmin() {
 
   // lấy tất cả món hàng thuộc về các đơn hàng trên
   const itemQuery = `
-    SELECT id_order, product_name, quantity 
+    SELECT id_order, product_name, quantity, price
     FROM order_items 
     WHERE id_order IN (${placeholders})
   `;

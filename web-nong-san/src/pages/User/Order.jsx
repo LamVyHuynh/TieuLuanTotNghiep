@@ -3,9 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   CalendarDays,
   Package,
-  Wallet,
   ArrowLeft,
-  ShoppingBag, // Nhớ import thêm icon này cho đẹp
+  ShoppingBag,
+  TicketPercent, // Icon cho phần giảm giá
+  Truck, // Icon cho phí ship
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -120,7 +121,7 @@ function Order() {
       </section>
 
       {/* KHU VỰC RENDER DANH SÁCH ĐƠN HÀNG */}
-      <div className="space-y-4">
+      <div className="space-y-4 pb-20">
         {loading ? (
           <div className="flex justify-center py-10">
             <span className="text-emerald-600 font-semibold animate-pulse">
@@ -140,6 +141,19 @@ function Order() {
         ) : (
           orders.map((order) => {
             const viStatus = statusTextMap[order.status] || order.status;
+
+            // Tính toán lại Tiền hàng tạm tính
+            const subtotal = order.items
+              ? order.items.reduce(
+                  (acc, item) => acc + Number(item.price) * item.quantity,
+                  0,
+                )
+              : 0;
+
+            // Khớp với logic Checkout (Có hàng là có ship 20k, có giảm giá 15k)
+            const shippingFee =
+              order.items && order.items.length > 0 ? 20000 : 0;
+            const discount = order.items && order.items.length > 0 ? 15000 : 0;
 
             return (
               <article
@@ -167,14 +181,13 @@ function Order() {
                   </span>
                 </div>
 
-                {/* ===== CHI TIẾT MÓN ĂN TRONG ĐƠN (Thêm mới) ===== */}
+                {/* CHI TIẾT MÓN ĂN TRONG ĐƠN */}
                 <div className="mb-5 rounded-xl bg-slate-50/50 p-4 border border-slate-100/50">
                   <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
                     <ShoppingBag size={16} className="text-emerald-500" />
                     Sản phẩm đã mua
                   </div>
                   <ul className="space-y-3">
-                    {/* Duyệt mảng items bên trong mỗi order */}
                     {order.items && order.items.length > 0 ? (
                       order.items.map((item, index) => (
                         <li
@@ -204,11 +217,12 @@ function Order() {
                     )}
                   </ul>
                 </div>
-                {/* ============================================== */}
 
-                {/* Footer Card (Ngày đặt + Tổng tiền) */}
-                <div className="mb-4 grid gap-3 text-sm sm:grid-cols-2">
-                  <div className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-slate-600">
+                {/* ============================================== */}
+                {/* BILL TÍNH TIỀN (NÂNG CẤP) */}
+                {/* ============================================== */}
+                <div className="border-t border-slate-100 pt-4">
+                  <div className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-slate-600 mb-4 text-sm">
                     <CalendarDays size={16} className="text-slate-400" />
                     Ngày đặt:{" "}
                     <span className="font-semibold text-slate-700">
@@ -219,12 +233,47 @@ function Order() {
                       })}
                     </span>
                   </div>
-                  <div className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-slate-600">
-                    <Wallet size={16} className="text-slate-400" />
-                    Tổng thanh toán:{" "}
-                    <span className="font-bold text-amber-500 text-base">
-                      {Number(order.total_amount).toLocaleString("vi-VN")}đ
-                    </span>
+
+                  <div className="space-y-2 text-sm">
+                    {/* Tiền tạm tính */}
+                    <div className="flex justify-between text-slate-500">
+                      <span>
+                        Tạm tính ({order.items?.length || 0} sản phẩm)
+                      </span>
+                      <span className="font-medium">
+                        {subtotal.toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
+
+                    {/* Phí ship */}
+                    <div className="flex justify-between text-slate-500">
+                      <span className="flex items-center gap-1.5">
+                        <Truck size={14} /> Phí vận chuyển
+                      </span>
+                      <span className="font-medium">
+                        {shippingFee.toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
+
+                    {/* Giảm giá */}
+                    <div className="flex justify-between text-emerald-600">
+                      <span className="flex items-center gap-1.5">
+                        <TicketPercent size={14} /> Giảm giá
+                      </span>
+                      <span className="font-bold">
+                        -{discount.toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
+
+                    {/* Tổng cộng */}
+                    <div className="flex justify-between items-center pt-3 mt-3 border-t border-slate-100">
+                      <span className="font-bold text-slate-700 text-base">
+                        Tổng thanh toán
+                      </span>
+                      <span className="font-black text-amber-500 text-2xl">
+                        {Number(order.total_amount).toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
                   </div>
                 </div>
               </article>

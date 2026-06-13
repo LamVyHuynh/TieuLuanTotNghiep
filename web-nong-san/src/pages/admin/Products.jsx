@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
+
 import {
   Plus,
   X,
@@ -97,23 +98,27 @@ function ProductsPage() {
     };
   }, []);
 
-  // Hiện tên danh mục thay vì ID (nếu muốn, có thể bỏ qua nếu không cần)
   const categoryMap = useMemo(() => {
     return categoryList.reduce((acc, cat) => {
       acc[cat.id_category] = cat.name;
       return acc;
     }, {});
   }, [categoryList]);
+
   const getCategoryName = (id) => categoryMap[id] || "Chưa có danh mục";
 
-  // Tính toán thống kê
+  // 🚀 TÍNH TOÁN THỐNG KÊ (ĐÃ FIX THEO LOGIC MỚI CỦA MÀY)
   const stastics = {
     total: productList.length,
     lowStock: productList.filter((product) => product.stock_quantity <= 5)
       .length,
     totalValue: productList.reduce((sum, product) => {
-      const price = product.discount_price || product.price || 0;
-      return sum + price * (product.stock_quantity || 0);
+      // Lấy trực tiếp giá khuyến mãi nếu có, không có thì lấy giá gốc
+      const activePrice =
+        product.discount_price && Number(product.discount_price) > 0
+          ? Number(product.discount_price)
+          : Number(product.price) || 0;
+      return sum + activePrice * (product.stock_quantity || 0);
     }, 0),
   };
 
@@ -206,14 +211,294 @@ function ProductsPage() {
 
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 relative bg-slate-50/50 overflow-hidden">
-      {/* MODAL THÊM / SỬA */}
+      {/* HEADER TRANG CHÍNH */}
+      <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between px-2">
+        <div>
+          <h2 className="text-4xl font-black text-slate-900 tracking-tighter">
+            Quản lý sản phẩm
+          </h2>
+          <p className="mt-1 text-slate-500 font-medium italic">
+            Sức khỏe của khách hàng nằm trong tay bạn!
+          </p>
+        </div>
+        <button
+          onClick={openAddModal}
+          className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 active:scale-95"
+        >
+          <Plus size={22} />
+          <span className="text-base">Thêm món mới</span>
+        </button>
+      </header>
+
+      {/* THỐNG KÊ & TÌM KIẾM */}
+      <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4 px-2">
+        <div className="lg:col-span-2 flex relative">
+          <Search
+            size={18}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 "
+          />
+          <input
+            type="text"
+            placeholder="Tìm kiếm sản phẩm..."
+            className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-medium shadow-sm outline-none focus:border-emerald-500 transition-all"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+            <div className="p-3 bg-emerald-100 text-emerald-700 rounded-xl">
+              <LayoutDashboard size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-400">
+                Tổng món
+              </p>
+              <p className="text-lg font-black">{stastics.total}</p>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+            <div className="p-3 bg-amber-100 text-amber-700 rounded-xl">
+              <AlertTriangle size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-slate-400">
+                Sản phẩm sắp hết
+              </p>
+              <p className="text-lg font-black">{stastics.lowStock}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Card giá trị kho */}
+      <section className="mb-8 px-2">
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl">
+            <DollarSign size={28} />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              Tổng giá trị kho hàng (Theo giá thực tế)
+            </p>
+            <p className="text-2xl font-black text-slate-800">
+              {Number(stastics.totalValue).toLocaleString("vi-VN")} đ
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* TABLE BẢNG HIỂN THỊ */}
+      {isLoading ? (
+        <div className="flex justify-center p-20">
+          <div className="h-10 w-10 animate-spin border-4 border-[#2e7d32] border-t-transparent rounded-full" />
+        </div>
+      ) : productList.length > 0 ? (
+        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full min-w-[1100px] text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/80 border-b border-slate-100">
+                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 w-[300px]">
+                    Món ăn
+                  </th>
+                  <th className="p-5 text-[11px] font-black uppercase text-slate-400">
+                    Danh mục
+                  </th>
+                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-center">
+                    Dinh dưỡng (P-C-F)
+                  </th>
+                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-center">
+                    Tồn kho
+                  </th>
+                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-right">
+                    Giá gốc
+                  </th>
+                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-right">
+                    Giá khuyến mãi
+                  </th>
+                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-right">
+                    Thao tác
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {productList.map((product) => {
+                  const originalPrice = Number(product.price) || 0;
+                  const discountPrice = Number(product.discount_price) || 0;
+
+                  return (
+                    <tr
+                      key={product.id_product}
+                      className="group hover:bg-emerald-50/30 transition-all align-middle"
+                    >
+                      <td className="p-5">
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={
+                              product.image_url ||
+                              "https://via.placeholder.com/150"
+                            }
+                            alt=""
+                            className="h-14 w-14 rounded-2xl object-cover shadow-sm"
+                          />
+                          <div>
+                            <p className="font-black text-slate-800 leading-tight line-clamp-2 mb-1">
+                              {product.name}
+                            </p>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase bg-slate-100 px-1.5 py-0.5 rounded-md">
+                              {product.unit}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="p-5">
+                        <span
+                          title={getCategoryName(product.id_category)}
+                          className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 shadow-sm"
+                        >
+                          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest truncate max-w-[120px]">
+                            {getCategoryName(product.id_category)}
+                          </span>
+                        </span>
+                      </td>
+
+                      <td className="p-5 text-center">
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg mb-1">
+                            {product.calories} kcal
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400">
+                            P:{product.protein} C:{product.carbs} F:
+                            {product.fat}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="p-5 text-center">
+                        <span
+                          className={`font-black text-sm px-3 py-1 rounded-lg ${
+                            product.stock_quantity <= 5
+                              ? "bg-rose-50 text-rose-600 border border-rose-200"
+                              : "bg-slate-50 text-slate-600"
+                          }`}
+                        >
+                          {product.stock_quantity}
+                        </span>
+                      </td>
+
+                      {/* 🚀 Cột hiển thị Giá Gốc (Gạch chéo nếu có giảm giá) */}
+                      <td className="p-5 text-right font-bold text-slate-600">
+                        <span
+                          className={
+                            discountPrice > 0
+                              ? "line-through text-slate-400"
+                              : ""
+                          }
+                        >
+                          {originalPrice.toLocaleString("vi-VN")}đ
+                        </span>
+                      </td>
+
+                      {/* 🚀 Cột hiển thị Giá Khuyến Mãi (Là giá thực bán) */}
+                      <td className="p-5 text-right">
+                        {discountPrice > 0 ? (
+                          <span className="font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                            {discountPrice.toLocaleString("vi-VN")}đ
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 font-semibold italic text-xs bg-slate-50 px-3 py-1.5 rounded-md">
+                            Không có
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="p-5 text-right">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => openEditModal(product)}
+                            className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl cursor-pointer transition-colors"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              openDeleteConfirm(product.id_product)
+                            }
+                            className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl cursor-pointer transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <section className="rounded-[3rem] border border-slate-100 bg-white p-24 text-center">
+          <Box size={48} className="mx-auto text-slate-200 mb-4" />
+          <h3 className="text-xl font-black text-slate-800">
+            Chưa có món ăn nào
+          </h3>
+        </section>
+      )}
+
+      {/* ================= MODAL XÁC NHẬN XOÁ ================= */}
+      {deleteConfirm.show && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer"
+            onClick={() => setDeleteConfirm({ ...deleteConfirm, show: false })}
+          ></div>
+          <div className="relative w-full max-w-sm rounded-[2.5rem] bg-white overflow-hidden shadow-2xl border-2 border-rose-100">
+            <div className="p-8 flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-rose-50/50">
+                <Trash2 size={40} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-2">
+                Xoá thiệt hả?
+              </h3>
+              <p className="text-slate-500 font-medium mb-8">
+                Món ăn này sẽ biến mất vĩnh viễn khỏi kho. Suy nghĩ kỹ chưa bạn
+                ơi?
+              </p>
+              <div className="flex w-full gap-3">
+                <button
+                  onClick={() =>
+                    setDeleteConfirm({ ...deleteConfirm, show: false })
+                  }
+                  className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-all cursor-pointer"
+                >
+                  Thôi hổng xoá
+                </button>
+                <button
+                  onClick={executeDelete}
+                  disabled={deleteConfirm.isDeleting}
+                  className="flex-1 py-4 bg-rose-500 hover:bg-rose-600 text-white font-black rounded-2xl shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+                >
+                  {deleteConfirm.isDeleting ? (
+                    <div className="h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full" />
+                  ) : (
+                    "Xoá luôn!"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL THÊM / SỬA ================= */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer"
             onClick={() => setIsModalOpen(false)}
           ></div>
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] bg-white shadow-2xl">
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] bg-white shadow-2xl custom-scrollbar">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white/80 px-8 py-6 backdrop-blur-md">
               <h3 className="text-2xl font-black tracking-tight text-slate-900">
                 {isEditMode ? "Chỉnh sửa món ăn" : "Thêm món ăn mới"}
@@ -243,13 +528,12 @@ function ProductsPage() {
                       className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
                     />
                   </div>
-                  {/* Ô Dropdown Danh mục (chiếm 1 cột) */}
                   <div className="sm:col-span-1">
                     <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
                       Thuộc danh mục
                     </label>
                     <select
-                      name="id_category" // <-- Chú ý chữ 'c' viết thường cho đúng Database
+                      name="id_category"
                       required
                       value={formData.id_category}
                       onChange={(e) =>
@@ -409,269 +693,6 @@ function ProductsPage() {
                 )}
               </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* HEADER TRANG CHÍNH */}
-      <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between px-2">
-        <div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tighter">
-            Quản lý sản phẩm
-          </h2>
-          <p className="mt-1 text-slate-500 font-medium italic">
-            Sức khỏe của khách hàng nằm trong tay bạn!
-          </p>
-        </div>
-        <button
-          onClick={openAddModal}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 active:scale-95"
-        >
-          <Plus size={22} />
-          <span className="text-base">Thêm món mới</span>
-        </button>
-      </header>
-
-      {/* THỐNG KÊ & TÌM KIẾM */}
-      <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4 px-2">
-        <div className="lg:col-span-2 flex relative">
-          <Search
-            size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 "
-          />
-          <input
-            type="text"
-            placeholder="Tìm kiếm sản phẩm..."
-            className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-medium shadow-sm outline-none focus:border-emerald-500 transition-all"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
-            <div className="p-3 bg-emerald-100 text-emerald-700 rounded-xl">
-              <LayoutDashboard size={20} />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-bold text-slate-400">
-                Tổng món
-              </p>
-              <p className="text-lg font-black">{stastics.total}</p>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
-            <div className="p-3 bg-amber-100 text-amber-700 rounded-xl">
-              <AlertTriangle size={20} />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-bold text-slate-400">
-                Sản phẩm sắp hết
-              </p>
-              <p className="text-lg font-black">{stastics.lowStock}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Card giá trị kho (Nếu muốn tách riêng cho đẹp) */}
-      <section className="mb-8 px-2">
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
-          <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl">
-            <DollarSign size={28} />
-          </div>
-          <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-              Tổng giá trị kho hàng
-            </p>
-            <p className="text-2xl font-black text-slate-800">
-              {Number(stastics.totalValue).toLocaleString("vi-VN")} đ
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* TABLE BẢNG HIỂN THỊ ĐÃ KHÔI PHỤC ĐẦY ĐỦ */}
-      {isLoading ? (
-        <div className="flex justify-center p-20">
-          <div className="h-10 w-10 animate-spin border-4 border-[#2e7d32] border-t-transparent rounded-full" />
-        </div>
-      ) : productList.length > 0 ? (
-        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-100">
-                  <th className="p-5 text-[11px] font-black uppercase text-slate-400">
-                    Món ăn
-                  </th>
-                  <th className="p-5 text-[11px] font-black uppercase text-slate-400">
-                    Danh mục
-                  </th>
-                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-center">
-                    Dinh dưỡng (P-C-F)
-                  </th>
-                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-center">
-                    Tồn kho
-                  </th>
-                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-center">
-                    Giá bán
-                  </th>
-                  <th className="p-5 text-[11px] font-black uppercase text-slate-400 text-right">
-                    Thao tác
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {productList.map((product) => (
-                  <tr
-                    key={product.id_product}
-                    className="group hover:bg-emerald-50/30 transition-all"
-                  >
-                    {/* Cột Tên & Ảnh */}
-                    <td className="p-5">
-                      <div className="flex items-center gap-4">
-                        <img
-                          src={
-                            product.image_url ||
-                            "https://via.placeholder.com/150"
-                          }
-                          alt=""
-                          className="h-14 w-14 rounded-2xl object-cover shadow-sm"
-                        />
-                        <div>
-                          <p className="font-black text-slate-800 leading-none mb-1">
-                            {product.name}
-                          </p>
-
-                          <span className="text-[10px] font-bold text-slate-400 uppercase bg-slate-100 px-1.5 py-0.5 rounded-md">
-                            {product.unit}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    {/* Cột Danh mục */}
-                    <td className="p-5">
-                      <div className="flex">
-                        <span
-                          title={getCategoryName(product.id_category)}
-                          className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 shadow-sm"
-                        >
-                          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest truncate max-w-[120px]">
-                            {getCategoryName(product.id_category)}
-                          </span>
-                        </span>
-                      </div>
-                    </td>
-                    {/* Cột Dinh dưỡng */}
-                    <td className="p-5 text-center">
-                      <div className="flex flex-col items-center">
-                        <span className="text-xs font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg mb-1">
-                          {product.calories} kcal
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400">
-                          P:{product.protein} C:{product.carbs} F:{product.fat}
-                        </span>
-                      </div>
-                    </td>
-                    {/* Cột Tồn kho */}
-                    <td className="p-5 text-center">
-                      <span
-                        className={`font-black text-sm ${product.stock_quantity <= 5 ? "text-rose-500" : "text-slate-600"}`}
-                      >
-                        {product.stock_quantity}
-                      </span>
-                    </td>
-                    {/* Cột Giá */}
-                    <td className="p-5 text-center font-black text-[#2e7d32]">
-                      {product.discount_price ? (
-                        <div className="flex flex-col items-center">
-                          <span className="text-slate-300 line-through text-[10px]">
-                            {Number(product.price).toLocaleString("vi-VN")}đ
-                          </span>
-                          <span>
-                            {Number(product.discount_price).toLocaleString(
-                              "vi-VN",
-                            )}
-                            đ
-                          </span>
-                        </div>
-                      ) : (
-                        <span>
-                          {Number(product.price).toLocaleString("vi-VN")}đ
-                        </span>
-                      )}
-                    </td>
-                    {/* Cột Nút bấm thao tác */}
-                    <td className="p-5 text-right">
-                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => openEditModal(product)}
-                          className="p-2.5 text-slate-400 hover:text-emerald-600 cursor-pointer transition-colors"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => openDeleteConfirm(product.id_product)}
-                          className="p-2.5 text-slate-400 hover:text-rose-600 cursor-pointer transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : (
-        <section className="rounded-[3rem] border border-slate-100 bg-white p-24 text-center">
-          <Box size={48} className="mx-auto text-slate-200 mb-4" />
-          <h3 className="text-xl font-black text-slate-800">
-            Chưa có món ăn nào
-          </h3>
-        </section>
-      )}
-
-      {/* ================= MODAL XÁC NHẬN XOÁ ================= */}
-      {deleteConfirm.show && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer"
-            onClick={() => setDeleteConfirm({ ...deleteConfirm, show: false })}
-          ></div>
-          <div className="relative w-full max-w-sm rounded-[2.5rem] bg-white overflow-hidden shadow-2xl border-2 border-rose-100">
-            <div className="p-8 flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-rose-50/50">
-                <Trash2 size={40} />
-              </div>
-              <h3 className="text-2xl font-black text-slate-900 mb-2">
-                Xoá thiệt hả?
-              </h3>
-              <p className="text-slate-500 font-medium mb-8">
-                Món ăn này sẽ biến mất vĩnh viễn khỏi kho. Suy nghĩ kỹ chưa bạn
-                ơi?
-              </p>
-              <div className="flex w-full gap-3">
-                <button
-                  onClick={() =>
-                    setDeleteConfirm({ ...deleteConfirm, show: false })
-                  }
-                  className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-all cursor-pointer"
-                >
-                  Thôi hổng xoá
-                </button>
-                <button
-                  onClick={executeDelete}
-                  disabled={deleteConfirm.isDeleting}
-                  className="flex-1 py-4 bg-rose-500 hover:bg-rose-600 text-white font-black rounded-2xl shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50"
-                >
-                  {deleteConfirm.isDeleting ? (
-                    <div className="h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full" />
-                  ) : (
-                    "Xoá luôn!"
-                  )}
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
