@@ -33,6 +33,9 @@ const orderRoutes = require("./routes/order.routes");
 // imoport router thông báo
 const notificationRoutes = require("./routes/notification.routes");
 
+// Import router đánh giá
+const reviewRoutes = require("./routes/review.routes");
+
 // Import cookie-parser để đọc cookie từ request header
 const cookieParser = require("cookie-parser");
 
@@ -83,6 +86,9 @@ app.use("/orders", orderRoutes);
 
 // gắn router thông báo
 app.use("/notifications", notificationRoutes);
+
+// gắn router đánh giá
+app.use("/reviews", reviewRoutes);
 
 // Kiểm tra route
 app.get("/", (req, res) => {

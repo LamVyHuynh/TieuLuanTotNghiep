@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   CalendarDays,
   Package,
   ArrowLeft,
   ShoppingBag,
-  TicketPercent, // Icon cho phần giảm giá
-  Truck, // Icon cho phí ship
+  TicketPercent,
+  Truck,
+  Star,
+  MessageSquare,
+  Send,
+  Loader2,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -14,25 +21,88 @@ function Order() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // =================================================================
-  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG THÔNG MINH
-  // =================================================================
   const [isExiting, setIsExiting] = useState(true);
   const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
-  // Lịch sử đơn hàng
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Tự động gọi API khi vừa vào trang để lấy lịch sử đơn hàng
+  // =================================================================
+  // STATE TOAST THÔNG BÁO
+  // =================================================================
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
+  const toastTimerRef = useRef(null);
+
+  const showToast = (message, type = "success") => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ show: true, message, type });
+    toastTimerRef.current = setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 2500);
+  };
+
+  // =================================================================
+  // 🚀 STATE QUẢN LÝ ĐÁNH GIÁ TRỰC TIẾP (OBJECT STATE DÀNH CHO NHIỀU ITEM)
+  // =================================================================
+  const [ratings, setRatings] = useState({});
+  const [hoverRatings, setHoverRatings] = useState({});
+  const [comments, setComments] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState({});
+  const [submittedReviews, setSubmittedReviews] = useState({}); // Lưu trạng thái đã gửi thành công
+
+  // Hàm thay đổi giá trị cho từng item riêng biệt
+  const setItemRating = (id, val) =>
+    setRatings((prev) => ({ ...prev, [id]: val }));
+  const setItemHover = (id, val) =>
+    setHoverRatings((prev) => ({ ...prev, [id]: val }));
+  const setItemComment = (id, val) =>
+    setComments((prev) => ({ ...prev, [id]: val }));
+
+  const handleSubmitReview = async (e, orderId, productId) => {
+    e.preventDefault();
+    const uniqueId = `${orderId}-${productId}`;
+    const currentRating = ratings[uniqueId] || 5; // Mặc định 5 sao nếu chưa chọn
+    const currentComment = comments[uniqueId] || "";
+
+    if (currentRating < 1) {
+      showToast("Vui lòng chọn số sao đánh giá!", "error");
+      return;
+    }
+
+    setIsSubmitting((prev) => ({ ...prev, [uniqueId]: true }));
+    try {
+      await axiosClient.post("/reviews", {
+        productId: productId,
+        rating: currentRating,
+        comment: currentComment,
+      });
+
+      showToast("Cảm ơn bạn đã gửi đánh giá! 🥰", "success");
+      setSubmittedReviews((prev) => ({ ...prev, [uniqueId]: true }));
+    } catch (error) {
+      console.error("Lỗi gửi đánh giá:", error);
+      showToast(
+        error.response?.data?.message || "Có lỗi xảy ra, thử lại sau nhé!",
+        "error",
+      );
+    } finally {
+      setIsSubmitting((prev) => ({ ...prev, [uniqueId]: false }));
+    }
+  };
+
+  // =================================================================
+  // FETCH DỮ LIỆU
+  // =================================================================
   useEffect(() => {
     const fetchHistory = async () => {
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) {
-          console.warn(
-            "Không tìm thấy token xác thực! Vui lòng đăng nhập để xem lịch sử đơn hàng.",
-          );
+          console.warn("Không tìm thấy token xác thực!");
           setLoading(false);
           return;
         }
@@ -56,13 +126,11 @@ function Order() {
 
   const handleNavigate = (path) => {
     if (location.pathname === path) return;
-
     if (path === "/" || path === -1) {
       setSlideDirection("translate-x-12");
     } else {
       setSlideDirection("-translate-x-12");
     }
-
     setIsExiting(true);
     setTimeout(() => {
       if (path === -1) navigate(-1);
@@ -70,9 +138,6 @@ function Order() {
     }, 400);
   };
 
-  // =================================================================
-  // DICTIONARY MAP TRẠNG THÁI VÀ MÀU SẮC
-  // =================================================================
   const statusTextMap = {
     pending: "Chờ xác nhận",
     processing: "Đang chuẩn bị",
@@ -124,9 +189,7 @@ function Order() {
       <div className="space-y-4 pb-20">
         {loading ? (
           <div className="flex justify-center py-10">
-            <span className="text-emerald-600 font-semibold animate-pulse">
-              Đang tải dữ liệu...
-            </span>
+            <Loader2 className="animate-spin text-emerald-600" size={32} />
           </div>
         ) : orders.length === 0 ? (
           <div className="rounded-2xl border border-slate-100 bg-white p-10 text-center shadow-sm">
@@ -141,8 +204,9 @@ function Order() {
         ) : (
           orders.map((order) => {
             const viStatus = statusTextMap[order.status] || order.status;
+            // 🚀 BẮT ĐIỀU KIỆN ĐƠN ĐÃ HOÀN THÀNH
+            const isCompleted = order.status === "completed";
 
-            // Tính toán lại Tiền hàng tạm tính
             const subtotal = order.items
               ? order.items.reduce(
                   (acc, item) => acc + Number(item.price) * item.quantity,
@@ -150,7 +214,6 @@ function Order() {
                 )
               : 0;
 
-            // Khớp với logic Checkout (Có hàng là có ship 20k, có giảm giá 15k)
             const shippingFee =
               order.items && order.items.length > 0 ? 20000 : 0;
             const discount = order.items && order.items.length > 0 ? 15000 : 0;
@@ -187,29 +250,144 @@ function Order() {
                     <ShoppingBag size={16} className="text-emerald-500" />
                     Sản phẩm đã mua
                   </div>
-                  <ul className="space-y-3">
+                  <ul className="space-y-5">
                     {order.items && order.items.length > 0 ? (
-                      order.items.map((item, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start justify-between gap-4 text-sm"
-                        >
-                          <div className="flex-1">
-                            <span className="font-medium text-slate-800">
-                              {item.product_name}
-                            </span>
-                            <span className="ml-2 text-slate-500 font-medium">
-                              x{item.quantity}
-                            </span>
-                          </div>
-                          <div className="font-semibold text-slate-700">
-                            {(
-                              Number(item.price) * item.quantity
-                            ).toLocaleString("vi-VN")}
-                            đ
-                          </div>
-                        </li>
-                      ))
+                      order.items.map((item, index) => {
+                        const actualProductId =
+                          item.id_product || item.product_id;
+                        const uniqueId = `${order.id_order}-${actualProductId}`;
+
+                        // Lấy State của cái item đang render hiện tại
+                        const currentRating = ratings[uniqueId] || 5;
+                        const currentHover = hoverRatings[uniqueId] || 0;
+                        const currentComment = comments[uniqueId] || "";
+                        const isSubmittingThis =
+                          isSubmitting[uniqueId] || false;
+                        const isSubmittedThis =
+                          submittedReviews[uniqueId] || false;
+
+                        return (
+                          <li
+                            key={index}
+                            className="flex flex-col gap-3 text-sm border-b border-slate-100/50 pb-5 last:border-0 last:pb-0"
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div className="flex-1">
+                                <span className="font-bold text-slate-800">
+                                  {item.product_name}
+                                </span>
+                                <span className="ml-2 text-slate-500 font-medium bg-white px-2 py-0.5 rounded border border-slate-200">
+                                  x{item.quantity}
+                                </span>
+                              </div>
+                              <div className="font-black text-emerald-700">
+                                {(
+                                  Number(item.price) * item.quantity
+                                ).toLocaleString("vi-VN")}
+                                đ
+                              </div>
+                            </div>
+
+                            {/* 🚀 FORM ĐÁNH GIÁ LUÔN HIỂN THỊ NẾU ĐÃ NHẬN VÀ CHƯA ĐÁNH GIÁ */}
+                            {isCompleted &&
+                              (isSubmittedThis ? (
+                                <div className="mt-2 flex items-center gap-1.5 text-sm font-bold text-emerald-600 bg-emerald-50 w-fit px-3 py-1.5 rounded-lg border border-emerald-100">
+                                  <CheckCircle2 size={16} /> Đã gửi đánh giá
+                                </div>
+                              ) : (
+                                <form
+                                  onSubmit={(e) =>
+                                    handleSubmitReview(
+                                      e,
+                                      order.id_order,
+                                      actualProductId,
+                                    )
+                                  }
+                                  className="mt-2 bg-white border border-amber-200/60 rounded-xl p-4 shadow-sm relative overflow-hidden"
+                                >
+                                  <div className="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
+
+                                  <div className="flex items-center gap-2 mb-3 text-slate-800 font-bold text-sm">
+                                    <MessageSquare
+                                      size={16}
+                                      className="text-amber-500"
+                                    />
+                                    Đánh giá sản phẩm này
+                                  </div>
+
+                                  {/* Cụm chọn sao */}
+                                  <div className="flex items-center gap-1 mb-3">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <button
+                                        key={star}
+                                        type="button"
+                                        onClick={() =>
+                                          setItemRating(uniqueId, star)
+                                        }
+                                        onMouseEnter={() =>
+                                          setItemHover(uniqueId, star)
+                                        }
+                                        onMouseLeave={() =>
+                                          setItemHover(uniqueId, 0)
+                                        }
+                                        className="focus:outline-none transition-transform hover:scale-110 cursor-pointer"
+                                      >
+                                        <Star
+                                          size={24}
+                                          className={`transition-colors duration-200 ${
+                                            star <=
+                                            (currentHover || currentRating)
+                                              ? "fill-amber-400 text-amber-400 drop-shadow-sm"
+                                              : "text-slate-200"
+                                          }`}
+                                        />
+                                      </button>
+                                    ))}
+                                    <span className="ml-3 text-[10px] font-bold text-amber-600 uppercase tracking-widest bg-amber-50 px-2 py-1 rounded">
+                                      {currentRating === 5
+                                        ? "Tuyệt vời"
+                                        : currentRating === 4
+                                          ? "Rất tốt"
+                                          : currentRating === 3
+                                            ? "Bình thường"
+                                            : currentRating === 2
+                                              ? "Tệ"
+                                              : "Rất tệ"}
+                                    </span>
+                                  </div>
+
+                                  {/* Khung nhập comment */}
+                                  <textarea
+                                    value={currentComment}
+                                    onChange={(e) =>
+                                      setItemComment(uniqueId, e.target.value)
+                                    }
+                                    placeholder="Hương vị món ăn thế nào? Để lại nhận xét nhé..."
+                                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 outline-none transition-all min-h-[70px] resize-none"
+                                  ></textarea>
+
+                                  <div className="flex justify-end mt-3">
+                                    <button
+                                      type="submit"
+                                      disabled={isSubmittingThis}
+                                      className="flex items-center gap-2 px-5 py-2 text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                                    >
+                                      {isSubmittingThis ? (
+                                        <Loader2
+                                          size={14}
+                                          className="animate-spin"
+                                        />
+                                      ) : (
+                                        <Send size={14} />
+                                      )}
+                                      Gửi đánh giá
+                                    </button>
+                                  </div>
+                                </form>
+                              ))}
+                          </li>
+                        );
+                      })
                     ) : (
                       <li className="text-sm text-slate-400 italic">
                         Không tải được chi tiết sản phẩm
@@ -218,9 +396,7 @@ function Order() {
                   </ul>
                 </div>
 
-                {/* ============================================== */}
-                {/* BILL TÍNH TIỀN (NÂNG CẤP) */}
-                {/* ============================================== */}
+                {/* BILL TÍNH TIỀN */}
                 <div className="border-t border-slate-100 pt-4">
                   <div className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-slate-600 mb-4 text-sm">
                     <CalendarDays size={16} className="text-slate-400" />
@@ -235,7 +411,6 @@ function Order() {
                   </div>
 
                   <div className="space-y-2 text-sm">
-                    {/* Tiền tạm tính */}
                     <div className="flex justify-between text-slate-500">
                       <span>
                         Tạm tính ({order.items?.length || 0} sản phẩm)
@@ -244,8 +419,6 @@ function Order() {
                         {subtotal.toLocaleString("vi-VN")}đ
                       </span>
                     </div>
-
-                    {/* Phí ship */}
                     <div className="flex justify-between text-slate-500">
                       <span className="flex items-center gap-1.5">
                         <Truck size={14} /> Phí vận chuyển
@@ -254,8 +427,6 @@ function Order() {
                         {shippingFee.toLocaleString("vi-VN")}đ
                       </span>
                     </div>
-
-                    {/* Giảm giá */}
                     <div className="flex justify-between text-emerald-600">
                       <span className="flex items-center gap-1.5">
                         <TicketPercent size={14} /> Giảm giá
@@ -264,8 +435,6 @@ function Order() {
                         -{discount.toLocaleString("vi-VN")}đ
                       </span>
                     </div>
-
-                    {/* Tổng cộng */}
                     <div className="flex justify-between items-center pt-3 mt-3 border-t border-slate-100">
                       <span className="font-bold text-slate-700 text-base">
                         Tổng thanh toán
@@ -281,6 +450,24 @@ function Order() {
           })
         )}
       </div>
+
+      {/* TOAST THÔNG BÁO (BẮN BẰNG PORTAL RA NGOÀI CÙNG) */}
+      {toast.show &&
+        createPortal(
+          <div
+            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3 rounded-full px-5 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-5 ${
+              toast.type === "success" ? "bg-emerald-600" : "bg-rose-500"
+            }`}
+          >
+            {toast.type === "success" ? (
+              <CheckCircle2 size={20} />
+            ) : (
+              <XCircle size={20} />
+            )}
+            {toast.message}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

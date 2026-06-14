@@ -1,6 +1,9 @@
 const pool = require("../config/db");
+
 // 🚀 THÊM MỚI: Import hàm tạo thông báo từ service mới tạo
 const { createNotification } = require("./notification.service");
+
+const { encodeId } = require("../../utils/hashid.util");
 
 async function createOrderTransaction(userId, orderData, items) {
   // Lấy 1 connection riêng biệt từ pool để chạy về Transaction
@@ -100,7 +103,13 @@ async function getOrdersByUserId(userId) {
     return {
       ...order,
       // Lọc ra những món hàng có id_order khớp với đơn hàng đang lặp
-      items: items.filter((item) => item.id_order === order.id_order),
+      items: items
+        .filter((item) => item.id_order === order.id_order)
+        .map((item) => ({
+          ...item,
+          // 🚀 TUYỆT CHIÊU Ở ĐÂY: Mã hoá cái id_product lại trước khi ném về cho Frontend
+          id_product: encodeId(item.id_product),
+        })),
     };
   });
 
