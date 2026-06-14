@@ -14,6 +14,9 @@ import axiosClient from "../../api/axiosClient";
 import { CartContext } from "../../context/CartContext";
 import { CheckoutContext } from "../../context/CheckoutContext";
 
+// Import component đánh giá sản phẩm
+import ProductReviews from "../../components/ProductReviews";
+
 function DetailProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -194,7 +197,7 @@ function DetailProduct() {
                     "Món ăn thanh đạm, giàu dinh dưỡng, phù hợp cho mọi chế độ ăn kiêng. Nguyên liệu chuẩn Organic 100%."}
                 </p>
 
-                {/* 🚀 KHU VỰC HIỆN GIÁ CỦA SẢN PHẨM CHÍNH */}
+                {/* KHU VỰC HIỆN GIÁ CỦA SẢN PHẨM CHÍNH */}
                 <div className="mt-5 flex flex-wrap items-end gap-3">
                   {product.discount_price &&
                   Number(product.discount_price) > 0 ? (
@@ -339,11 +342,10 @@ function DetailProduct() {
                       }
                       e.stopPropagation();
 
-                      // Đẩy sản phẩm vào Context Checkout (BỌC GIÁ ĐÃ GIẢM LẠI ĐỂ QUA BILL KHÔNG BỊ SAI)
                       addToPayment([
                         {
                           ...product,
-                          price: activePrice, // 🚀 Cực kỳ quan trọng: Ghi đè giá gốc bằng giá active
+                          price: activePrice,
                           quantity,
                         },
                       ]);
@@ -359,7 +361,14 @@ function DetailProduct() {
             </div>
           </section>
 
-          <section className="mt-24 border-t border-slate-200 pt-16">
+          {/* ================================================================= */}
+          {/* 🚀 KHU VỰC HIỂN THỊ ĐÁNH GIÁ (TRUYỀN ID SẢN PHẨM VÀO ĐỂ FETCH DATA) */}
+          {/* ================================================================= */}
+          <div className="mt-16">
+            <ProductReviews productId={id} />
+          </div>
+
+          <section className="mt-16 border-t border-slate-200 pt-16">
             <h2 className="mb-8 text-3xl font-black tracking-[-0.04em] text-slate-950">
               Có thể bạn sẽ thích
             </h2>
@@ -387,7 +396,7 @@ function DetailProduct() {
                       {item.name}
                     </h3>
 
-                    {/* 🚀 KHU VỰC HIỆN GIÁ CỦA SẢN PHẨM GỢI Ý */}
+                    {/* KHU VỰC HIỆN GIÁ CỦA SẢN PHẨM GỢI Ý */}
                     <div className="flex items-end gap-1.5 flex-wrap mt-1">
                       {item.discount_price &&
                       Number(item.discount_price) > 0 ? (
