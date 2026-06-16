@@ -14,6 +14,7 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
+  Clock,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -397,17 +398,43 @@ function Order() {
                 </div>
 
                 {/* BILL TÍNH TIỀN */}
+                {/* BILL TÍNH TIỀN */}
                 <div className="border-t border-slate-100 pt-4">
-                  <div className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-slate-600 mb-4 text-sm">
-                    <CalendarDays size={16} className="text-slate-400" />
-                    Ngày đặt:{" "}
-                    <span className="font-semibold text-slate-700">
-                      {new Date(order.created_at).toLocaleDateString("vi-VN", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      })}
-                    </span>
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <div className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-slate-600 text-sm">
+                      <CalendarDays size={16} className="text-slate-400" />
+                      Ngày đặt:{" "}
+                      <span className="font-semibold text-slate-700">
+                        {new Date(order.created_at).toLocaleDateString(
+                          "vi-VN",
+                          {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          },
+                        )}
+                      </span>
+                    </div>
+
+                    {/* 🚀 HIỆN GIỜ ĐẶT HÀNG (NẾU CÓ scheduled_time) */}
+                    {order.scheduled_time && (
+                      <div className="inline-flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2 text-amber-700 text-sm">
+                        <Clock size={16} className="text-amber-500" />
+                        Hẹn giao lúc:{" "}
+                        <span className="font-black text-amber-600">
+                          {new Date(order.scheduled_time).toLocaleString(
+                            "vi-VN",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            },
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2 text-sm">

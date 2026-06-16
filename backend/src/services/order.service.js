@@ -14,9 +14,16 @@ async function createOrderTransaction(userId, orderData, items) {
     await conn.beginTransaction();
 
     // 1. Tạo đơn hàng
-    const { full_name, phone, address, note, payment_method, total_amount } =
-      orderData;
-    const insertOrderQuery = `INSERT INTO orders (user_id, full_name, phone, address, note, payment_method, total_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')`;
+    const {
+      full_name,
+      phone,
+      address,
+      note,
+      payment_method,
+      total_amount,
+      scheduled_time,
+    } = orderData;
+    const insertOrderQuery = `INSERT INTO orders (user_id, full_name, phone, address, note, payment_method, total_amount, scheduled_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`;
     const [orderResult] = await conn.execute(insertOrderQuery, [
       userId,
       full_name,
@@ -25,6 +32,7 @@ async function createOrderTransaction(userId, orderData, items) {
       note || null,
       payment_method,
       total_amount,
+      scheduled_time,
     ]);
 
     const orderId = orderResult.insertId;
@@ -72,7 +80,7 @@ async function createOrderTransaction(userId, orderData, items) {
 async function getOrdersByUserId(userId) {
   // BƯỚC 1: Lấy danh sách các đơn hàng của thằng User này
   const orderQuery = `
-    SELECT id_order, total_amount, status, created_at 
+    SELECT id_order, total_amount, status, created_at, scheduled_time 
     FROM orders 
     WHERE user_id = ? 
     ORDER BY created_at DESC
@@ -120,7 +128,7 @@ async function getOrdersByUserId(userId) {
 async function getAllOrdersForAdmin() {
   // 1. Lấy tất cả đơn hàng từ mới nhất đến cũ nhất
   const orderQuery = `
-    SELECT id_order, full_name, address, payment_method, total_amount, status, created_at 
+    SELECT id_order, full_name, address, payment_method, total_amount, status, created_at, scheduled_time 
     FROM orders 
     ORDER BY created_at DESC
   `;

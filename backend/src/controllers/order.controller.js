@@ -8,6 +8,7 @@ const {
 } = require("../services/order.service");
 const { encodeId, decodeId } = require("../../utils/hashid.util");
 
+// Tạo đơn hàng mới (dùng cho trang Checkout)
 const createOrder = async (req, res) => {
   try {
     const userId = req.user.id; // Lấy ID người dùng từ token đã xác thực
@@ -18,6 +19,7 @@ const createOrder = async (req, res) => {
       note,
       payment_method,
       total_amount,
+      scheduled_time, // Nhận từ Frontend (có thể dính chữ T và Z)
       items,
     } = req.body;
 
@@ -31,6 +33,26 @@ const createOrder = async (req, res) => {
       return res
         .status(400)
         .json({ message: "Vui lòng nhập đầy đủ thông tin nhận hàng !!!" });
+    }
+
+    // =====================================================================
+    // 🚀 THUỐC GIẢI: ÉP KIỂU LẠI THỜI GIAN NGAY TẠI ĐÂY TRƯỚC KHI ĐƯA VÀO DB
+    // =====================================================================
+    let formattedScheduledTime = null;
+    if (scheduled_time) {
+      // 1. Tạo Date object từ chuỗi Frontend gửi lên
+      const dateObj = new Date(scheduled_time);
+
+      // 2. Rút trích từng phần theo giờ địa phương của Server
+      const yyyy = dateObj.getFullYear();
+      const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const dd = String(dateObj.getDate()).padStart(2, "0");
+      const hh = String(dateObj.getHours()).padStart(2, "0");
+      const mi = String(dateObj.getMinutes()).padStart(2, "0");
+      const ss = String(dateObj.getSeconds()).padStart(2, "0");
+
+      // 3. Ráp lại chuẩn YYYY-MM-DD HH:mm:ss cho MySQL (SẠCH BÓNG CHỮ T VÀ Z)
+      formattedScheduledTime = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
     }
 
     // BỌC THÉP CHIỀU VÀO: Giải mã id_product từ mảng items mà React gửi lên
@@ -68,6 +90,7 @@ const createOrder = async (req, res) => {
       note,
       payment_method,
       total_amount,
+      scheduled_time: formattedScheduledTime, // 🚀 Ném cái giờ đã làm sạch xuống Service
     };
 
     // Gọi Service chạy Transaction
@@ -97,7 +120,6 @@ const createOrder = async (req, res) => {
     });
   }
 };
-
 // Controller lấy đơn hàng theo user (dùng cho trang Lịch sử đơn hàng)
 const getOrdersHistory = async (req, res) => {
   try {

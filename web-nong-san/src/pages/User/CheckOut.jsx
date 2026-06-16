@@ -24,10 +24,88 @@ import {
   Phone,
   Trash2,
   CheckCircle2,
+  Clock,
+  ChevronDown, // 🚀 THÊM MỚI: Icon mũi tên sổ xuống cho Dropdown
 } from "lucide-react";
 import { CheckoutContext } from "../../context/CheckoutContext";
 import { useAuth } from "../../context/AuthContext";
 import axiosClient from "../../api/axiosClient";
+
+// =================================================================
+// 🚀 HÀM TẠO KHUNG GIỜ THÔNG MINH (FULL 24H - PHÂN BUỔI - LÀM MỜ)
+// =================================================================
+const generateTimeSlots = () => {
+  const groupedSlots = [];
+  const now = new Date();
+
+  // Tính mốc giới hạn (Hiện tại + 45p chuẩn bị)
+  now.setMinutes(now.getMinutes() + 45);
+  const limitHour = now.getHours();
+  const limitMinute = now.getMinutes();
+
+  // Định nghĩa Full 24h chia làm 5 Buổi cho đẹp mắt
+  const sessions = [
+    { name: "Khuya", start: 0, end: 6 },
+    { name: "Sáng", start: 6, end: 11 },
+    { name: "Trưa", start: 11, end: 13 },
+    { name: "Chiều", start: 13, end: 18 },
+    { name: "Tối", start: 18, end: 24 },
+  ];
+
+  sessions.forEach((session) => {
+    const slotsInThisSession = [];
+
+    // Quét từng giờ trong buổi đó
+    for (let h = session.start; h < session.end; h++) {
+      const mins = [0, 30]; // Mỗi giờ chia làm 2 mốc 00 và 30
+
+      for (let m of mins) {
+        const startTimeStr = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+
+        let nextH = h;
+        let nextM = m + 30;
+        if (nextM >= 60) {
+          nextM = 0;
+          nextH += 1;
+        }
+        // Fix lỗi hiển thị 24:00 thành 00:00
+        const displayNextH =
+          nextH === 24 ? "00" : nextH.toString().padStart(2, "0");
+        const endTimeStr = `${displayNextH}:${nextM.toString().padStart(2, "0")}`;
+
+        // 🚀 KIỂM TRA: Giờ này đã qua chưa? (Nếu qua rồi thì đánh dấu isDisabled)
+        let isDisabled = false;
+        if (h < limitHour) isDisabled = true;
+        if (h === limitHour && m < limitMinute) isDisabled = true;
+
+        // Giá trị thời gian chuẩn YYYY-MM-DD HH:mm:ss cho MySQL
+        const realNow = new Date(); // Lấy ngày hiện tại
+        const year = realNow.getFullYear();
+        const month = String(realNow.getMonth() + 1).padStart(2, "0");
+        const date = String(realNow.getDate()).padStart(2, "0");
+        const hourStr = String(h).padStart(2, "0");
+        const minStr = String(m).padStart(2, "0");
+
+        const mysqlDateTime = `${year}-${month}-${date} ${hourStr}:${minStr}:00`;
+
+        slotsInThisSession.push({
+          value: mysqlDateTime,
+          label: `${startTimeStr} - ${endTimeStr}`,
+          isDisabled: isDisabled, // Lưu trạng thái mờ
+        });
+      }
+    }
+
+    if (slotsInThisSession.length > 0) {
+      groupedSlots.push({
+        sessionName: session.name,
+        slots: slotsInThisSession,
+      });
+    }
+  });
+
+  return groupedSlots;
+};
 
 const paymentMethods = [
   {
@@ -53,9 +131,6 @@ function CheckOut() {
   const { checkoutList } = useContext(CheckoutContext);
   const { currentUser } = useAuth();
 
-  // =================================================================
-  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
-  // =================================================================
   const [isExiting, setIsExiting] = useState(true);
   const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
@@ -80,11 +155,13 @@ function CheckOut() {
     }, 400);
   };
 
-  // =================================================================
-  // STATE DỮ LIỆU ĐẶT HÀNG & ĐỊA CHỈ
-  // =================================================================
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [note, setNote] = useState("");
+
+  // 🚀 STATE ĐẶT LỊCH GIAO HÀNG
+  const [deliveryType, setDeliveryType] = useState("asap");
+  const [scheduledTime, setScheduledTime] = useState("");
+  const [timeSlots, setTimeSlots] = useState([]); // Chứa danh sách giờ được tính toán
 
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -92,13 +169,11 @@ function CheckOut() {
   const [isLoadingAddress, setIsLoadingAddress] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State quản lý Modal
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [isAddingNewAddr, setIsAddingNewAddr] = useState(false);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
 
-  // State quản lý Modal Xoá
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -120,7 +195,11 @@ function CheckOut() {
     }, 2500);
   };
 
-  // --- API LẤY DANH SÁCH ĐỊA CHỈ ---
+  // Vừa load trang là tính toán ngay bộ khung giờ
+  useEffect(() => {
+    setTimeSlots(generateTimeSlots());
+  }, []);
+
   const fetchAddresses = useCallback(async (newIdToSelect = null) => {
     try {
       setIsLoadingAddress(true);
@@ -156,7 +235,6 @@ function CheckOut() {
     }
   }, [currentUser, fetchAddresses]);
 
-  // --- API LƯU ĐỊA CHỈ MỚI VÀO SỔ ---
   const handleSaveNewAddress = async () => {
     if (!newAddressText.trim()) {
       showToast("Vui lòng nhập địa chỉ cụ thể!", "error");
@@ -195,14 +273,12 @@ function CheckOut() {
     }
   };
 
-  // --- XỬ LÝ MỞ MODAL XOÁ ---
   const triggerDelete = (addressId, e) => {
     e.stopPropagation();
     setAddressToDelete(addressId);
     setShowDeleteModal(true);
   };
 
-  // --- API XOÁ ĐỊA CHỈ (Thực thi khi bấm Xác nhận trong Modal) ---
   const executeDeleteAddress = async () => {
     if (!addressToDelete) return;
 
@@ -216,7 +292,7 @@ function CheckOut() {
       }
 
       await fetchAddresses();
-      setShowDeleteModal(false); // Đóng modal xoá
+      setShowDeleteModal(false);
       setAddressToDelete(null);
     } catch (error) {
       showToast(
@@ -228,7 +304,6 @@ function CheckOut() {
     }
   };
 
-  // Tính tiền
   const product = checkoutList.length > 0 ? checkoutList[0] : null;
   const subtotal = useMemo(
     () =>
@@ -239,10 +314,14 @@ function CheckOut() {
   const discount = checkoutList.length > 0 ? 15000 : 0;
   const total = Math.max(subtotal + shippingFee - discount, 0);
 
-  // --- HÀM XỬ LÝ CHỐT ĐƠN ---
   const handlePlaceOrder = () => {
     if (!selectedAddress) {
       showToast("Vui lòng thêm địa chỉ giao hàng!", "error");
+      return;
+    }
+
+    if (deliveryType === "scheduled" && !scheduledTime) {
+      showToast("Vui lòng chọn khung giờ bạn muốn nhận hàng!", "error");
       return;
     }
 
@@ -254,11 +333,9 @@ function CheckOut() {
     executeOrder();
   };
 
-  // --- THỰC THI GỌI API BACKEND ĐỂ CHỐT ĐƠN ---
   const executeOrder = async () => {
     setIsSubmitting(true);
     try {
-      // Chuẩn bị Payload y chang tên biến mà Controller của mày mong đợi
       const orderPayload = {
         full_name: currentUser?.full_name,
         phone: currentUser?.phone,
@@ -266,30 +343,25 @@ function CheckOut() {
         note: note,
         payment_method: paymentMethod,
         total_amount: total,
-        // Map lại mảng items cho chuẩn (đặc biệt là cái id_product)
+        scheduled_time: deliveryType === "scheduled" ? scheduledTime : null,
         items: checkoutList.map((item) => ({
-          id_product: item.id_product || item.id, // ID HashID bọc thép
-          name: item.name, // Nhớ gửi cả name lên để lưu order_items
+          id_product: item.id_product || item.id,
+          name: item.name,
           quantity: item.quantity,
           price: item.price,
         })),
       };
 
-      console.log("Dữ liệu gửi chốt đơn:", orderPayload);
-
-      // Gọi API thực tế xuống Backend
       await axiosClient.post("/orders/checkout", orderPayload);
 
       setShowQRModal(false);
       showToast("Đặt hàng thành công! Sang trang đơn hàng...", "success");
 
-      // Đợi Toast chạy xong thì chuyển hướng qua Lịch sử mua hàng
       setTimeout(() => {
         handleNavigate("/order");
       }, 1500);
     } catch (error) {
       console.error("Lỗi đặt hàng:", error);
-      // Bắt lỗi Hết hàng hoặc Thiếu thông tin từ Backend trả về
       showToast(
         error.response?.data?.message || "Lỗi khi đặt hàng, vui lòng thử lại!",
         "error",
@@ -358,9 +430,7 @@ function CheckOut() {
 
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
-            {/* --- CỘT TRÁI --- */}
             <div className="space-y-6 lg:col-span-8">
-              {/* SECTION 1: THÔNG TIN GIAO NHẬN */}
               <section className="rounded-[1.5rem] bg-white p-6 shadow-[0_12px_30px_rgba(15,23,42,0.05)] sm:p-8">
                 <div className="mb-6 flex items-center gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">
@@ -457,6 +527,94 @@ function CheckOut() {
                       )}
                     </div>
 
+                    {/* 🚀 KHU VỰC CHỌN THỜI GIAN GIAO HÀNG (CẬP NHẬT GIAO DIỆN MỚI) */}
+                    <div className="border-t border-slate-100 pt-6">
+                      <label className="ml-1 mb-3 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        <span className="flex items-center gap-1.5">
+                          <Clock size={14} /> Thời gian nhận hàng
+                        </span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeliveryType("asap");
+                            setScheduledTime("");
+                          }}
+                          className={`py-3.5 px-4 rounded-xl border-2 font-bold text-sm transition cursor-pointer ${
+                            deliveryType === "asap"
+                              ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
+                              : "border-slate-200 bg-white text-slate-600 hover:border-emerald-200"
+                          }`}
+                        >
+                          Giao ngay cho nóng
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryType("scheduled")}
+                          className={`py-3.5 px-4 rounded-xl border-2 font-bold text-sm transition cursor-pointer ${
+                            deliveryType === "scheduled"
+                              ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
+                              : "border-slate-200 bg-white text-slate-600 hover:border-emerald-200"
+                          }`}
+                        >
+                          Hẹn giờ giao
+                        </button>
+                      </div>
+
+                      {/* 🚀 DROPDOWN THÔNG MINH HIỆN RA KHI CHỌN HẸN GIỜ */}
+                      {deliveryType === "scheduled" && (
+                        <div className="animate-in fade-in slide-in-from-top-2 duration-200 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                          <label className="block text-xs font-medium text-slate-500 mb-2">
+                            Chọn khung giờ (Dự kiến):
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={scheduledTime}
+                              onChange={(e) => setScheduledTime(e.target.value)}
+                              className="w-full appearance-none rounded-xl border border-slate-200 bg-white p-3.5 pr-10 text-sm font-semibold text-emerald-800 shadow-sm outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+                            >
+                              <option value="" disabled>
+                                -- Chọn khung giờ nhận hàng --
+                              </option>
+
+                              {/* Render danh sách Full 24h Cha - Con */}
+                              {timeSlots.map((group, idx) => (
+                                <optgroup
+                                  key={idx}
+                                  label={`--- BUỔI ${group.sessionName.toUpperCase()} ---`}
+                                >
+                                  {group.slots.map((slot, sIdx) => (
+                                    <option
+                                      key={sIdx}
+                                      value={slot.value}
+                                      disabled={slot.isDisabled}
+                                      className={
+                                        slot.isDisabled
+                                          ? "text-slate-300"
+                                          : "text-slate-800 font-bold"
+                                      }
+                                    >
+                                      {slot.label}{" "}
+                                      {slot.isDisabled ? " ❌ (Đã qua)" : ""}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              ))}
+                            </select>
+                            <ChevronDown
+                              size={18}
+                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                            />
+                          </div>
+                          <p className="mt-3 text-[11px] text-amber-600 font-medium">
+                            * Khung giờ đã qua sẽ không thể chọn. Cửa hàng cần
+                            thêm 45 phút chuẩn bị món.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
                     <div>
                       <label className="ml-1 mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                         Ghi chú đơn hàng (Tùy chọn)
@@ -464,7 +622,7 @@ function CheckOut() {
                       <input
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
-                        placeholder="Vd: Giao trước 5h chiều, tới nơi gọi..."
+                        placeholder="Vd: Tới nơi gọi trước giúp mình nha..."
                         className="w-full rounded-xl border-none bg-slate-100 p-3.5 text-sm text-slate-700 outline-none transition focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.10)]"
                       />
                     </div>
