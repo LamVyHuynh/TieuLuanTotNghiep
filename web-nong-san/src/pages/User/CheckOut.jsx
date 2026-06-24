@@ -325,11 +325,18 @@ function CheckOut() {
       return;
     }
 
-    if (paymentMethod !== "cod" && !showQRModal) {
+    // 🚀 GIẢI THÍCH: Hồi trước mày chỉ cho "bank" hiện Popup QR.
+    // Giờ tao gom chung, khách chọn "bank" hay "momo" thì web đều BẬT POPUP MÃ QR LÊN.
+    // Mã QR ở dưới nó dùng api của vietqr.io, nên mày lấy MoMo quét nó vẫn nhận diện số tiền bình thường!
+    if (
+      (paymentMethod === "bank" || paymentMethod === "momo") &&
+      !showQRModal
+    ) {
       setShowQRModal(true);
       return;
     }
 
+    // Nếu khách chọn "cod" (thanh toán khi nhận hàng), thì chạy chốt đơn luôn
     executeOrder();
   };
 
@@ -341,7 +348,7 @@ function CheckOut() {
         phone: currentUser?.phone,
         address: selectedAddress.address,
         note: note,
-        payment_method: paymentMethod,
+        payment_method: paymentMethod, // Biến này sẽ lưu là 'cod', 'bank', hoặc 'momo' gửi xuống DB
         total_amount: total,
         scheduled_time: deliveryType === "scheduled" ? scheduledTime : null,
         items: checkoutList.map((item) => ({
@@ -352,20 +359,22 @@ function CheckOut() {
         })),
       };
 
+      // 🚀 GIẢI THÍCH: XÓA BAY CÁI ĐOẠN GỌI API MOMO RƯỜM RÀ CŨ ĐI!
+      // Khi khách bấm "Tôi đã chuyển khoản xong" ở cái Popup QR,
+      // Hàm này sẽ bắn thẳng dữ liệu xuống API /orders/checkout để lưu đơn hàng.
       await axiosClient.post("/orders/checkout", orderPayload);
 
-      setShowQRModal(false);
-      showToast("Đặt hàng thành công! Sang trang đơn hàng...", "success");
+      setShowQRModal(false); // Tắt popup QR đi
+      showToast(
+        "Thanh toán thành công! Đang sang trang đơn hàng...",
+        "success",
+      );
 
-      setTimeout(() => {
-        handleNavigate("/order");
-      }, 1500);
+      // Chuyển khách sang trang xem Lịch sử đơn hàng sau 1.5 giây
+      setTimeout(() => handleNavigate("/order"), 1500);
     } catch (error) {
       console.error("Lỗi đặt hàng:", error);
-      showToast(
-        error.response?.data?.message || "Lỗi khi đặt hàng, vui lòng thử lại!",
-        "error",
-      );
+      showToast(error.response?.data?.message || "Lỗi khi đặt hàng!", "error");
     } finally {
       setIsSubmitting(false);
     }

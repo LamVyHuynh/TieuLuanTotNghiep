@@ -8,6 +8,9 @@ const {
   updateOrderStatusAdmin,
   getDashboardReview,
   getReportsAdmin,
+  createPayment,
+  confirmPayment,
+  handleMomoIPN,
 } = require("../controllers/order.controller");
 
 // Route để tạo đơn hàng mới
@@ -27,5 +30,14 @@ router.get("/admin/dashboard", authenticateToken, getDashboardReview);
 
 // Route để lấy báo cáo chi tiết cho admin
 router.get("/admin/reports", authenticateToken, getReportsAdmin);
+
+// Route xin link quét mã MoMo (Cần đăng nhập)
+router.post("/momo-payment", authenticateToken, createPayment);
+
+// Route xử lý cập nhật đơn khi chạy demo ở localhost (Cần đăng nhập)
+router.post("/momo-local-confirm", authenticateToken, confirmPayment);
+
+// Route Webhook cho máy chủ MoMo gọi (ĐỂ PUBLIC - KHÔNG ĐƯỢC CÀI authenticateToken nha mạy)
+router.post("/momo-ipn", handleMomoIPN);
 
 module.exports = router;
