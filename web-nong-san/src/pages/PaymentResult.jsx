@@ -11,16 +11,18 @@ export default function PaymentResult() {
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const resultCode = queryParams.get("resultCode");
-    const orderId = queryParams.get("orderId");
+    const momoOrderId = queryParams.get("orderId"); // ID dính đuôi từ MoMo trả về
 
-    // 🚀 BỌC VÀO SETTIMEOUT ĐỂ NÉ LỖI LINTER REACT & HIỆN VÒNG QUAY QUAY 1.5 GIÂY
     const timer = setTimeout(() => {
       if (resultCode === "0") {
         setStatus("success");
-        // Gọi API báo Backend đổi trạng thái đơn hàng sang Đang chuẩn bị món
-        if (orderId) {
+
+        if (momoOrderId) {
+          // 🚀 SỬA TẠI ĐÂY: Tách lấy phần ID đơn hàng thực sự trước khi gửi xuống local
+          const realOrderId = momoOrderId.split("_")[0];
+
           axiosClient
-            .post("/orders/momo-local-confirm", { orderId: orderId })
+            .post("/orders/momo-local-confirm", { orderId: realOrderId }) // Truyền realOrderId vào đây
             .then(() => console.log("Cập nhật DB local thành công!"))
             .catch((err) =>
               console.error("Lỗi cập nhật đơn hàng ở local:", err),
@@ -29,9 +31,8 @@ export default function PaymentResult() {
       } else {
         setStatus("fail");
       }
-    }, 1500); // 1500 mili-giây = 1.5 giây
+    }, 1500);
 
-    // Dọn dẹp bộ đếm khi thoái trang
     return () => clearTimeout(timer);
   }, [location.search]);
 

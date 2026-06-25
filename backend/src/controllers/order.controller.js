@@ -103,10 +103,9 @@ const createOrder = async (req, res) => {
     );
 
     // =========================================================================
-    // 🚀 GIẢI THÍCH: TỰ ĐỘNG CHUYỂN TRẠNG THÁI NẾU KHÁCH QUÉT QR (MOMO / BANK)
-    // Sau khi tạo đơn xong, nếu hệ thống thấy khách dùng momo hoặc bank,
-    // Nó sẽ gọi hàm updateOrderStatus (hàm này mày viết sẵn rồi) để ép trạng thái
-    // của đơn hàng đó thành "processing" (Đang chuẩn bị) ngay lập tức!
+    // 🚀 TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI:
+    // Vì đéo xài API MoMo nên đéo có Webhook. Ta tự ép trạng thái đơn hàng thành
+    // "processing" (Đang chuẩn bị) nếu khách đã bấm nút hoàn thành ở popup QR.
     // =========================================================================
     if (payment_method === "momo" || payment_method === "bank") {
       await updateOrderStatus(newOrderId, "processing");
