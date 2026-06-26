@@ -291,13 +291,18 @@ function OrdersPage() {
       </section>
 
       {/* BẢNG QUẢN LÝ ĐƠN HÀNG - ĐÃ FIX KHUNG CHỨA ĐỂ HIỆN THANH CUỘN */}
-      <section className="overflow-hidden rounded-2xl bg-[#eef2eb] shadow-sm flex flex-col w-full max-w-[calc(100vw-2rem)] md:max-w-[calc(100vw-18rem)] lg:max-w-none">
-        <div className="w-full overflow-x-auto custom-scrollbar pb-3">
-          <table className="w-full min-w-[1500px] border-collapse text-left">
+      <section className="mt-8 rounded-2xl bg-[#eef2eb] shadow-sm flex flex-col w-full">
+        {/* 🚀 QUAN TRỌNG: Chỉ cần cái div này có overflow-x-auto là bảng sẽ có thanh cuộn ngang */}
+        <div className="w-full overflow-x-auto custom-scrollbar">
+          <table className="w-full min-w-[1200px] border-collapse text-left">
             <thead>
               <tr className="bg-slate-200/70 text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">
-                <th className="px-5 py-4 w-[100px]">Mã đơn</th>
-                <th className="px-5 py-4 w-[180px]">Khách hàng</th>
+                <th className="px-5 py-4 w-[100px] whitespace-nowrap">
+                  Mã đơn
+                </th>
+                <th className="px-5 py-4 w-[180px] whitespace-nowrap">
+                  Khách hàng
+                </th>
                 <th className="px-5 py-4 w-[220px]">Nơi giao</th>
                 <th className="px-5 py-4 w-[250px]">Sản phẩm</th>
                 <th className="px-5 py-4 w-[120px]">Tạm tính</th>
