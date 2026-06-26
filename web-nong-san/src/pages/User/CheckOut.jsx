@@ -169,7 +169,6 @@ function CheckOut() {
   const [isLoadingAddress, setIsLoadingAddress] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [showQRModal, setShowQRModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [isAddingNewAddr, setIsAddingNewAddr] = useState(false);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
@@ -319,22 +318,12 @@ function CheckOut() {
       showToast("Vui lòng thêm địa chỉ giao hàng!", "error");
       return;
     }
-
     if (deliveryType === "scheduled" && !scheduledTime) {
       showToast("Vui lòng chọn khung giờ bạn muốn nhận hàng!", "error");
       return;
     }
 
-    // 🚀 BƯỚC NGOẶT: Khách chọn Bank hay MoMo -> BẬT POPUP MÃ QR LÊN (Không thèm gọi API MoMo nữa)
-    if (
-      (paymentMethod === "bank" || paymentMethod === "momo") &&
-      !showQRModal
-    ) {
-      setShowQRModal(true);
-      return;
-    }
-
-    // Nếu là COD thì gọi hàm lưu đơn luôn
+    // Gọi chốt đơn luôn, ĐÉO CẦN SHOW POPUP QR NỮA!
     executeOrder();
   };
 
@@ -346,7 +335,7 @@ function CheckOut() {
         phone: currentUser?.phone,
         address: selectedAddress.address,
         note: note,
-        payment_method: paymentMethod, // Sẽ gửi 'cod', 'bank', hoặc 'momo' xuống Backend
+        payment_method: paymentMethod,
         total_amount: total,
         scheduled_time: deliveryType === "scheduled" ? scheduledTime : null,
         items: checkoutList.map((item) => ({
@@ -357,16 +346,32 @@ function CheckOut() {
         })),
       };
 
-      // 🚀 BỎ GỌI "/orders/momo-payment". GỌI THẲNG XUỐNG "/orders/checkout" ĐỂ LƯU ĐƠN
-      await axiosClient.post("/orders/checkout", orderPayload);
+      // 🚀 NẾU CHỌN CHUYỂN KHOẢN HOẶC MOMO -> GỌI API LẤY LINK PAYOS VÀ CHUYỂN HƯỚNG
+      if (paymentMethod === "bank" || paymentMethod === "momo") {
+        const res = await axiosClient.post(
+          "/orders/momo-payment",
+          orderPayload,
+        );
 
-      setShowQRModal(false); // Tắt popup QR đi
+        if (res.data?.success && res.data?.payUrl) {
+          showToast(
+            "Đang chuyển hướng sang cổng thanh toán an toàn... 💸",
+            "success",
+          );
+          setTimeout(() => {
+            // Lệnh chí mạng: Đá văng sang giao diện siêu đẹp của PayOS
+            window.location.href = res.data.payUrl;
+          }, 1000);
+        }
+        return;
+      }
+
+      // NẾU LÀ COD TIỀN MẶT
+      await axiosClient.post("/orders/checkout", orderPayload);
       showToast(
-        "Thanh toán thành công! Đang chuyển sang trang đơn hàng...",
+        "Đặt hàng thành công! Đang chuyển sang trang đơn hàng...",
         "success",
       );
-
-      // Chuyển thẳng sang trang Lịch sử đơn hàng sau 1.5 giây
       setTimeout(() => handleNavigate("/order"), 1500);
     } catch (error) {
       console.error("Lỗi đặt hàng:", error);
@@ -375,7 +380,6 @@ function CheckOut() {
       setIsSubmitting(false);
     }
   };
-
   if (!product) {
     return (
       <div
@@ -930,48 +934,6 @@ function CheckOut() {
                   ) : (
                     "Xoá ngay"
                   )}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
-
-      {/* ================= MODAL MÃ QR THANH TOÁN ================= */}
-      {showQRModal &&
-        createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
-            <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-sm overflow-hidden rounded-[2rem] bg-white shadow-2xl relative">
-              <div className="bg-[#a50064] p-6 text-center text-white relative">
-                <button
-                  onClick={() => setShowQRModal(false)}
-                  className="absolute top-4 right-4 p-1 rounded-full bg-white/20 hover:bg-white/40 transition cursor-pointer"
-                >
-                  <X size={20} />
-                </button>
-                <QrCode size={40} className="mx-auto mb-3 opacity-90" />
-                <h3 className="text-xl font-black tracking-wide">
-                  Quét mã thanh toán
-                </h3>
-              </div>
-              <div className="p-8 text-center">
-                <div className="mx-auto aspect-square max-w-[220px] rounded-2xl border-4 border-pink-100 p-2 shadow-sm bg-white overflow-hidden mb-5">
-                  <img
-                    src={`https://img.vietqr.io/image/vcb-123456789-compact.png?amount=${total}&addInfo=Thanh toan don hang`}
-                    alt="QR Code"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <button
-                  onClick={executeOrder}
-                  disabled={isSubmitting}
-                  className={`w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-md transition cursor-pointer ${
-                    isSubmitting
-                      ? "bg-slate-400"
-                      : "bg-[#a50064] hover:bg-[#80004d]"
-                  }`}
-                >
-                  {isSubmitting ? "Đang xử lý..." : "Tôi đã chuyển khoản xong"}
                 </button>
               </div>
             </div>
