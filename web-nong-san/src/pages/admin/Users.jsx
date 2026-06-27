@@ -24,6 +24,7 @@ import {
   Key,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient.js";
+import { filter } from "framer-motion/client";
 
 // --- HÀM CHẾ BIẾN DỮ LIỆU ---
 const getRoleInfo = (role_id) => {
@@ -379,6 +380,60 @@ function UsersPage() {
     } finally {
       setIsChangingPwd(false);
     }
+  };
+
+  // Hàm xuất dữ liệu ra CSV
+  const exportToCSV = () => {
+    if (filteredUsers.length === 0) {
+      showToast("error", "Không có dữ liệu để xuất ra CSV! 😥");
+      return;
+    }
+
+    // 1. Tạo dòng tiêu đề
+    const headers = [
+      "ID",
+      "Họ và tên",
+      "Email",
+      "Số điện thoại",
+      "Vai trò",
+      "Trạng thái",
+      "Ngày tham gia",
+    ];
+
+    // 2. Tạo dữ liệu cho từng dòng
+    const csvRows = filteredUsers.map((user) => {
+      const roleName = getRoleInfo(user.role_id).name;
+      const statusName = getStatusInfo(user.is_active).name;
+      const joinDate = new Date(user.created_at).toLocaleDateString("vi-VN");
+
+      return [
+        user.id,
+        `"${user.full_name || ""}"`,
+        `"${user.email || ""}"`,
+        `"${user.phone || ""}"`, // Chừa sẵn nếu tương lai API trả về phone
+        `"${roleName}"`,
+        `"${statusName}"`,
+        `"${joinDate}"`,
+      ].join(";");
+    });
+
+    // 3. Gộp tiêu đề và dữ liệu
+    const csvString = [headers.join(";"), ...csvRows].join("\n");
+
+    // 4. Tạo Blob và url để tải xuống
+    const blob = new Blob(["\uFEFF" + csvString], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `DanhSachUser_HealthyGO_${new Date().toLocaleDateString("vi-VN")}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -806,7 +861,12 @@ function UsersPage() {
           <button className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
             <Filter size={16} /> Bộ lọc
           </button>
-          <button className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300">
+
+          {/* 🚀 Thêm sự kiện onClick vô nút này nè */}
+          <button
+            onClick={exportToCSV}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300"
+          >
             <Download size={16} /> Xuất CSV
           </button>
         </div>
