@@ -8,7 +8,6 @@ import {
   ShieldAlert,
   CheckCircle2,
   AlertTriangle,
-  Logs,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 import { useCallback } from "react";
@@ -108,6 +107,48 @@ function LogsPage() {
   for (let i = startPage; i <= endPage; i++) {
     visiblePageNumbers.push(i);
   }
+
+  const exportToCSV = () => {
+    if (logs.length === 0) {
+      alert("Chưa có nhật ký hoạt động nào để xuất!");
+      return;
+    }
+
+    const headers = [
+      "Thời gian",
+      "Người thực hiện",
+      "Email",
+      "Trạng thái",
+      "Địa chỉ IP",
+    ];
+
+    const csvRows = logs.map((log) => {
+      const time = new Date(log.created_at).toLocaleString("vi-VN");
+      const status = log.status === "success" ? "Thành công" : "Thất bại";
+
+      return [
+        `"${time}"`,
+        `"${log.full_name || "Khách vãng lai"}"`,
+        `"${log.email_attempted || ""}"`,
+        `"${status}"`,
+        `"${log.ip_address || ""}"`,
+      ].join(";"); // Dùng dấu chấm phẩy cho Excel VN
+    });
+
+    const csvString = [headers.join(";"), ...csvRows].join("\n");
+    const blob = new Blob(["\uFEFF" + csvString], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `NhatKyHoatDong_HealthyGO_${new Date().toLocaleDateString("vi-VN")}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
   return (
     <div className="min-h-screen bg-[#f9f9f9] text-[#1a1c1c] antialiased font-sans">
       <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-10">
@@ -122,7 +163,17 @@ function LogsPage() {
               dùng theo thời gian thực.
             </p>
           </div>
+
           <div className="flex gap-3">
+            {/* Nút Xuất CSV */}
+            <button
+              onClick={exportToCSV}
+              className="flex items-center gap-2 px-6 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-sm shadow-sm hover:bg-slate-50 transition-all cursor-pointer"
+            >
+              <Download size={18} /> Xuất CSV
+            </button>
+
+            {/* Nút Làm mới */}
             <button
               onClick={fetchLogs}
               disabled={loading}
