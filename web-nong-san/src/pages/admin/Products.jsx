@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   AlertTriangle,
   DollarSign,
+  Download,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -209,6 +210,61 @@ function ProductsPage() {
     }
   };
 
+  // Hàm xuất dữ liệu ra CSV
+  const exportToCSV = () => {
+    if (productList.length === 0) {
+      showToast("error", "Không có dữ liệu để xuất CSV!");
+      return;
+    }
+
+    const headers = [
+      "Mã SP",
+      "Tên món",
+      "Danh mục",
+      "Đơn vị",
+      "Giá gốc (đ)",
+      "Giá KM (đ)",
+      "Tồn kho",
+      "Calo",
+      "Đạm (P)",
+      "Carb (C)",
+      "Béo (F)",
+    ];
+
+    const csvRows = productList.map((product) => {
+      return [
+        product.id_product,
+        `"${product.name}"`,
+        `"${getCategoryName(product.id_category)}"`,
+        product.unit,
+        product.price,
+        product.discount_price || "",
+        product.stock_quantity,
+        product.calories,
+        product.protein,
+        product.carbs,
+        product.fat,
+      ].join(";");
+    });
+
+    const csvString = [headers.join(";"), ...csvRows].join("\n");
+    const blob = new Blob(["\uFEFF" + csvString], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `KhoSanPham_HealthyGO_${new Date().toLocaleDateString("vi-VN")}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast("success", "Xuất kho hàng thành công! 🥰");
+  };
+
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 relative bg-slate-50/50 overflow-hidden">
       {/* HEADER TRANG CHÍNH */}
@@ -221,13 +277,25 @@ function ProductsPage() {
             Sức khỏe của khách hàng nằm trong tay bạn!
           </p>
         </div>
-        <button
-          onClick={openAddModal}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 active:scale-95"
-        >
-          <Plus size={22} />
-          <span className="text-base">Thêm món mới</span>
-        </button>
+
+        {/* 🚀 Cụm nút bấm */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={exportToCSV}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-slate-200 px-6 py-4 font-bold text-slate-700 shadow-sm transition hover:scale-105 active:scale-95"
+          >
+            <Download size={22} />
+            <span className="text-base">Xuất CSV</span>
+          </button>
+
+          <button
+            onClick={openAddModal}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:bg-[#1b5e20] active:scale-95"
+          >
+            <Plus size={22} />
+            <span className="text-base">Thêm món mới</span>
+          </button>
+        </div>
       </header>
 
       {/* THỐNG KÊ & TÌM KIẾM */}
