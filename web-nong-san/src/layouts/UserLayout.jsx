@@ -279,7 +279,15 @@ function UserLayout() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = () => console.log("Tìm kiếm với từ khóa:", searchTerm);
+  // 🚀 Hàm xử lý khi bấm tìm kiếm
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      showToast("error", "Nhập cái gì đó để tìm đi mạy!");
+      return;
+    }
+    // Chuyển hướng sang trang search kèm theo từ khóa trên URL
+    handleNavigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -326,13 +334,14 @@ function UserLayout() {
           <div className="hidden md:flex flex-1 max-w-xl mx-4 relative">
             <Search
               size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 cursor-pointer"
-              onClick={handleSearch}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 cursor-pointer hover:text-emerald-600 transition"
+              onClick={handleSearch} // Click icon kính lúp
             />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()} // 🚀 Bấm Enter để tìm
               placeholder="Tìm món ăn, nguyên liệu, combo..."
               className="w-full pl-11 pr-4 py-2 bg-zinc-100 border-transparent rounded-full text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white transition-all"
             />
