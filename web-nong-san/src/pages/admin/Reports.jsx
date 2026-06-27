@@ -56,6 +56,75 @@ function ReportsPage() {
     return Math.round((count / totalPaymentOrders) * 100);
   };
 
+  // Hàm xuất file CSV
+  const exportToCSV = () => {
+    // Phần 1: Xuất các chỉ số tổng quan (AOV, Tỷ lệ huỷ, Phân bổ danh sách thanh toán)
+    const summaryHeaders = ["Chỉ số", "Giá trị"];
+    const summaryRows = [
+      [
+        "Giá trị ĐH Trung bình (AOV)",
+        `${Math.round(reportData.aov).toLocaleString("vi-VN")} VND`,
+      ],
+      ["Tỷ lệ Hủy/Bom hàng", `${reportData.cancelRate}%`],
+      ["Tổng số đơn hàng đã thanh toán", totalPaymentOrders],
+      ["Tiền mặt (COD)", `${codCount} đơn (${getPaymentPercent(codCount)}%)`],
+      [
+        "Ví điện tử (MoMo)",
+        `${momoCount} đơn (${getPaymentPercent(momoCount)}%)`,
+      ],
+      [
+        "Chuyển khoản (Bank)",
+        `${bankCount} đơn (${getPaymentPercent(bankCount)}%)`,
+      ],
+    ];
+
+    // Tạo chuỗi CSV cho phần tổng quan
+    const summaryCSV = [
+      summaryHeaders.join(";"),
+      ...summaryRows.map((row) => row.join(";")),
+    ].join("\n");
+
+    // Phần 2: Xuất Bảng Vàng Khách Hàng VIP
+    const vipHeaders = [
+      "Top",
+      "Khách hàng",
+      "Số đơn đã giao",
+      "Tổng chi tiêu (VND)",
+    ];
+
+    let vipCSV = "";
+    if (reportData.vips && reportData.vips.length > 0) {
+      const vipRows = reportData.vips.map((vip, index) => {
+        return [
+          index + 1,
+          `"${vip.full_name || "Khách ẩn danh"}"`, // Bọc ngoặc kép chống rớt chữ
+          vip.total_orders,
+          vip.total_spent,
+        ].join(";");
+      });
+
+      vipCSV = [vipHeaders.join(";"), ...vipRows].join("\n");
+    } else {
+      vipCSV = "Chưa có đủ dữ liệu khách hàng VIP";
+    }
+
+    // Phần 3: Gộp cả 2 phần lại, cách nhau bằng 2 dòng trống (\n\n)
+    const finalCSVString = `BÁO CÁO TỔNG QUAN\n${summaryCSV}\n\nBẢNG VÀNG KHÁCH HÀNG VIP\n${vipCSV}`;
+
+    // Tạo file và ép trình duyệt tải xuống (với \uFEFF chống lỗi font)
+    const blob = new Blob(["\uFEFF" + finalCSVString], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `BaoCaoTongHop_HealthyGO_${new Date().toLocaleDateString("vi-VN")}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-emerald-600">
@@ -80,8 +149,12 @@ function ReportsPage() {
             hàng (Real-time).
           </p>
         </div>
-        <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">
-          <ArrowDownToLine size={14} /> Xuất File CSV
+        {/* 🚀 Đã gắn hàm vào nút */}
+        <button
+          onClick={exportToCSV}
+          className="flex items-center cursor-pointer gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+        >
+          <ArrowDownToLine size={14} /> Xuất Báo Cáo Tổng Hợp
         </button>
       </header>
 
