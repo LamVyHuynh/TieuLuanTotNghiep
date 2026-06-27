@@ -9,6 +9,7 @@ import {
   ImageIcon,
   FileText,
   Search,
+  Download,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -163,8 +164,62 @@ function CategoriesPage() {
     }
   };
 
+  // Hàm xuất dữ liệu ra CSV
+  const exportToCSV = () => {
+    if (categoryList.length === 0) {
+      showToast("error", "Không có dữ liệu để xuất ra CSV! 😥");
+      return;
+    }
+
+    // 1. Khai báo tên các cột
+    // 1. Khai báo tiêu đề cột
+    const headers = [
+      "Mã danh mục",
+      "Tên danh mục",
+      "Mô tả",
+      "Số lượng sản phẩm",
+      "Trạng thái",
+    ];
+
+    // 2. Chuyển dữ liệu thành mảng các dòng CSV
+    const csvRows = categoryList.map((cat) => {
+      const productCount = coutProductsInCategory[cat.id_category] || 0;
+      const statusText = cat.status === 1 ? "Hiển thị" : "Đang ẩn";
+      return [
+        cat.id_category,
+        `"${cat.name}"`,
+        `"${cat.description || ""}"`,
+        productCount,
+        `"${statusText}"`,
+      ].join(";");
+    });
+
+    // 3. Gộp header và dữ liệu
+    const csvString = [headers.join(";"), ...csvRows].join("\n");
+
+    // 4. Tạo Blob và url để tải xuống
+    // Ép vào ký tự \uFEFF và khai báo charset
+    const blob = new Blob(["\uFEFF" + csvString], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `DanhMucSanPham_${new Date().toLocaleDateString("vi-VN")}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast("success", "Xuất dữ liệu ra CSV thành công! 🥰");
+  };
+
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 relative bg-slate-50/50 overflow-hidden">
+      {/* HEADER */}
       {/* HEADER */}
       <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between px-2">
         <div>
@@ -175,13 +230,25 @@ function CategoriesPage() {
             Phân loại món ăn rõ ràng giúp khách dễ mua hơn!
           </p>
         </div>
-        <button
-          onClick={openAddModal}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:bg-[#1b5e20] active:scale-95"
-        >
-          <Plus size={22} />
-          <span className="text-base">Thêm danh mục</span>
-        </button>
+
+        {/* 🚀 BỌC 2 NÚT VÀO MỘT CÁI DIV ĐỂ NÓ NẰM NGANG NHAU */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={exportToCSV}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-slate-200 px-6 py-4 font-bold text-slate-700 shadow-sm transition hover:scale-105 hover:bg-slate-300 active:scale-95"
+          >
+            <Download size={22} />
+            <span className="text-base">Xuất CSV</span>
+          </button>
+
+          <button
+            onClick={openAddModal}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:bg-[#1b5e20] active:scale-95"
+          >
+            <Plus size={22} />
+            <span className="text-base">Thêm danh mục</span>
+          </button>
+        </div>
       </header>
 
       {/* KHU VỰC TÌM KIẾM & THỐNG KÊ */}
