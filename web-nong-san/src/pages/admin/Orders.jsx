@@ -190,6 +190,75 @@ function OrdersPage() {
   const currentOrders = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
 
+  // Hàm xuất file csv (CSV Export)
+  const exportToCSV = () => {
+    if (orders.length === 0) {
+      showToast("Không có dữ liệu để xuất CSV.", "error");
+      return;
+    }
+
+    // Tạo tiêu đề CSV
+    const headers = [
+      "Mã đơn",
+      "Ngày đặt",
+      "Khách hàng",
+      "Nơi giao",
+      "Sản phẩm", // 🚀 Cột này hồi nãy thiếu
+      "Tạm tính",
+      "Tổng thanh toán",
+      "Trạng thái",
+    ];
+
+    // Xử lí dữ liệu đơn hàng thành định dạng CSV
+    const csvRows = orders.map((order) => {
+      const statusText = getStatusConfig(order.status).text;
+
+      // 🚀 Format ngày tháng cho Excel
+      const orderDate = new Date(order.created_at).toLocaleDateString("vi-VN");
+
+      // 🚀 Rút trích tên sản phẩm từ mảng items (Vd: Bát gạo lứt x1 + Combo Detox x2)
+      const products = order.items
+        ? order.items
+            .map((i) => `${i.product_name} (x${i.quantity})`)
+            .join(" + ")
+        : "Không có dữ liệu";
+
+      return [
+        order.id_order,
+        `"${orderDate}"`,
+        `"${order.full_name || ""}"`, // Bọc ngoặc kép chống lỗi tên có dấu phẩy
+        `"${order.address || ""}"`, // Bọc ngoặc kép chống lỗi địa chỉ có dấu phẩy
+        `"${products}"`, // Bọc ngoặc kép
+        order.items.reduce(
+          (acc, item) => acc + Number(item.price) * item.quantity,
+          0,
+        ),
+        order.total_amount,
+        `"${statusText}"`,
+      ].join(";");
+    });
+
+    // Gộp header và dữ liệu
+    const csvString = [headers.join(";"), ...csvRows].join("\n");
+
+    // Tạo Blob và url để tải xuống
+    // Ép vào ký tự \uFEFF và khai báo charset
+    const blob = new Blob(["\uFEFF" + csvString], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `DonHang_HealthyGO_${new Date().toLocaleDateString("vi-VN")}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showToast("Đã xuất file CSV thành công!", "success");
+  };
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 overflow-hidden">
       {/* 🚀 CSS THANH KÉO NGANG CHO BẢNG */}
@@ -221,7 +290,10 @@ function OrdersPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button className="cursor-pointer rounded-lg bg-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-300">
+          <button
+            onClick={exportToCSV}
+            className="cursor-pointer rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          >
             <span className="inline-flex items-center gap-2">
               <Download size={16} /> Xuất CSV
             </span>
