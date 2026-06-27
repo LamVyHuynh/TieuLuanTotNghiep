@@ -11,6 +11,7 @@ import {
   Save,
   CheckCircle2,
   XCircle,
+  Download,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -114,6 +115,52 @@ function AddressPage() {
     }
   };
 
+  // Hàm xuất dữ liệu ra CSV
+  const exportToCSV = () => {
+    if (addresses.length === 0) {
+      showToast("Không có dữ liệu để xuất CSV", "error");
+      return;
+    }
+
+    const headers = [
+      "ID",
+      "Tên khách hàng",
+      "Người nhận",
+      "Số điện thoại",
+      "Địa chỉ chi tiết",
+      "Mặc định",
+    ];
+    const csvRows = addresses.map((addr) =>
+      [
+        addr.id_address,
+        addr.user_name,
+        addr.receiver_name || "",
+        addr.phone || "",
+        addr.address || "",
+        addr.is_default === 1 ? "Mặc định" : "Thường",
+      ].join(";"),
+    );
+
+    const csvString = [headers.join(";"), ...csvRows].join("\n");
+
+    const blob = new Blob([`\uFEFF${csvString}`], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `DanhSachDiaChi_HealthyGO_${new Date().toLocaleDateString("vi-VN")}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast("Đã xuất danh sách địa chỉ!");
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center p-8">
@@ -134,22 +181,30 @@ function AddressPage() {
         <div>
           <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
             <MapPin className="text-emerald-600" size={28} /> Quản lý Địa Chỉ
-            Giao Hàng
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Hiển thị toàn bộ địa chỉ mà khách hàng đã thiết lập trên hệ thống
+            Hiển thị toàn bộ địa chỉ khách hàng đã thiết lập
           </p>
         </div>
 
-        <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 border border-slate-200 shadow-sm">
-          <span className="flex h-3 w-3 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-          </span>
-          <span className="text-sm font-bold text-slate-700">
-            Tổng cộng:{" "}
-            <span className="text-emerald-600">{addresses.length}</span> địa chỉ
-          </span>
+        {/* 🚀 Cụm nút bấm */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={exportToCSV}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-300"
+          >
+            <Download size={16} /> Xuất CSV
+          </button>
+
+          <div className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 border border-slate-200 shadow-sm">
+            <span className="flex h-3 w-3 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <span className="text-sm font-bold text-slate-700">
+              {addresses.length} địa chỉ
+            </span>
+          </div>
         </div>
       </div>
 
