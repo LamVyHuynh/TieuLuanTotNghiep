@@ -102,7 +102,7 @@ function SearchPage() {
         <div className="text-center py-24 bg-white rounded-3xl border border-zinc-100 shadow-sm">
           <Frown size={60} className="mx-auto text-zinc-300 mb-4" />
           <h3 className="text-xl font-bold text-zinc-700">
-            Khum tìm thấy món nào mạy ơi!
+            Khum tìm thấy món nào!
           </h3>
           <p className="text-zinc-500 mt-2">
             Thử gõ từ khóa khác xem sao (Ví dụ: Salad, Cơm gạo lứt...)

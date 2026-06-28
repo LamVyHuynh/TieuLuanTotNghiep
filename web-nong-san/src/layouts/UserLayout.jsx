@@ -148,15 +148,34 @@ function UserLayout() {
   // =================================================================
   const [isExiting, setIsExiting] = useState(false);
 
-  useEffect(() => {
-    const resetAnimation = setTimeout(() => {
-      setIsExiting(false);
-    }, 0);
-    return () => clearTimeout(resetAnimation);
-  }, [location.pathname]);
+  // location.pathname là /search
+  // location.search là ?q=salad
+  // lấy cả 2 chỉ số này thứ nhất giải quyết được việc khi tìm kiếm tại trang kết quả không chuyển trang kết quả được nữa
+  // thứ 2 là giải quyết được việc là trải nghiệm người dùng của khách hàng tìm kiếm tại trang đó
+  useEffect(
+    () => {
+      const resetAnimation = setTimeout(() => {
+        setIsExiting(false);
+      }, 0);
+      return () => clearTimeout(resetAnimation);
+    },
+    [location.pathname],
+    [location.search],
+  );
 
   const handleNavigate = (path) => {
-    if (location.pathname === path) return;
+    // Nếu bấm đúng cái đường dẫn hiện tại (cả pathname lẫn search) thì bỏ qua
+    const currentPath = location.pathname + location.search;
+    if (currentPath === path) return;
+
+    // ĐẶC BIỆT: Nếu đang ở trang Search và lại tiếp tục Search
+    // -> Không cần hiệu ứng trượt rườm rà, nhảy luôn cho kết quả cập nhật mượt mà!
+    // location.pathname là /search
+    // startsWith là kiểm tra xem path có bắt đầu bằng /search hay không
+    if (location.pathname === "/search" && path.startsWith("/search")) {
+      navigate(path);
+      return;
+    }
     setIsExiting(true);
     setTimeout(() => {
       navigate(path);
@@ -289,6 +308,10 @@ function UserLayout() {
     handleNavigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
   };
 
+  const handleDeleteAllSearch = () => {
+    setSearchTerm("");
+  };
+
   const handleLogout = async () => {
     await logout();
     if (setCartItems) setCartItems([]);
@@ -341,12 +364,34 @@ function UserLayout() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()} // 🚀 Bấm Enter để tìm
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()} // Bấm Enter để tìm
               placeholder="Tìm món ăn, nguyên liệu, combo..."
-              className="w-full pl-11 pr-4 py-2 bg-zinc-100 border-transparent rounded-full text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white transition-all"
+              // 🚀 FIX: Tăng pr-4 thành pr-10 để chữ không bị đè lên cái nút X
+              className="w-full pl-11 pr-10 py-2 bg-zinc-100 border-transparent rounded-full text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white transition-all"
             />
+
+            {/* 🚀 NÚT XOÁ TẤT CẢ TÌM KIẾM (Chỉ hiện khi có gõ chữ) */}
+            {searchTerm.length > 0 && (
+              <button
+                onClick={handleDeleteAllSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-rose-500 bg-zinc-200/50 hover:bg-rose-50 p-1 rounded-full transition-colors cursor-pointer"
+                title="Xoá tìm kiếm"
+              >
+                <X size={14} strokeWidth={2.5} />
+              </button>
+            )}
           </div>
 
+          {/* NÚT XOÁ TẤT CẢ TRONG KHUNG TÌM KIẾM */}
+          {searchTerm.length > 0 && (
+            <button
+              onClick={handleDeleteAllSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-rose-500 bg-zinc-200/50 hover:bg-rose-50 p-1 rounded-full transition-colors cursor-pointer"
+              title="Xoá tìm kiếm"
+            >
+              <X size={14} strokeWidth={2.5} />
+            </button>
+          )}
           <div className="flex items-center gap-2 md:gap-4 text-sm font-medium tracking-tight">
             <button
               onClick={() => handleNavigate("/order")}
@@ -397,7 +442,6 @@ function UserLayout() {
                     )}
                   </div>
 
-                  {/* List Thông báo */}
                   {/* List Thông báo */}
                   <div className="max-h-[320px] overflow-y-auto noti-scrollbar flex flex-col bg-white">
                     {notifications.length === 0 ? (
