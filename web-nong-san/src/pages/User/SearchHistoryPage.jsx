@@ -60,11 +60,15 @@ function SearchHistoryPage() {
       `search_history_${currentUser.id}`,
       JSON.stringify(newHistory),
     );
+
+    window.dispatchEvent(new Event("custom_storage_change"));
   };
 
   const handleClearAll = () => {
     setHistory([]);
     localStorage.removeItem(`search_history_${currentUser.id}`);
+
+    window.dispatchEvent(new Event("custom_storage_change"));
   };
 
   const handleSearch = (term) => {

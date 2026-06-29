@@ -50,17 +50,45 @@ function UserLayout() {
   // Ref để quản lý click ra ngoài khung tìm kiếm
   const searchContainerRef = useRef(null);
   // Tự động load lịch  sử tìm kiếm của riêng từng user
+  // Tự động load lịch sử tìm kiếm & Lắng nghe đồng bộ
   useEffect(() => {
-    if (currentUser) {
-      const history = localStorage.getItem(`search_history_${currentUser.id}`);
-      if (history) {
-        setSearchHistory(JSON.parse(history));
+    // 1. Hàm dùng chung để load data
+    const loadHistory = () => {
+      if (currentUser) {
+        const history = localStorage.getItem(
+          `search_history_${currentUser.id}`,
+        );
+        setSearchHistory(history ? JSON.parse(history) : []);
       } else {
         setSearchHistory([]);
       }
-    } else {
-      setSearchHistory([]); // khi chưa đăng nhập tài khoản
-    }
+    };
+
+    // Chạy lần đầu tiên
+    loadHistory();
+
+    // 2. 🚀 Gắn tai nghe: Cứ LocalStorage thay đổi là tao tự load lại!
+    const handleStorageChange = (e) => {
+      // Chỉ lắng nghe đúng cái chìa khoá của thằng user đang đăng nhập
+      if (currentUser && e.key === `search_history_${currentUser.id}`) {
+        loadHistory();
+      }
+    };
+
+    // Đăng ký bắt sự kiện (Hoạt động ngon nhất khi 2 component nằm khác tab, nhưng trong React đôi khi phải dùng Custom Event)
+    window.addEventListener("storage", handleStorageChange);
+
+    // ⚠️ ĐẶC TRỊ CHO SINGLE PAGE APP (React): Bắn Custom Event để báo cho nhau
+    const handleCustomStorageChange = () => loadHistory();
+    window.addEventListener("custom_storage_change", handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(
+        "custom_storage_change",
+        handleCustomStorageChange,
+      );
+    };
   }, [currentUser]);
 
   // Khi click ra ngoài khung tìm kiếm thì ẩn khung lịch sử tìm kiếm đi
