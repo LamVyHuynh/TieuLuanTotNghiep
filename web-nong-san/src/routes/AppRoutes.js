@@ -17,6 +17,7 @@ import AdminLayout from "../layouts/AdminLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import AddressPage from "../pages/admin/Address";
 import SearchPage from "../pages/User/SearchPage";
+import SearchHistoryPage from "../pages/User/SearchHistoryPage";
 const publicRoutes = [
   {
     // path :"/", element UserLayout là dùng dùng để bọc nguyên lại
@@ -32,6 +33,7 @@ const publicRoutes = [
       { path: "register", element: Register },
       { path: "order", element: Order },
       { path: "search", element: SearchPage },
+      { path: "search-history", element: SearchHistoryPage },
     ],
   },
   {

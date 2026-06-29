@@ -1,16 +1,40 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { Search, Loader2, Frown, ArrowLeft } from "lucide-react"; // 🚀 Import thêm ArrowLeft
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom"; // 🚀 Thêm useLocation
+import { Search, Loader2, Frown, ArrowLeft } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
 function SearchPage() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const navigate = useNavigate();
+  const location = useLocation(); // 🚀 Khai báo location
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // =================================================================
+  // 🚀 STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
+  // =================================================================
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    const resetAnimation = setTimeout(() => {
+      setIsExiting(false);
+    }, 0);
+    return () => clearTimeout(resetAnimation);
+  }, [location.pathname, location.search]);
+
+  const handleNavigate = (path) => {
+    if (location.pathname + location.search === path) return;
+    setIsExiting(true);
+    setTimeout(() => {
+      navigate(path);
+    }, 400); // Chờ 0.4s trượt xong mới sang trang
+  };
+
+  // =================================================================
+  // LOGIC TÌM KIẾM
+  // =================================================================
   useEffect(() => {
     const fetchSearchResults = async () => {
       if (!query) {
@@ -39,10 +63,14 @@ function SearchPage() {
   }, [query]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 min-h-[70vh]">
-      {/* 🚀 NÚT QUAY LẠI TRANG CHỦ MỚI THÊM VÀO ĐÂY NÈ */}
+    // 🚀 ĐẮP CLASS HIỆU ỨNG VÀO THẺ DIV NGOÀI CÙNG
+    <div
+      className={`max-w-7xl mx-auto px-4 py-8 min-h-[70vh] transform transition-all duration-500 ease-in-out ${
+        isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
+      }`}
+    >
       <button
-        onClick={() => navigate("/")} // Bấm phát dắt về thẳng trang chủ
+        onClick={() => handleNavigate("/")} // 🚀 Sửa navigate thành handleNavigate
         className="flex items-center gap-2 text-zinc-500 hover:text-emerald-600 font-semibold mb-6 transition-colors w-fit cursor-pointer"
       >
         <ArrowLeft size={20} />
@@ -64,7 +92,9 @@ function SearchPage() {
           {products.map((product) => (
             <div
               key={product.id_product}
-              onClick={() => navigate(`/detail-product/${product.id_product}`)}
+              onClick={() =>
+                handleNavigate(`/detail-product/${product.id_product}`)
+              } // 🚀 Sửa navigate thành handleNavigate
               className="bg-white p-4 rounded-3xl shadow-sm border border-zinc-100 cursor-pointer hover:shadow-xl hover:border-emerald-300 transition-all duration-300 group"
             >
               <div className="overflow-hidden rounded-2xl mb-3 aspect-square">
