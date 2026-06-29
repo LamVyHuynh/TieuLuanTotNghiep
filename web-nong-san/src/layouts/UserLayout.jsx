@@ -42,6 +42,96 @@ function UserLayout() {
 
   const { cartItems, fetchCart, setCartItems } = useContext(CartContext);
 
+  // Lịch sử tìm kiếm
+  const [searchHistory, setSearchHistory] = useState([]); // Chứa mảng từ khoá
+  // Quản lí khách hàng có bấm vào ô tìm kiếm không -> bấm là sổ list tìm kiếm ra, rời khỏi là ẩn đi
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Ref để quản lý click ra ngoài khung tìm kiếm
+  const searchContainerRef = useRef(null);
+  // Tự động load lịch  sử tìm kiếm của riêng từng user
+  useEffect(() => {
+    if (currentUser) {
+      const history = localStorage.getItem(`search_history_${currentUser.id}`);
+      if (history) {
+        setSearchHistory(JSON.parse(history));
+      } else {
+        setSearchHistory([]);
+      }
+    } else {
+      setSearchHistory([]); // khi chưa đăng nhập tài khoản
+    }
+  }, [currentUser]);
+
+  // Khi click ra ngoài khung tìm kiếm thì ẩn khung lịch sử tìm kiếm đi
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+      if (notiMenuRef.current && !notiMenuRef.current.contains(event.target)) {
+        setShowNotiMenu(false);
+      }
+
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target)
+      )
+        setIsSearchFocused(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // 🚀 Hàm xử lý khi bấm tìm kiếm
+  const handleSearch = (term = searchTerm) => {
+    const finalTerm =
+      typeof term === "string" ? term.trim() : searchTerm.trim();
+
+    if (!finalTerm) {
+      showToast("error", "Nhập cái gì đó để tìm đi mạy!");
+      return;
+    }
+
+    // 1. Nếu đã đăng nhập thì nhét từ khoá vào localStorage của user đó
+    if (currentUser) {
+      setSearchHistory((prev) => {
+        const newHistory = [
+          finalTerm,
+          ...prev.filter((item) => item !== finalTerm),
+        ].slice(0, 10); // Giữ tối đa 10 từ khoá
+        localStorage.setItem(
+          `search_history_${currentUser.id}`,
+          JSON.stringify(newHistory),
+        );
+        return newHistory;
+      });
+    }
+
+    setSearchTerm(finalTerm);
+
+    // Chuyển hướng sang trang search kèm theo từ khóa trên URL
+    handleNavigate(`/search?q=${encodeURIComponent(finalTerm)}`);
+  };
+
+  // Hàm xoá lịch sử tìm kiếm của user hiện tại
+  const handleDeleteSearchHistory = (e, itemToRemove) => {
+    e.stopPropagation(); // ⚠️ Chặn không cho nó tự động kích hoạt tìm kiếm khi bấm nút X
+    if (currentUser) {
+      const newHistory = searchHistory.filter((item) => item !== itemToRemove);
+      setSearchHistory(newHistory);
+      localStorage.setItem(
+        `search_history_${currentUser.id}`,
+        JSON.stringify(newHistory),
+      );
+      return newHistory;
+    }
+  };
+
+  const handleDeleteAllSearch = () => {
+    setSearchTerm("");
+  };
+
   // =================================================================
   // ĐỒNG BỘ GIỎ HÀNG KHI LOGIN / LOGOUT
   // =================================================================
@@ -285,32 +375,6 @@ function UserLayout() {
   };
 
   // CÁC EFFECT & HÀM KHÁC
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setShowUserMenu(false);
-      }
-      if (notiMenuRef.current && !notiMenuRef.current.contains(event.target)) {
-        setShowNotiMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // 🚀 Hàm xử lý khi bấm tìm kiếm
-  const handleSearch = () => {
-    if (!searchTerm.trim()) {
-      showToast("error", "Nhập cái gì đó để tìm đi mạy!");
-      return;
-    }
-    // Chuyển hướng sang trang search kèm theo từ khóa trên URL
-    handleNavigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
-  };
-
-  const handleDeleteAllSearch = () => {
-    setSearchTerm("");
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -354,31 +418,77 @@ function UserLayout() {
             HealthyGO
           </button>
 
-          <div className="hidden md:flex flex-1 max-w-xl mx-4 relative">
+          <div
+            className="hidden md:flex flex-1 max-w-xl mx-4 relative"
+            ref={searchContainerRef}
+          >
             <Search
               size={18}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 cursor-pointer hover:text-emerald-600 transition"
-              onClick={handleSearch} // Click icon kính lúp
+              onClick={() => handleSearch()} // Click icon kính lúp
             />
+
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()} // Bấm Enter để tìm
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              onFocus={() => setIsSearchFocused(true)} // 🚀 CLICK VÔ Ô NÀY LÀ HIỆN KHUNG LỊCH SỬ
               placeholder="Tìm món ăn, nguyên liệu, combo..."
-              // 🚀 FIX: Tăng pr-4 thành pr-10 để chữ không bị đè lên cái nút X
               className="w-full pl-11 pr-10 py-2 bg-zinc-100 border-transparent rounded-full text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white transition-all"
             />
 
-            {/* 🚀 NÚT XOÁ TẤT CẢ TÌM KIẾM (Chỉ hiện khi có gõ chữ) */}
+            {/* NÚT XOÁ CHỮ TRONG Ô TÌM KIẾM */}
             {searchTerm.length > 0 && (
               <button
                 onClick={handleDeleteAllSearch}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-rose-500 bg-zinc-200/50 hover:bg-rose-50 p-1 rounded-full transition-colors cursor-pointer"
-                title="Xoá tìm kiếm"
+                title="Xoá chữ"
               >
                 <X size={14} strokeWidth={2.5} />
               </button>
+            )}
+
+            {/* 🚀 KHUNG DROPDOWN LỊCH SỬ TÌM KIẾM */}
+            {isSearchFocused && currentUser && searchHistory.length > 0 && (
+              <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-zinc-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                {/* Header của khung */}
+                <div className="flex justify-between items-center px-4 py-3 bg-zinc-50 border-b border-zinc-100">
+                  <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <History size={14} /> Tìm kiếm gần đây
+                  </span>
+                  <button
+                    onClick={() => {
+                      setIsSearchFocused(false);
+                      handleNavigate("/search-history"); // Chút mình tạo trang này sau
+                    }}
+                    className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer transition-colors uppercase"
+                  >
+                    Xem tất cả
+                  </button>
+                </div>
+
+                {/* Danh sách 5 từ khoá */}
+                <ul className="flex flex-col">
+                  {searchHistory.slice(0, 5).map((item, index) => (
+                    <li
+                      key={index}
+                      onClick={() => handleSearch(item)} // 🚀 Bấm vô chữ là tự tìm luôn
+                      className="flex items-center justify-between px-4 py-2.5 hover:bg-zinc-50 cursor-pointer group transition-colors"
+                    >
+                      <span className="text-sm font-medium text-zinc-700 group-hover:text-emerald-600 line-clamp-1 pr-4">
+                        {item}
+                      </span>
+                      <button
+                        onClick={(e) => handleDeleteSearchHistory(e, item)} // 🚀 Bấm X để xoá
+                        className="text-zinc-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all p-1 rounded-full hover:bg-rose-50 cursor-pointer shrink-0"
+                      >
+                        <X size={14} strokeWidth={2.5} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
 
