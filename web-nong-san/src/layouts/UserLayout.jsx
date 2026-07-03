@@ -18,41 +18,78 @@ import {
   History,
   Bell,
   Trash2,
-  BellRing, // Icon cái chuông lúc trống
+  BellRing,
 } from "lucide-react";
 import axiosClient from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
-
+// Hàm phụ trợ: Chuyển đổi chuỗi tiếng Việt có dấu thành không dấu viết thường
+// 🚀 HÀM PHỤ: Bỏ dấu tiếng Việt giúp tìm kiếm chuẩn xác
+const removeVietnameseTones = (str) => {
+  if (!str) return "";
+  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+  str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+  str = str.replace(/đ/g, "d");
+  str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+  str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+  str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+  str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+  str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+  str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+  str = str.replace(/Đ/g, "D");
+  return str.toLowerCase().trim();
+};
 function UserLayout() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showUserMenu, setShowUserMenu] = useState(false);
-
-  // 🚀 STATE QUẢN LÝ MENU THÔNG BÁO
-  const [showNotiMenu, setShowNotiMenu] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState([]);
-
   const navigate = useNavigate();
   const location = useLocation();
-
   const { currentUser, logout, loading, refetchUser } = useAuth();
-  const userMenuRef = useRef(null);
-  const notiMenuRef = useRef(null);
-
   const { cartItems, fetchCart, setCartItems } = useContext(CartContext);
 
-  // Lịch sử tìm kiếm
-  const [searchHistory, setSearchHistory] = useState([]); // Chứa mảng từ khoá
-  // Quản lí khách hàng có bấm vào ô tìm kiếm không -> bấm là sổ list tìm kiếm ra, rời khỏi là ẩn đi
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  // =================================================================
+  // 1. STATE QUẢN LÝ UI CHUNG
+  // =================================================================
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
 
-  // Ref để quản lý click ra ngoài khung tìm kiếm
+  const [toast, setToast] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
+  const toastTimerRef = useRef(null);
+
+  const [isExiting, setIsExiting] = useState(false);
+
+  // =================================================================
+  // 2. TÌM KIẾM, LỊCH SỬ & ĐỀ XUẤT SẢN PHẨM
+  // =================================================================
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const searchContainerRef = useRef(null);
-  // Tự động load lịch  sử tìm kiếm của riêng từng user
-  // Tự động load lịch sử tìm kiếm & Lắng nghe đồng bộ
+
+  // Lấy toàn bộ sản phẩm để làm data đề xuất
   useEffect(() => {
-    // 1. Hàm dùng chung để load data
+    const fetchAllProducts = async () => {
+      try {
+        const res = await axiosClient.get("/products");
+        const productsArray =
+          res.data.products || res.data.data || res.data || [];
+        setAllProducts(productsArray);
+      } catch (error) {
+        console.error("Lỗi lấy danh sách sản phẩm:", error);
+      }
+    };
+    fetchAllProducts();
+  }, []);
+
+  // Lắng nghe và load lịch sử tìm kiếm từ LocalStorage
+  useEffect(() => {
     const loadHistory = () => {
       if (currentUser) {
         const history = localStorage.getItem(
@@ -64,21 +101,14 @@ function UserLayout() {
       }
     };
 
-    // Chạy lần đầu tiên
     loadHistory();
 
-    // 2. 🚀 Gắn tai nghe: Cứ LocalStorage thay đổi là tao tự load lại!
     const handleStorageChange = (e) => {
-      // Chỉ lắng nghe đúng cái chìa khoá của thằng user đang đăng nhập
-      if (currentUser && e.key === `search_history_${currentUser.id}`) {
+      if (currentUser && e.key === `search_history_${currentUser.id}`)
         loadHistory();
-      }
     };
 
-    // Đăng ký bắt sự kiện (Hoạt động ngon nhất khi 2 component nằm khác tab, nhưng trong React đôi khi phải dùng Custom Event)
     window.addEventListener("storage", handleStorageChange);
-
-    // ⚠️ ĐẶC TRỊ CHO SINGLE PAGE APP (React): Bắn Custom Event để báo cho nhau
     const handleCustomStorageChange = () => loadHistory();
     window.addEventListener("custom_storage_change", handleCustomStorageChange);
 
@@ -91,43 +121,35 @@ function UserLayout() {
     };
   }, [currentUser]);
 
-  // Khi click ra ngoài khung tìm kiếm thì ẩn khung lịch sử tìm kiếm đi
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setShowUserMenu(false);
-      }
-      if (notiMenuRef.current && !notiMenuRef.current.contains(event.target)) {
-        setShowNotiMenu(false);
-      }
+  // 🚀 BỘ NÃO NÂNG CẤP: Phân biệt rõ lúc TRỐNG và lúc GÕ
+  const isSearching = searchTerm.trim() !== "";
+  const normalizedSearchTerm = removeVietnameseTones(searchTerm);
 
-      if (
-        searchContainerRef.current &&
-        !searchContainerRef.current.contains(event.target)
-      )
-        setIsSearchFocused(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const displaySuggestions = isSearching
+    ? allProducts
+        .filter((p) => {
+          // Phòng hờ lỡ có sản phẩm nào trong DB mày quên nhập tên
+          if (!p || !p.name) return false;
+          return removeVietnameseTones(p.name).includes(normalizedSearchTerm);
+        })
+        .slice(0, 4) // Đang gõ: Chỉ hiện 5 kết quả khớp nhất
+    : allProducts.slice(0, 4); // Đang trống: Hiện 4 món Hot/Mới nhất
 
-  // 🚀 Hàm xử lý khi bấm tìm kiếm
+  // Các hàm xử lý hành động Tìm Kiếm
   const handleSearch = (term = searchTerm) => {
     const finalTerm =
       typeof term === "string" ? term.trim() : searchTerm.trim();
-
     if (!finalTerm) {
       showToast("error", "Nhập cái gì đó để tìm đi mạy!");
       return;
     }
 
-    // 1. Nếu đã đăng nhập thì nhét từ khoá vào localStorage của user đó
     if (currentUser) {
       setSearchHistory((prev) => {
         const newHistory = [
           finalTerm,
           ...prev.filter((item) => item !== finalTerm),
-        ].slice(0, 10); // Giữ tối đa 10 từ khoá
+        ].slice(0, 10);
         localStorage.setItem(
           `search_history_${currentUser.id}`,
           JSON.stringify(newHistory),
@@ -137,14 +159,12 @@ function UserLayout() {
     }
 
     setSearchTerm(finalTerm);
-
-    // Chuyển hướng sang trang search kèm theo từ khóa trên URL
+    setIsSearchFocused(false);
     handleNavigate(`/search?q=${encodeURIComponent(finalTerm)}`);
   };
 
-  // Hàm xoá lịch sử tìm kiếm của user hiện tại
   const handleDeleteSearchHistory = (e, itemToRemove) => {
-    e.stopPropagation(); // ⚠️ Chặn không cho nó tự động kích hoạt tìm kiếm khi bấm nút X
+    e.stopPropagation();
     if (currentUser) {
       const newHistory = searchHistory.filter((item) => item !== itemToRemove);
       setSearchHistory(newHistory);
@@ -152,40 +172,28 @@ function UserLayout() {
         `search_history_${currentUser.id}`,
         JSON.stringify(newHistory),
       );
-      return newHistory;
     }
   };
 
-  const handleDeleteAllSearch = () => {
-    setSearchTerm("");
-  };
+  const handleDeleteAllSearch = () => setSearchTerm("");
 
   // =================================================================
-  // ĐỒNG BỘ GIỎ HÀNG KHI LOGIN / LOGOUT
+  // 3. THÔNG BÁO (NOTIFICATIONS)
   // =================================================================
-  useEffect(() => {
-    if (currentUser && fetchCart) {
-      fetchCart();
-    }
-    if (!currentUser && setCartItems) {
-      setCartItems([]);
-    }
-  }, [currentUser, fetchCart, setCartItems]);
+  const [showNotiMenu, setShowNotiMenu] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const notiMenuRef = useRef(null);
 
-  // =================================================================
-  // 🚀 FAKE REAL-TIME LẤY THÔNG BÁO
-  // =================================================================
   useEffect(() => {
     if (!currentUser) return;
-
     const fetchNotifications = async () => {
       try {
         const res = await axiosClient.get("/notifications");
         if (res.data.success) {
           const list = res.data.data;
           setNotifications(list);
-          const unread = list.filter((n) => Number(n.is_read) === 0).length;
-          setUnreadCount(unread);
+          setUnreadCount(list.filter((n) => Number(n.is_read) === 0).length);
         }
       } catch (error) {
         console.error("Lỗi lấy thông báo:", error);
@@ -193,15 +201,10 @@ function UserLayout() {
     };
 
     fetchNotifications();
-
-    const intervalId = setInterval(() => {
-      fetchNotifications();
-    }, 15000);
-
+    const intervalId = setInterval(fetchNotifications, 15000);
     return () => clearInterval(intervalId);
   }, [currentUser]);
 
-  // Hàm khi bấm vào một thông báo cụ thể (Đọc + Chuyển hướng)
   const handleReadNotification = async (notiId) => {
     try {
       await axiosClient.put(`/notifications/${notiId}/read`);
@@ -218,21 +221,18 @@ function UserLayout() {
     }
   };
 
-  // Hàm xoá 1 thông báo
   const handleDeleteNotification = async (notiId) => {
     try {
       await axiosClient.delete(`/notifications/${notiId}`);
       setNotifications((prev) =>
         prev.filter((n) => n.id_notification !== notiId),
       );
-      // Cập nhật lại số lượng chưa đọc nếu cái vừa bị xoá là cái chưa đọc
       setUnreadCount((prev) => {
         const deletedNoti = notifications.find(
           (n) => n.id_notification === notiId,
         );
-        if (deletedNoti && Number(deletedNoti.is_read) === 0) {
+        if (deletedNoti && Number(deletedNoti.is_read) === 0)
           return Math.max(0, prev - 1);
-        }
         return prev;
       });
     } catch (error) {
@@ -240,17 +240,13 @@ function UserLayout() {
     }
   };
 
-  // 🚀 HÀM XOÁ TẤT CẢ THÔNG BÁO (MỚI)
   const handleDeleteAllNotifications = async () => {
     if (notifications.length === 0) return;
     try {
-      // Ép giao diện giấu đi trước cho mượt (Optimistic UI Update)
       const oldNotifications = [...notifications];
       setNotifications([]);
       setUnreadCount(0);
       setShowNotiMenu(false);
-
-      // Gọi API xóa toàn bộ ngầm (Dùng vòng lặp gọi API đơn)
       await Promise.all(
         oldNotifications.map((noti) =>
           axiosClient.delete(`/notifications/${noti.id_notification}`),
@@ -262,69 +258,7 @@ function UserLayout() {
   };
 
   // =================================================================
-  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
-  // =================================================================
-  const [isExiting, setIsExiting] = useState(false);
-
-  // location.pathname là /search
-  // location.search là ?q=salad
-  // lấy cả 2 chỉ số này thứ nhất giải quyết được việc khi tìm kiếm tại trang kết quả không chuyển trang kết quả được nữa
-  // thứ 2 là giải quyết được việc là trải nghiệm người dùng của khách hàng tìm kiếm tại trang đó
-  useEffect(
-    () => {
-      const resetAnimation = setTimeout(() => {
-        setIsExiting(false);
-      }, 0);
-      return () => clearTimeout(resetAnimation);
-    },
-    [location.pathname],
-    [location.search],
-  );
-
-  const handleNavigate = (path) => {
-    // Nếu bấm đúng cái đường dẫn hiện tại (cả pathname lẫn search) thì bỏ qua
-    const currentPath = location.pathname + location.search;
-    if (currentPath === path) return;
-
-    // ĐẶC BIỆT: Nếu đang ở trang Search và lại tiếp tục Search
-    // -> Không cần hiệu ứng trượt rườm rà, nhảy luôn cho kết quả cập nhật mượt mà!
-    // location.pathname là /search
-    // startsWith là kiểm tra xem path có bắt đầu bằng /search hay không
-    if (location.pathname === "/search" && path.startsWith("/search")) {
-      navigate(path);
-      return;
-    }
-    setIsExiting(true);
-    setTimeout(() => {
-      navigate(path);
-    }, 400);
-  };
-
-  // =================================================================
-  // TOAST THÔNG BÁO
-  // =================================================================
-  const [toast, setToast] = useState({
-    show: false,
-    type: "success",
-    message: "",
-  });
-  const toastTimerRef = useRef(null);
-
-  const showToast = (type, message) => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ show: true, type, message });
-    toastTimerRef.current = setTimeout(() => {
-      setToast((prev) => ({ ...prev, show: false }));
-    }, 2500);
-  };
-
-  const closeToast = () => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast((prev) => ({ ...prev, show: false }));
-  };
-
-  // =================================================================
-  // CẬP NHẬT THÔNG TIN CÁ NHÂN & ĐỔI MK (GIỮ NGUYÊN)
+  // 4. QUẢN LÝ PROFILE & AUTH
   // =================================================================
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -333,6 +267,11 @@ function UserLayout() {
     phone: "",
     email: "",
   });
+
+  const [isChangePwdOpen, setIsChangePwdOpen] = useState(false);
+  const [isChangingPwd, setIsChangingPwd] = useState(false);
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [pwdData, setPwdData] = useState({ new_password: "" });
 
   const openEditProfile = () => {
     setEditFormData({
@@ -361,19 +300,11 @@ function UserLayout() {
       showToast("success", "Cập nhật thông tin thành công! 🥰");
       if (refetchUser) await refetchUser();
     } catch (error) {
-      showToast(
-        "error",
-        error.response?.data?.message || "Lỗi hệ thống khi cập nhật 😥",
-      );
+      showToast("error", error.response?.data?.message || "Lỗi cập nhật 😥");
     } finally {
       setIsEditing(false);
     }
   };
-
-  const [isChangePwdOpen, setIsChangePwdOpen] = useState(false);
-  const [isChangingPwd, setIsChangingPwd] = useState(false);
-  const [showNewPwd, setShowNewPwd] = useState(false);
-  const [pwdData, setPwdData] = useState({ new_password: "" });
 
   const openChangePwd = () => {
     setPwdData({ new_password: "" });
@@ -395,20 +326,72 @@ function UserLayout() {
     } catch (error) {
       showToast(
         "error",
-        error.response?.data?.message || "Lỗi hệ thống khi đổi mật khẩu 😥",
+        error.response?.data?.message || "Lỗi đổi mật khẩu 😥",
       );
     } finally {
       setIsChangingPwd(false);
     }
   };
 
-  // CÁC EFFECT & HÀM KHÁC
-
   const handleLogout = async () => {
     await logout();
     if (setCartItems) setCartItems([]);
     setShowUserMenu(false);
     navigate("/");
+  };
+
+  // =================================================================
+  // 5. CÁC HÀM TIỆN ÍCH (EFFECTS, TOAST, NAVIGATE)
+  // =================================================================
+  useEffect(() => {
+    if (currentUser && fetchCart) fetchCart();
+    if (!currentUser && setCartItems) setCartItems([]);
+  }, [currentUser, fetchCart, setCartItems]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target))
+        setShowUserMenu(false);
+      if (notiMenuRef.current && !notiMenuRef.current.contains(event.target))
+        setShowNotiMenu(false);
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target)
+      )
+        setIsSearchFocused(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const resetAnimation = setTimeout(() => setIsExiting(false), 0);
+    return () => clearTimeout(resetAnimation);
+  }, [location.pathname, location.search]);
+
+  const handleNavigate = (path) => {
+    const currentPath = location.pathname + location.search;
+    if (currentPath === path) return;
+    if (location.pathname === "/search" && path.startsWith("/search")) {
+      navigate(path);
+      return;
+    }
+    setIsExiting(true);
+    setTimeout(() => navigate(path), 400);
+  };
+
+  const showToast = (type, message) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ show: true, type, message });
+    toastTimerRef.current = setTimeout(
+      () => setToast((prev) => ({ ...prev, show: false })),
+      2500,
+    );
+  };
+
+  const closeToast = () => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast((prev) => ({ ...prev, show: false }));
   };
 
   const totalItemsCart = cartItems
@@ -419,21 +402,11 @@ function UserLayout() {
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-emerald-500/20 relative overflow-x-hidden">
-      {/* 🚀 CSS THANH CUỘN CHO DROPDOWN THÔNG BÁO */}
       <style>{`
-        .noti-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .noti-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .noti-scrollbar::-webkit-scrollbar-thumb {
-          background: #e4e4e7;
-          border-radius: 10px;
-        }
-        .noti-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #d4d4d8;
-        }
+        .noti-scrollbar::-webkit-scrollbar { width: 6px; }
+        .noti-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .noti-scrollbar::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 10px; }
+        .noti-scrollbar::-webkit-scrollbar-thumb:hover { background: #d4d4d8; }
       `}</style>
 
       {/* HEADER */}
@@ -446,6 +419,7 @@ function UserLayout() {
             HealthyGO
           </button>
 
+          {/* 🚀 KHUNG SEARCH & DROPDOWN TÍCH HỢP ĐỀ XUẤT */}
           <div
             className="hidden md:flex flex-1 max-w-xl mx-4 relative"
             ref={searchContainerRef}
@@ -453,7 +427,7 @@ function UserLayout() {
             <Search
               size={18}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 cursor-pointer hover:text-emerald-600 transition"
-              onClick={() => handleSearch()} // Click icon kính lúp
+              onClick={() => handleSearch()}
             />
 
             <input
@@ -461,12 +435,11 @@ function UserLayout() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              onFocus={() => setIsSearchFocused(true)} // 🚀 CLICK VÔ Ô NÀY LÀ HIỆN KHUNG LỊCH SỬ
+              onFocus={() => setIsSearchFocused(true)}
               placeholder="Tìm món ăn, nguyên liệu, combo..."
               className="w-full pl-11 pr-10 py-2 bg-zinc-100 border-transparent rounded-full text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white transition-all"
             />
 
-            {/* NÚT XOÁ CHỮ TRONG Ô TÌM KIẾM */}
             {searchTerm.length > 0 && (
               <button
                 onClick={handleDeleteAllSearch}
@@ -477,59 +450,121 @@ function UserLayout() {
               </button>
             )}
 
-            {/* 🚀 KHUNG DROPDOWN LỊCH SỬ TÌM KIẾM */}
-            {isSearchFocused && currentUser && searchHistory.length > 0 && (
-              <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-zinc-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                {/* Header của khung */}
-                <div className="flex justify-between items-center px-4 py-3 bg-zinc-50 border-b border-zinc-100">
-                  <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <History size={14} /> Tìm kiếm gần đây
-                  </span>
-                  <button
-                    onClick={() => {
-                      setIsSearchFocused(false);
-                      handleNavigate("/search-history"); // Chút mình tạo trang này sau
-                    }}
-                    className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer transition-colors uppercase"
-                  >
-                    Xem tất cả
-                  </button>
-                </div>
+            {/* 🚀 KHUNG DROPDOWN THẢ XUỐNG (NÂNG CẤP) */}
+            {isSearchFocused && (
+              <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-zinc-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 pb-2">
+                {/* 1. NỬA TRÊN: LỊCH SỬ TÌM KIẾM (Chỉ hiện khi chưa gõ chữ) */}
+                {currentUser &&
+                  searchHistory.length > 0 &&
+                  searchTerm.trim() === "" && (
+                    <>
+                      <div className="flex justify-between items-center px-4 py-3 bg-zinc-50 border-b border-zinc-100">
+                        <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <History size={14} /> Tìm kiếm gần đây
+                        </span>
+                        <button
+                          onClick={() => {
+                            setIsSearchFocused(false);
+                            handleNavigate("/search-history");
+                          }}
+                          className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer uppercase"
+                        >
+                          Xem tất cả
+                        </button>
+                      </div>
+                      <ul className="flex flex-col">
+                        {searchHistory.slice(0, 5).map((item, index) => (
+                          <li
+                            key={index}
+                            onClick={() => handleSearch(item)}
+                            className="flex items-center justify-between px-4 py-2 hover:bg-zinc-50 cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <History size={14} className="text-zinc-300" />
+                              <span className="text-sm font-medium text-zinc-700 group-hover:text-emerald-600 line-clamp-1">
+                                {item}
+                              </span>
+                            </div>
+                            <button
+                              onClick={(e) =>
+                                handleDeleteSearchHistory(e, item)
+                              }
+                              className="text-zinc-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-rose-50 cursor-pointer"
+                            >
+                              <X size={14} strokeWidth={2.5} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
 
-                {/* Danh sách 5 từ khoá */}
-                <ul className="flex flex-col">
-                  {searchHistory.slice(0, 5).map((item, index) => (
-                    <li
-                      key={index}
-                      onClick={() => handleSearch(item)} // 🚀 Bấm vô chữ là tự tìm luôn
-                      className="flex items-center justify-between px-4 py-2.5 hover:bg-zinc-50 cursor-pointer group transition-colors"
-                    >
-                      <span className="text-sm font-medium text-zinc-700 group-hover:text-emerald-600 line-clamp-1 pr-4">
-                        {item}
+                {/* 2. NỬA DƯỚI: ĐỀ XUẤT SẢN PHẨM (Hiện mọi lúc) */}
+                {displaySuggestions.length > 0 && (
+                  <div className="mt-1">
+                    <div className="px-4 py-2 text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                      {searchTerm.trim() === "" ? (
+                        <>
+                          <BellRing size={14} className="text-orange-500" /> Món
+                          ngon bán chạy
+                        </>
+                      ) : (
+                        <>
+                          <Search size={14} className="text-emerald-500" /> Kết
+                          quả gợi ý
+                        </>
+                      )}
+                    </div>
+                    <ul className="flex flex-col">
+                      {displaySuggestions.map((product) => (
+                        <li
+                          key={product.id_product}
+                          onClick={() => {
+                            setIsSearchFocused(false);
+                            navigate(`/detail-product/${product.id_product}`);
+                          }}
+                          className="flex items-center gap-3 px-4 py-2 hover:bg-emerald-50/50 cursor-pointer group transition-colors"
+                        >
+                          <img
+                            src={
+                              product.image_url ||
+                              "https://via.placeholder.com/40"
+                            }
+                            alt={product.name}
+                            className="w-10 h-10 rounded-xl object-cover border border-zinc-100 group-hover:scale-105 transition-transform"
+                          />
+                          <div className="flex-1">
+                            <h4 className="text-sm font-semibold text-zinc-700 group-hover:text-emerald-700 line-clamp-1 transition-colors">
+                              {product.name}
+                            </h4>
+                            <span className="text-xs font-black text-emerald-600">
+                              {Number(
+                                product.discount_price > 0
+                                  ? product.discount_price
+                                  : product.price,
+                              ).toLocaleString("vi-VN")}
+                              đ
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {searchTerm.trim() !== "" &&
+                  displaySuggestions.length === 0 && (
+                    <div className="px-4 py-6 text-center text-sm text-zinc-500">
+                      Không tìm thấy món nào với{" "}
+                      <span className="font-bold text-zinc-700">
+                        "{searchTerm}"
                       </span>
-                      <button
-                        onClick={(e) => handleDeleteSearchHistory(e, item)} // 🚀 Bấm X để xoá
-                        className="text-zinc-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all p-1 rounded-full hover:bg-rose-50 cursor-pointer shrink-0"
-                      >
-                        <X size={14} strokeWidth={2.5} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                    </div>
+                  )}
               </div>
             )}
           </div>
 
-          {/* NÚT XOÁ TẤT CẢ TRONG KHUNG TÌM KIẾM */}
-          {searchTerm.length > 0 && (
-            <button
-              onClick={handleDeleteAllSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-rose-500 bg-zinc-200/50 hover:bg-rose-50 p-1 rounded-full transition-colors cursor-pointer"
-              title="Xoá tìm kiếm"
-            >
-              <X size={14} strokeWidth={2.5} />
-            </button>
-          )}
           <div className="flex items-center gap-2 md:gap-4 text-sm font-medium tracking-tight">
             <button
               onClick={() => handleNavigate("/order")}
@@ -537,12 +572,11 @@ function UserLayout() {
             >
               <History size={18} /> Lịch sử mua hàng
             </button>
-
             <button className="md:hidden p-2 text-zinc-600 cursor-pointer">
               <Search size={20} />
             </button>
 
-            {/* 🚀 CHUÔNG THÔNG BÁO VỚI GIAO DIỆN MỚI */}
+            {/* CHUÔNG THÔNG BÁO */}
             {currentUser && (
               <div className="relative" ref={notiMenuRef}>
                 <button
@@ -560,15 +594,9 @@ function UserLayout() {
                     </span>
                   )}
                 </button>
-
                 <div
-                  className={`absolute right-0 top-[calc(100%+10px)] w-80 origin-top-right overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.15)] transition-all duration-300 ${
-                    showNotiMenu
-                      ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-                      : "pointer-events-none -translate-y-4 scale-95 opacity-0"
-                  }`}
+                  className={`absolute right-0 top-[calc(100%+10px)] w-80 origin-top-right overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.15)] transition-all duration-300 ${showNotiMenu ? "pointer-events-auto translate-y-0 scale-100 opacity-100" : "pointer-events-none -translate-y-4 scale-95 opacity-0"}`}
                 >
-                  {/* Header Thông báo */}
                   <div className="px-5 py-4 border-b border-zinc-100/80 bg-zinc-50/50 flex justify-between items-center sticky top-0 z-10 backdrop-blur-md">
                     <h3 className="font-black text-zinc-800 tracking-tight">
                       Thông báo
@@ -579,8 +607,6 @@ function UserLayout() {
                       </span>
                     )}
                   </div>
-
-                  {/* List Thông báo */}
                   <div className="max-h-[320px] overflow-y-auto noti-scrollbar flex flex-col bg-white">
                     {notifications.length === 0 ? (
                       <div className="p-10 flex flex-col items-center text-center text-zinc-400">
@@ -598,19 +624,13 @@ function UserLayout() {
                           onClick={() =>
                             handleReadNotification(noti.id_notification)
                           }
-                          className={`group relative flex items-center gap-3 p-4 border-b border-zinc-50 text-left transition-colors cursor-pointer pr-10 ${
-                            Number(noti.is_read) === 0
-                              ? "bg-emerald-50/20 hover:bg-emerald-50/40"
-                              : "hover:bg-zinc-50"
-                          }`}
+                          className={`group relative flex items-center gap-3 p-4 border-b border-zinc-50 text-left transition-colors cursor-pointer pr-10 ${Number(noti.is_read) === 0 ? "bg-emerald-50/20 hover:bg-emerald-50/40" : "hover:bg-zinc-50"}`}
                         >
-                          {/* Dấu chấm xanh nếu chưa đọc */}
                           <div className="w-2 shrink-0 flex justify-center">
                             {Number(noti.is_read) === 0 && (
                               <span className="w-2 h-2 rounded-full bg-emerald-500 block"></span>
                             )}
                           </div>
-
                           <div className="flex-1">
                             <h4
                               className={`text-sm mb-0.5 line-clamp-1 pr-2 ${Number(noti.is_read) === 0 ? "font-bold text-emerald-800" : "font-semibold text-zinc-700"}`}
@@ -626,15 +646,12 @@ function UserLayout() {
                               )}
                             </span>
                           </div>
-
-                          {/* 🚀 NÚT X (XOÁ 1 ITEM) NẰM GIỮA MÀN HÌNH */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteNotification(noti.id_notification);
                             }}
                             className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-7 h-7 text-zinc-300 hover:text-rose-500 hover:bg-rose-50 rounded-full opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
-                            title="Xoá thông báo"
                           >
                             <X size={16} strokeWidth={2.5} />
                           </button>
@@ -642,8 +659,6 @@ function UserLayout() {
                       ))
                     )}
                   </div>
-
-                  {/* 🚀 Nút Xoá Tất Cả (Nằm dưới cùng) */}
                   {notifications.length > 0 && (
                     <div className="p-3 border-t border-zinc-100 bg-white sticky bottom-0 z-10">
                       <button
@@ -658,7 +673,7 @@ function UserLayout() {
               </div>
             )}
 
-            {/* Giỏ hàng */}
+            {/* GIỎ HÀNG */}
             <button
               onClick={() => handleNavigate("/cart")}
               className="p-2 hover:bg-zinc-100 text-zinc-700 transition-colors rounded-full relative flex items-center cursor-pointer no-underline"
@@ -671,7 +686,7 @@ function UserLayout() {
               )}
             </button>
 
-            {/* User Menu */}
+            {/* USER MENU */}
             {currentUser ? (
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -687,13 +702,8 @@ function UserLayout() {
                   </span>
                   <ChevronDown size={14} className="text-zinc-400" />
                 </button>
-
                 <div
-                  className={`absolute right-0 top-[calc(100%+10px)] w-52 origin-top-right overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${
-                    showUserMenu
-                      ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-                      : "pointer-events-none -translate-y-2 scale-95 opacity-0"
-                  }`}
+                  className={`absolute right-0 top-[calc(100%+10px)] w-52 origin-top-right overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${showUserMenu ? "pointer-events-auto translate-y-0 scale-100 opacity-100" : "pointer-events-none -translate-y-2 scale-95 opacity-0"}`}
                 >
                   <button
                     type="button"
@@ -742,13 +752,12 @@ function UserLayout() {
 
       {/* BODY CHÍNH */}
       <main
-        className={`pt-20 transform transition-all duration-500 ease-in-out ${
-          isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"
-        }`}
+        className={`pt-20 transform transition-all duration-500 ease-in-out ${isExiting ? "-translate-x-12 opacity-0" : "translate-x-0 opacity-100"}`}
       >
         <Outlet />
       </main>
 
+      {/* FLOATING CART (MOBILE) */}
       <button
         onClick={() => handleNavigate("/cart")}
         className="md:hidden fixed bottom-6 right-6 bg-emerald-600 text-white w-14 h-14 rounded-full shadow-[0_10px_25px_rgba(5,150,105,0.3)] flex items-center justify-center z-50 hover:bg-emerald-700 transition-colors cursor-pointer"
@@ -844,11 +853,7 @@ function UserLayout() {
                   <button
                     type="submit"
                     disabled={isEditing}
-                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${
-                      isEditing
-                        ? "bg-zinc-400 cursor-not-allowed"
-                        : "bg-emerald-600 hover:bg-emerald-700"
-                    }`}
+                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${isEditing ? "bg-zinc-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700"}`}
                   >
                     {isEditing ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -923,11 +928,7 @@ function UserLayout() {
                   <button
                     type="submit"
                     disabled={isChangingPwd}
-                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${
-                      isChangingPwd
-                        ? "bg-zinc-400 cursor-not-allowed"
-                        : "bg-indigo-600 hover:bg-indigo-700"
-                    }`}
+                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${isChangingPwd ? "bg-zinc-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"}`}
                   >
                     {isChangingPwd ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -952,16 +953,10 @@ function UserLayout() {
             onClick={closeToast}
           ></div>
           <div
-            className={`relative w-full max-w-sm rounded-[2.5rem] bg-white overflow-hidden shadow-2xl border-2 ${
-              toast.type === "success"
-                ? "border-emerald-500"
-                : "border-rose-400"
-            }`}
+            className={`relative w-full max-w-sm rounded-[2.5rem] bg-white overflow-hidden shadow-2xl border-2 ${toast.type === "success" ? "border-emerald-500" : "border-rose-400"}`}
           >
             <div
-              className={`p-8 flex flex-col items-center text-center relative ${
-                toast.type === "success" ? "bg-emerald-500" : "bg-rose-500"
-              }`}
+              className={`p-8 flex flex-col items-center text-center relative ${toast.type === "success" ? "bg-emerald-500" : "bg-rose-500"}`}
             >
               <button
                 onClick={closeToast}
