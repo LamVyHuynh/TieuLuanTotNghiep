@@ -73,7 +73,7 @@ function UserLayout() {
   const [allProducts, setAllProducts] = useState([]);
   const searchContainerRef = useRef(null);
 
-  // Lấy toàn bộ sản phẩm để làm data đề xuất
+  // API sản phẩm để có danh sách sản phẩm đầy đủ lọc ra để hiển thị đề xuất sản phẩm cho khách hàng
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
@@ -85,6 +85,7 @@ function UserLayout() {
         console.error("Lỗi lấy danh sách sản phẩm:", error);
       }
     };
+    // gọi lại hàm fetchAllProducts để load danh sách sản phẩm khi component mount
     fetchAllProducts();
   }, []);
 
@@ -164,9 +165,12 @@ function UserLayout() {
   };
 
   const handleDeleteSearchHistory = (e, itemToRemove) => {
+    // Ngăn chặn sự kiện click lan ra ngoài, tránh việc đóng dropdown khi bấm nút xóa
     e.stopPropagation();
     if (currentUser) {
+      // Lọc nếu đúng là item === itemToRemove thì bỏ đi, còn khác thì giữ lại
       const newHistory = searchHistory.filter((item) => item !== itemToRemove);
+      // sau khi chọn xong sẽ set lại state và lưu vào localStorage dựa vào iduser của currentUser
       setSearchHistory(newHistory);
       localStorage.setItem(
         `search_history_${currentUser.id}`,
@@ -175,6 +179,7 @@ function UserLayout() {
     }
   };
 
+  // xoá tất cả lịch sửa tìm kiếm
   const handleDeleteAllSearch = () => setSearchTerm("");
 
   // =================================================================

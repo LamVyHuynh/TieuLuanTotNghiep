@@ -68,6 +68,8 @@ function SearchHistoryPage() {
     setHistory([]);
     localStorage.removeItem(`search_history_${currentUser.id}`);
 
+    // chuông báo cho các component khác biết rằng localStoragse đã thay đổi
+    // và sau khi xoá nó trở về rỗng, các component khác sẽ cập nhật lại state của mình và render lại giao diện
     window.dispatchEvent(new Event("custom_storage_change"));
   };
 
