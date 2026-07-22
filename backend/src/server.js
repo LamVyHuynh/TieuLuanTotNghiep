@@ -1,6 +1,7 @@
 // Import thư viện
 // import framwork express: tạo server,tạo API,xử lý request/response
 const express = require("express");
+const path = require("path"); // Thêm dòng này nếu chưa có
 
 // import thư viện cors: giải quyết lỗi CORS khi frontend và backend khác domain
 const cors = require("cors");
@@ -89,6 +90,9 @@ app.use("/notifications", notificationRoutes);
 
 // gắn router đánh giá
 app.use("/reviews", reviewRoutes);
+
+// MỞ CỬA CHO FRONTEND LẤY ẢNH:
+app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
 // Kiểm tra route
 app.get("/", (req, res) => {

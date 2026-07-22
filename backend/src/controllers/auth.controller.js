@@ -10,12 +10,14 @@ const {
   deleteUserById,
   updateUserById,
   updateUserPassword,
+  updateUserAvatar,
 } = require("../services/auth.service");
 
 const jwt = require("jsonwebtoken");
 
 // 1. IMPORT MÁY DỊCH MÃ VÀO
 const { encodeId, decodeId } = require("../../utils/hashid.util");
+const { PawPrint } = require("lucide-react");
 
 const register = async (req, res) => {
   const userData = req.body;
@@ -398,6 +400,41 @@ const changePassword = async (req, res) => {
   }
 };
 
+const updateAvatar = async (req, res) => {
+  try {
+    // 1. GIẢI MÃ ID TỪ URL
+    const userId = decodeId(req.params.id);
+    if (!userId) {
+      return res.status(400).json({ message: "ID người dùng không hợp lệ" });
+    }
+
+    // 2. Kiểm tra xem multer có bắt được file ảnh không
+    if (!req.file) {
+      return res.status(400).json({ message: "Vui lòng chọn một bức ảnh!" });
+    }
+
+    // 3. Tạo đường link ảo để lưu vào DB (tên file đã được multer đổi tên)
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+    // 4. Gọi Service để lưu vào Database
+    await updateUserAvatar(userId, avatarUrl);
+
+    // 5. Trả về phản hồi thành công
+    res.status(200).json({
+      message: "Cập nhật ảnh đại diện thành công",
+      avatarUrl: avatarUrl,
+    });
+  } catch (error) {
+    if (error.message === "Không tìm thấy người dùng") {
+      return res.status(404).json({ message: error.message });
+    }
+    res.status(500).json({
+      message: "Lỗi server khi cập nhật ảnh đại diện",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -410,4 +447,5 @@ module.exports = {
   deleteUser,
   updateUser,
   changePassword,
+  updateAvatar,
 };

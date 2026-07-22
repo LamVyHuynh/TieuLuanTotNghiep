@@ -115,49 +115,47 @@ async function registerUser(userData) {
 }
 
 async function loginUser(email, password) {
-  // Kiểm tra trống của email và password
   if (!email || !password) {
     throw new Error("Email hoặc mật khẩu không được để trống");
   }
 
-  // THÊM DÒNG NÀY: Chuẩn hóa email trước khi tìm trong Database
   const cleanEmail = email.trim().toLowerCase();
 
-  // Kiểm tra email có tồn tại trong database không
+  // 1. Thêm avatar_url vào câu lệnh SELECT
   const [rows] = await pool.query(
-    "SELECT id, full_name, email, phone, password_hash, role_id, is_active FROM users WHERE email = ?",
+    "SELECT id, full_name, email, phone, password_hash, role_id, is_active, avatar_url FROM users WHERE email = ?",
     [cleanEmail],
   );
   if (rows.length === 0) {
     throw new Error("Email hoặc mật khẩu không đúng");
   }
 
-  // Kiểm tra password có khớp không dùng bcrypt.compare()
-  //  lấy giá trị đầu tiên là id
   const user = rows[0];
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
   if (!isPasswordValid) {
     throw new Error("Email hoặc mật khẩu không đúng");
   }
 
-  // Kiểm tra xem tài khoản có đang hoạt động không
   if (!user.is_active) {
     throw new Error(
       "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.",
     );
   }
+
   return {
     id: user.id,
     full_name: user.full_name,
     email: user.email,
     phone: user.phone,
     role_id: user.role_id,
+    avatar_url: user.avatar_url, // 2. Thêm dòng này để trả ảnh về
   };
 }
 
 async function getCurrentUserById(userId) {
+  // 1. Thêm avatar_url vào câu lệnh SELECT
   const [rows] = await pool.query(
-    "SELECT id, full_name, email,phone, role_id FROM users WHERE id = ?",
+    "SELECT id, full_name, email, phone, role_id, avatar_url FROM users WHERE id = ?",
     [userId],
   );
   if (rows.length === 0) {
@@ -169,6 +167,7 @@ async function getCurrentUserById(userId) {
     email: rows[0].email,
     phone: rows[0].phone,
     role_id: rows[0].role_id,
+    avatar_url: rows[0].avatar_url,
   };
 }
 
@@ -365,6 +364,22 @@ async function updateUserPassword(userId, newPassword) {
   return true; // Trả về true nếu cập nhật thành công
 }
 
+// CẬP NHẬT ẢNH ĐẠI DIỆN USER
+async function updateUserAvatar(userId, avatarUrl) {
+  // Kiểm tra xem người dùng có tồn tại chưa
+  const [rows] = await pool.query("SELECT id FROM users WHERE id=?", [userId]);
+  if (rows.length === 0) {
+    throw new Error("Người dùng không tồn tại");
+  }
+
+  // Cập nhật đường dẫn ảnh đại diện mới vào database
+  await pool.query("UPDATE users SET avatar_url=? WHERE id=?", [
+    avatarUrl,
+    userId,
+  ]);
+
+  return true; // Trả về true nếu cập nhật thành công
+}
 module.exports = {
   registerUser,
   loginUser,
@@ -376,4 +391,5 @@ module.exports = {
   deleteUserById,
   updateUserById,
   updateUserPassword,
+  updateUserAvatar,
 };

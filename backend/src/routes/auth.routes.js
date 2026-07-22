@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+// Import cỗ máy multer để xử lý file ảnh
+const upload = require("../config/uploadConfig");
 
 const {
   register,
@@ -13,6 +15,7 @@ const {
   deleteUser,
   updateUser,
   changePassword,
+  updateAvatar,
 } = require("../controllers/auth.controller");
 
 const { loginRateLimiter } = require("../middlewares/rateLimit.middleware");
@@ -42,5 +45,9 @@ router.get("/logs", fetchAllLogs);
 router.get("/list-users", fetchAllUsers);
 router.post("/users/:id/toggle-status", toggleUserLock);
 router.delete("/users/:id/delete-user", deleteUser);
+
+// Route cập nhật ảnh đại diện
+// upload.single("avatar_file") đứng ra làm "bảo vệ", hứng file ảnh rồi mới cho chạy vào updateAvatar
+router.put("/users/:id/avatar", upload.single("avatar_file"), updateAvatar);
 
 module.exports = router;

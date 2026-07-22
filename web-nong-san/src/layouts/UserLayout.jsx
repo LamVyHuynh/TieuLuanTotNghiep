@@ -23,7 +23,7 @@ import {
 import axiosClient from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
-// Hàm phụ trợ: Chuyển đổi chuỗi tiếng Việt có dấu thành không dấu viết thường
+
 // 🚀 HÀM PHỤ: Bỏ dấu tiếng Việt giúp tìm kiếm chuẩn xác
 const removeVietnameseTones = (str) => {
   if (!str) return "";
@@ -43,6 +43,7 @@ const removeVietnameseTones = (str) => {
   str = str.replace(/Đ/g, "D");
   return str.toLowerCase().trim();
 };
+
 function UserLayout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -73,7 +74,6 @@ function UserLayout() {
   const [allProducts, setAllProducts] = useState([]);
   const searchContainerRef = useRef(null);
 
-  // API sản phẩm để có danh sách sản phẩm đầy đủ lọc ra để hiển thị đề xuất sản phẩm cho khách hàng
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
@@ -85,11 +85,9 @@ function UserLayout() {
         console.error("Lỗi lấy danh sách sản phẩm:", error);
       }
     };
-    // gọi lại hàm fetchAllProducts để load danh sách sản phẩm khi component mount
     fetchAllProducts();
   }, []);
 
-  // Lắng nghe và load lịch sử tìm kiếm từ LocalStorage
   useEffect(() => {
     const loadHistory = () => {
       if (currentUser) {
@@ -122,21 +120,18 @@ function UserLayout() {
     };
   }, [currentUser]);
 
-  // 🚀 BỘ NÃO NÂNG CẤP: Phân biệt rõ lúc TRỐNG và lúc GÕ
   const isSearching = searchTerm.trim() !== "";
   const normalizedSearchTerm = removeVietnameseTones(searchTerm);
 
   const displaySuggestions = isSearching
     ? allProducts
         .filter((p) => {
-          // Phòng hờ lỡ có sản phẩm nào trong DB mày quên nhập tên
           if (!p || !p.name) return false;
           return removeVietnameseTones(p.name).includes(normalizedSearchTerm);
         })
-        .slice(0, 4) // Đang gõ: Chỉ hiện 5 kết quả khớp nhất
-    : allProducts.slice(0, 4); // Đang trống: Hiện 4 món Hot/Mới nhất
+        .slice(0, 4)
+    : allProducts.slice(0, 4);
 
-  // Các hàm xử lý hành động Tìm Kiếm
   const handleSearch = (term = searchTerm) => {
     const finalTerm =
       typeof term === "string" ? term.trim() : searchTerm.trim();
@@ -165,12 +160,9 @@ function UserLayout() {
   };
 
   const handleDeleteSearchHistory = (e, itemToRemove) => {
-    // Ngăn chặn sự kiện click lan ra ngoài, tránh việc đóng dropdown khi bấm nút xóa
     e.stopPropagation();
     if (currentUser) {
-      // Lọc nếu đúng là item === itemToRemove thì bỏ đi, còn khác thì giữ lại
       const newHistory = searchHistory.filter((item) => item !== itemToRemove);
-      // sau khi chọn xong sẽ set lại state và lưu vào localStorage dựa vào iduser của currentUser
       setSearchHistory(newHistory);
       localStorage.setItem(
         `search_history_${currentUser.id}`,
@@ -179,7 +171,6 @@ function UserLayout() {
     }
   };
 
-  // xoá tất cả lịch sửa tìm kiếm
   const handleDeleteAllSearch = () => setSearchTerm("");
 
   // =================================================================
@@ -273,6 +264,17 @@ function UserLayout() {
     email: "",
   });
 
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
   const [isChangePwdOpen, setIsChangePwdOpen] = useState(false);
   const [isChangingPwd, setIsChangingPwd] = useState(false);
   const [showNewPwd, setShowNewPwd] = useState(false);
@@ -284,6 +286,15 @@ function UserLayout() {
       phone: currentUser?.phone || "",
       email: currentUser?.email || "",
     });
+    setAvatarFile(null);
+
+    // Chú ý: Backend chạy ở cổng 5000, nếu khác mày sửa lại số này
+    setPreviewUrl(
+      currentUser?.avatar_url
+        ? `http://localhost:5000${currentUser.avatar_url}`
+        : "",
+    );
+
     setShowUserMenu(false);
     setIsEditProfileOpen(true);
   };
@@ -301,8 +312,25 @@ function UserLayout() {
         email: currentUser.email,
         role_id: currentUser.role_id,
       });
+
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append("avatar_file", avatarFile);
+
+        await axiosClient.put(
+          `/auth/users/${currentUser.id}/avatar`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          },
+        );
+      }
+
       setIsEditProfileOpen(false);
       showToast("success", "Cập nhật thông tin thành công! 🥰");
+
       if (refetchUser) await refetchUser();
     } catch (error) {
       showToast("error", error.response?.data?.message || "Lỗi cập nhật 😥");
@@ -424,7 +452,7 @@ function UserLayout() {
             HealthyGO
           </button>
 
-          {/* 🚀 KHUNG SEARCH & DROPDOWN TÍCH HỢP ĐỀ XUẤT */}
+          {/* 🚀 KHUNG SEARCH */}
           <div
             className="hidden md:flex flex-1 max-w-xl mx-4 relative"
             ref={searchContainerRef}
@@ -434,7 +462,6 @@ function UserLayout() {
               className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 cursor-pointer hover:text-emerald-600 transition"
               onClick={() => handleSearch()}
             />
-
             <input
               type="text"
               value={searchTerm}
@@ -444,7 +471,6 @@ function UserLayout() {
               placeholder="Tìm món ăn, nguyên liệu, combo..."
               className="w-full pl-11 pr-10 py-2 bg-zinc-100 border-transparent rounded-full text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white transition-all"
             />
-
             {searchTerm.length > 0 && (
               <button
                 onClick={handleDeleteAllSearch}
@@ -455,10 +481,9 @@ function UserLayout() {
               </button>
             )}
 
-            {/* 🚀 KHUNG DROPDOWN THẢ XUỐNG (NÂNG CẤP) */}
+            {/* DROPDOWN */}
             {isSearchFocused && (
               <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-zinc-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 pb-2">
-                {/* 1. NỬA TRÊN: LỊCH SỬ TÌM KIẾM (Chỉ hiện khi chưa gõ chữ) */}
                 {currentUser &&
                   searchHistory.length > 0 &&
                   searchTerm.trim() === "" && (
@@ -504,7 +529,6 @@ function UserLayout() {
                     </>
                   )}
 
-                {/* 2. NỬA DƯỚI: ĐỀ XUẤT SẢN PHẨM (Hiện mọi lúc) */}
                 {displaySuggestions.length > 0 && (
                   <div className="mt-1">
                     <div className="px-4 py-2 text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -691,7 +715,7 @@ function UserLayout() {
               )}
             </button>
 
-            {/* USER MENU */}
+            {/* 🚀 USER MENU (ĐÃ THÊM LOGIC ẢNH ĐẠI DIỆN VÀO ĐÂY) */}
             {currentUser ? (
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -700,8 +724,21 @@ function UserLayout() {
                     setShowUserMenu((prev) => !prev);
                     setShowNotiMenu(false);
                   }}
-                  className="flex items-center gap-1.5 p-1 pl-3 pr-2 bg-zinc-100 hover:bg-zinc-200 transition-colors rounded-full cursor-pointer text-zinc-700 font-semibold text-sm"
+                  className="flex items-center gap-2 p-1.5 pl-2 pr-3 bg-zinc-100 hover:bg-zinc-200 transition-colors rounded-full cursor-pointer text-zinc-700 font-semibold text-sm"
                 >
+                  {/* Logic hiện ảnh hoặc logo chữ cái */}
+                  {currentUser.avatar_url ? (
+                    <img
+                      src={`http://localhost:5000${currentUser.avatar_url}`}
+                      alt="User"
+                      className="w-7 h-7 rounded-full object-cover shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-emerald-200 text-emerald-700 flex items-center justify-center text-xs font-black">
+                      {currentUser.full_name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+
                   <span className="max-w-[100px] truncate">
                     {currentUser.full_name.split(" ").pop()}
                   </span>
@@ -792,6 +829,34 @@ function UserLayout() {
             </div>
             <div className="p-6">
               <form onSubmit={handleEditSubmit} className="space-y-4">
+                {/* 🚀 KHU VỰC CHỌN ẢNH ĐẠI DIỆN */}
+                <div className="flex flex-col items-center justify-center mb-6">
+                  <div className="relative w-24 h-24 rounded-full border-2 border-dashed border-emerald-500 p-1 mb-2 overflow-hidden">
+                    {previewUrl ? (
+                      <img
+                        src={previewUrl}
+                        alt="Avatar Preview"
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-4xl font-black">
+                        {currentUser?.full_name?.charAt(0).toUpperCase() || (
+                          <User size={32} />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <label className="cursor-pointer bg-zinc-100 hover:bg-zinc-200 px-4 py-1.5 rounded-full text-xs font-semibold text-zinc-600 transition">
+                    Chọn ảnh mới
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                </div>
+
                 <div className="space-y-1.5">
                   <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
                     Địa chỉ Email
