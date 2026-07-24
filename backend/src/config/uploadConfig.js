@@ -22,6 +22,7 @@ if (!fs.existsSync(uploadDir)) {
 // Bước 2: Cấu hình multer để lưu trữ file
 const storage = multer.diskStorage({
   // 2.1 Nơi cất file
+  // destination: dùng để xác định thư mục nơi file tải lên sẽ được lưu trữ trên ổ đĩa máy chủ.
   destination: function (req, file, cb) {
     // cb là callback function, multer sẽ gọi hàm này để xác định nơi lưu file
     cb(null, uploadDir); // báo cho multer biết là lưu file vào uploadDir ở trên
