@@ -335,10 +335,11 @@ async function getDetailReport() {
 
     // 4. Top 5 Khách hàng VIP (Mua nhiều tiền nhất)
     const vipQuery = `
-      SELECT full_name, COUNT(*) AS total_orders, SUM(total_amount) AS total_spent 
-      FROM orders 
-      WHERE status != 'cancelled' AND user_id IS NOT NULL 
-      GROUP BY user_id, full_name 
+      SELECT o.full_name, COUNT(o.id_order) AS total_orders, SUM(o.total_amount) AS total_spent, u.avatar_url 
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id 
+      WHERE o.status != 'cancelled' AND o.user_id IS NOT NULL 
+      GROUP BY o.user_id, o.full_name, u.avatar_url 
       ORDER BY total_spent DESC 
       LIMIT 5
     `;

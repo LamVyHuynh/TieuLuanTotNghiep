@@ -352,9 +352,18 @@ function ReportsPage() {
                     <tr key={i} className="hover:bg-slate-50 transition">
                       <td className="py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-black text-xs uppercase shadow-sm">
-                            {vip.full_name?.charAt(0) || "U"}
-                          </div>
+                          {/* 🚀 ĐÃ CẬP NHẬT LOGIC KIỂM TRA AVATAR */}
+                          {vip.avatar_url ? (
+                            <img
+                              src={vip.avatar_url}
+                              alt={vip.full_name}
+                              className="h-10 w-10 rounded-full object-cover shadow-sm border border-amber-200 shrink-0"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-black text-sm uppercase shadow-sm shrink-0">
+                              {vip.full_name?.charAt(0) || "U"}
+                            </div>
+                          )}
                           <div>
                             <p className="text-sm font-bold text-slate-900">
                               {vip.full_name}
