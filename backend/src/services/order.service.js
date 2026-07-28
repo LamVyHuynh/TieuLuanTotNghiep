@@ -127,10 +127,12 @@ async function getOrdersByUserId(userId) {
 // Lấy tất cả các đơn hàng của admin
 async function getAllOrdersForAdmin() {
   // 1. Lấy tất cả đơn hàng từ mới nhất đến cũ nhất
+  // 🚀 ĐÃ SỬA: Dùng LEFT JOIN móc sang bảng users để lấy cột avatar_url ra
   const orderQuery = `
-    SELECT id_order, full_name, address, payment_method, total_amount, status, created_at, scheduled_time 
-    FROM orders 
-    ORDER BY created_at DESC
+    SELECT o.id_order, o.full_name, o.address, o.payment_method, o.total_amount, o.status, o.created_at, o.scheduled_time, u.avatar_url 
+    FROM orders o
+    LEFT JOIN users u ON o.user_id = u.id
+    ORDER BY o.created_at DESC
   `;
   const [orders] = await pool.execute(orderQuery);
 

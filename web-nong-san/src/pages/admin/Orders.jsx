@@ -203,7 +203,7 @@ function OrdersPage() {
       "Ngày đặt",
       "Khách hàng",
       "Nơi giao",
-      "Sản phẩm", // 🚀 Cột này hồi nãy thiếu
+      "Sản phẩm",
       "Tạm tính",
       "Tổng thanh toán",
       "Trạng thái",
@@ -212,11 +212,8 @@ function OrdersPage() {
     // Xử lí dữ liệu đơn hàng thành định dạng CSV
     const csvRows = orders.map((order) => {
       const statusText = getStatusConfig(order.status).text;
-
-      // 🚀 Format ngày tháng cho Excel
       const orderDate = new Date(order.created_at).toLocaleDateString("vi-VN");
 
-      // 🚀 Rút trích tên sản phẩm từ mảng items (Vd: Bát gạo lứt x1 + Combo Detox x2)
       const products = order.items
         ? order.items
             .map((i) => `${i.product_name} (x${i.quantity})`)
@@ -226,9 +223,9 @@ function OrdersPage() {
       return [
         order.id_order,
         `"${orderDate}"`,
-        `"${order.full_name || ""}"`, // Bọc ngoặc kép chống lỗi tên có dấu phẩy
-        `"${order.address || ""}"`, // Bọc ngoặc kép chống lỗi địa chỉ có dấu phẩy
-        `"${products}"`, // Bọc ngoặc kép
+        `"${order.full_name || ""}"`,
+        `"${order.address || ""}"`,
+        `"${products}"`,
         order.items.reduce(
           (acc, item) => acc + Number(item.price) * item.quantity,
           0,
@@ -238,11 +235,8 @@ function OrdersPage() {
       ].join(";");
     });
 
-    // Gộp header và dữ liệu
     const csvString = [headers.join(";"), ...csvRows].join("\n");
 
-    // Tạo Blob và url để tải xuống
-    // Ép vào ký tự \uFEFF và khai báo charset
     const blob = new Blob(["\uFEFF" + csvString], {
       type: "text/csv;charset=utf-8;",
     });
@@ -259,6 +253,7 @@ function OrdersPage() {
 
     showToast("Đã xuất file CSV thành công!", "success");
   };
+
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 overflow-hidden">
       {/* 🚀 CSS THANH KÉO NGANG CHO BẢNG */}
@@ -362,9 +357,8 @@ function OrdersPage() {
         </article>
       </section>
 
-      {/* BẢNG QUẢN LÝ ĐƠN HÀNG - ĐÃ FIX KHUNG CHỨA ĐỂ HIỆN THANH CUỘN */}
+      {/* BẢNG QUẢN LÝ ĐƠN HÀNG */}
       <section className="mt-8 rounded-2xl bg-[#eef2eb] shadow-sm flex flex-col w-full">
-        {/* 🚀 QUAN TRỌNG: Chỉ cần cái div này có overflow-x-auto là bảng sẽ có thanh cuộn ngang */}
         <div className="w-full overflow-x-auto custom-scrollbar">
           <table className="w-full min-w-[1200px] border-collapse text-left">
             <thead>
@@ -372,7 +366,7 @@ function OrdersPage() {
                 <th className="px-5 py-4 w-[100px] whitespace-nowrap">
                   Mã đơn
                 </th>
-                <th className="px-5 py-4 w-[180px] whitespace-nowrap">
+                <th className="px-5 py-4 w-[200px] whitespace-nowrap">
                   Khách hàng
                 </th>
                 <th className="px-5 py-4 w-[220px]">Nơi giao</th>
@@ -441,12 +435,20 @@ function OrdersPage() {
                         </div>
                       </td>
 
-                      {/* Khách hàng */}
+                      {/* Khách hàng (ĐÃ CẬP NHẬT LOGIC ẢNH ĐẠI DIỆN) */}
                       <td className="px-5 py-5">
                         <div className="flex items-start gap-3">
-                          <div className="h-8 w-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs uppercase shrink-0 mt-0.5">
-                            {order.full_name?.charAt(0) || "U"}
-                          </div>
+                          {order.avatar_url ? (
+                            <img
+                              src={order.avatar_url}
+                              alt={order.full_name}
+                              className="h-8 w-8 rounded-full object-cover border border-slate-200 shadow-sm shrink-0 mt-0.5"
+                            />
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs uppercase shrink-0 mt-0.5 shadow-sm">
+                              {order.full_name?.charAt(0) || "U"}
+                            </div>
+                          )}
                           <div>
                             <p className="text-sm font-bold text-slate-900 line-clamp-1">
                               {order.full_name}
