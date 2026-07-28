@@ -10,6 +10,7 @@ import {
   FileText,
   Search,
   Download,
+  UploadCloud,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -23,6 +24,10 @@ function CategoriesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentCategoryId, setCurrentCategoryId] = useState(null);
+
+  // --- STATE LƯU FILE & PREVIEW ẢNH ---
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
 
   // --- STATE CONFIRM XOÁ & TOAST ---
   const [deleteConfirm, setDeleteConfirm] = useState({
@@ -40,8 +45,7 @@ function CategoriesPage() {
   const initialFormState = {
     name: "",
     description: "",
-    image_url: "",
-    status: 1, // Mặc định là hiển thị (active)
+    status: 1,
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -91,7 +95,6 @@ function CategoriesPage() {
     return counts;
   }, [productList]);
 
-  // Tính toán thống kê
   const stastics = {
     total: categoryList.length,
     active: categoryList.filter((cat) => cat.status === 1).length,
@@ -103,8 +106,19 @@ function CategoriesPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Lắng nghe khi người dùng chọn file ảnh từ máy tính
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const openAddModal = () => {
     setFormData(initialFormState);
+    setImageFile(null);
+    setImagePreview("");
     setIsEditMode(false);
     setIsModalOpen(true);
   };
@@ -113,9 +127,10 @@ function CategoriesPage() {
     setFormData({
       name: category.name,
       description: category.description || "",
-      image_url: category.image_url || "",
       status: category.status,
     });
+    setImageFile(null);
+    setImagePreview(category.image_url || "");
     setCurrentCategoryId(category.id_category);
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -124,12 +139,27 @@ function CategoriesPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+
     try {
+      // Đóng gói dữ liệu thành FormData để gửi kèm tệp tin
+      const submitData = new FormData();
+      submitData.append("name", formData.name);
+      submitData.append("description", formData.description);
+      submitData.append("status", formData.status);
+
+      if (imageFile) {
+        submitData.append("image", imageFile);
+      }
+
       if (isEditMode) {
-        await axiosClient.put(`categories/${currentCategoryId}`, formData);
+        await axiosClient.put(`categories/${currentCategoryId}`, submitData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         showToast("success", "Cập nhật danh mục thành công! 🥰");
       } else {
-        await axiosClient.post("categories/add-category", formData);
+        await axiosClient.post("categories/add-category", submitData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         showToast("success", "Thêm danh mục mới thành công! 🥰");
       }
       setIsModalOpen(false);
@@ -157,22 +187,19 @@ function CategoriesPage() {
     } catch (error) {
       showToast(
         "error",
-        error.response?.data?.message || "Xoá không được rồi mạy ơi! 😥",
+        error.response?.data?.message || "Xoá không được rồi! 😥",
       );
     } finally {
       setDeleteConfirm({ show: false, categoryId: null, isDeleting: false });
     }
   };
 
-  // Hàm xuất dữ liệu ra CSV
   const exportToCSV = () => {
     if (categoryList.length === 0) {
       showToast("error", "Không có dữ liệu để xuất ra CSV! 😥");
       return;
     }
 
-    // 1. Khai báo tên các cột
-    // 1. Khai báo tiêu đề cột
     const headers = [
       "Mã danh mục",
       "Tên danh mục",
@@ -181,7 +208,6 @@ function CategoriesPage() {
       "Trạng thái",
     ];
 
-    // 2. Chuyển dữ liệu thành mảng các dòng CSV
     const csvRows = categoryList.map((cat) => {
       const productCount = coutProductsInCategory[cat.id_category] || 0;
       const statusText = cat.status === 1 ? "Hiển thị" : "Đang ẩn";
@@ -194,11 +220,7 @@ function CategoriesPage() {
       ].join(";");
     });
 
-    // 3. Gộp header và dữ liệu
     const csvString = [headers.join(";"), ...csvRows].join("\n");
-
-    // 4. Tạo Blob và url để tải xuống
-    // Ép vào ký tự \uFEFF và khai báo charset
     const blob = new Blob(["\uFEFF" + csvString], {
       type: "text/csv;charset=utf-8;",
     });
@@ -220,7 +242,6 @@ function CategoriesPage() {
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 relative bg-slate-50/50 overflow-hidden">
       {/* HEADER */}
-      {/* HEADER */}
       <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between px-2">
         <div>
           <h2 className="text-4xl font-black text-slate-900 tracking-tighter">
@@ -231,7 +252,6 @@ function CategoriesPage() {
           </p>
         </div>
 
-        {/* 🚀 BỌC 2 NÚT VÀO MỘT CÁI DIV ĐỂ NÓ NẰM NGANG NHAU */}
         <div className="flex items-center gap-3">
           <button
             onClick={exportToCSV}
@@ -253,20 +273,18 @@ function CategoriesPage() {
 
       {/* KHU VỰC TÌM KIẾM & THỐNG KÊ */}
       <section className="mb-10 grid grid-cols-1 lg:grid-cols-12 gap-6 px-2">
-        {/* Tìm kiếm */}
         <div className="lg:col-span-5 flex relative">
           <Search
             size={20}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 "
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
           />
           <input
             type="text"
             placeholder="Tìm kiếm danh mục..."
-            className="w-full  bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-medium shadow-sm outline-none focus:border-emerald-500 transition-all"
+            className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-medium shadow-sm outline-none focus:border-emerald-500 transition-all"
           />
         </div>
 
-        {/* Thống kê (3 Cards) */}
         <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
             <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
@@ -335,7 +353,6 @@ function CategoriesPage() {
                     key={cat.id_category}
                     className="group hover:bg-emerald-50/30 transition-all"
                   >
-                    {/* Thay đoạn td Tên danh mục cũ bằng đoạn này */}
                     <td className="p-5">
                       <div className="flex items-center gap-4">
                         <img
@@ -343,14 +360,12 @@ function CategoriesPage() {
                             cat.image_url || "https://via.placeholder.com/150"
                           }
                           alt=""
-                          className="h-14 w-14 rounded-2xl object-cover shadow-sm"
+                          className="h-14 w-14 rounded-2xl object-cover shadow-sm border border-slate-100"
                         />
                         <div className="flex flex-col">
                           <p className="font-black text-slate-800 text-base">
                             {cat.name}
                           </p>
-
-                          {/* Hiện số lượng món ở đây */}
                           <span className="text-[10px] font-bold text-slate-400 uppercase">
                             {coutProductsInCategory[cat.id_category] || 0} sản
                             phẩm
@@ -419,6 +434,52 @@ function CategoriesPage() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              {/* KHU VỰC CHỌN HÌNH ẢNH DANH MỤC */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                  <ImageIcon size={14} /> Hình ảnh danh mục
+                </label>
+
+                <div className="relative border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-3xl p-4 bg-slate-50 transition-colors flex flex-col items-center justify-center min-h-[160px]">
+                  {imagePreview ? (
+                    <div className="relative w-full h-44 rounded-2xl overflow-hidden group/img">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <label className="cursor-pointer bg-white text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg hover:bg-emerald-50 hover:text-emerald-700 transition">
+                          Đổi ảnh khác
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFileChange}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer flex flex-col items-center justify-center w-full py-6 text-slate-400 hover:text-emerald-600 transition">
+                      <UploadCloud size={44} className="mb-2 text-slate-300" />
+                      <span className="text-sm font-bold text-slate-700">
+                        Nhấp vào đây để chọn ảnh từ máy tính
+                      </span>
+                      <span className="text-xs text-slate-400 mt-1">
+                        Hỗ trợ PNG, JPG, WEBP tối đa 5MB
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-slate-400 uppercase flex items-center gap-1">
                   <Box size={14} /> Tên danh mục
@@ -449,19 +510,6 @@ function CategoriesPage() {
 
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                  <ImageIcon size={14} /> Link hình ảnh
-                </label>
-                <input
-                  name="image_url"
-                  value={formData.image_url}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white shadow-inner"
-                  placeholder="https://..."
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 uppercase flex items-center gap-1">
                   Trạng thái
                 </label>
                 <select
@@ -483,13 +531,13 @@ function CategoriesPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full mt-4 flex items-center justify-center gap-3 py-5 bg-[#2e7d32] hover:bg-[#1b5e20] active:scale-[0.98] text-white font-bold rounded-[1.5rem] shadow-xl cursor-pointer disabled:opacity-50"
+                className="w-full mt-4 flex items-center justify-center gap-3 py-5 bg-[#2e7d32] hover:bg-[#1b5e20] active:scale-[0.98] text-white font-bold rounded-[1.5rem] shadow-xl cursor-pointer disabled:opacity-50 transition"
               >
                 {isSubmitting ? (
                   <div className="h-6 w-6 animate-spin border-2 border-white border-t-transparent rounded-full" />
                 ) : (
                   <>
-                    <Save size={24} />{" "}
+                    <Save size={24} />
                     <span className="text-lg">
                       {isEditMode ? "CẬP NHẬT" : "THÊM DANH MỤC"}
                     </span>
