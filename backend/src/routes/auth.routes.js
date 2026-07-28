@@ -24,7 +24,7 @@ const {
   isAdmin,
 } = require("../middlewares/auth.middleware");
 // --- KHU VỰC CÔNG CỘNG (Không cần đăng nhập) ---
-router.post("/register", register);
+router.post("/register", upload.single("avatar_file"), register);
 router.post("/login", loginRateLimiter, login);
 router.post("/refresh-token", refreshToken);
 router.post("/logout", logout);

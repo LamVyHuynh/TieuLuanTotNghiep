@@ -24,6 +24,10 @@ const register = async (req, res) => {
   const userData = req.body;
 
   try {
+    if (req.file) {
+      const avatarUrl = await uploadToSupabase(req.file, "avatars");
+      userData.avatar_url = avatarUrl; // Nhét link vào userData trước khi gọi service
+    }
     const result = await registerUser(userData);
 
     if (!result) {
@@ -344,6 +348,12 @@ const updateUser = async (req, res) => {
     }
 
     const updateData = req.body;
+
+    if (req.file) {
+      const avatarUrl = await uploadToSupabase(req.file, "avatars");
+      userData.avatar_url = avatarUrl; // Nhét link vào userData trước khi gọi service
+    }
+
     const updateddUser = await updateUserById(userId, updateData);
 
     // 10. MÃ HOÁ ID SAU KHI UPDATE XONG ĐỂ TRẢ VỀ

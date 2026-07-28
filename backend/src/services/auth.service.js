@@ -255,7 +255,7 @@ async function getAllUsers(page = 1, limit = 10) {
   try {
     const [rowsResult, totalResult, statsResult] = await Promise.all([
       pool.query(
-        `SELECT id, full_name, email, phone, role_id, is_active, created_at
+        `SELECT id, full_name, email, phone, avatar_url, role_id, is_active, created_at
           FROM users
           ORDER BY created_at DESC
           LIMIT ? OFFSET ?`,

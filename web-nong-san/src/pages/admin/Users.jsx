@@ -47,12 +47,6 @@ const formatDate = (dateString) => {
   return `Tham gia ${date.toLocaleDateString("vi-VN")}`;
 };
 
-const getAvatarUrl = (name) => {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    name || "User",
-  )}&background=eef2eb&color=047857`;
-};
-
 // ==========================================
 // COMPONENT CHÍNH
 // ==========================================
@@ -911,11 +905,20 @@ function UsersPage() {
                     >
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={getAvatarUrl(user.full_name)}
-                            alt={user.full_name}
-                            className="h-10 w-10 rounded-full object-cover"
-                          />
+                          {/* 🚀 Logic kiểm tra: Có ảnh thì hiện ảnh Supabase, không thì hiện chữ cái đầu */}
+                          {user.avatar_url ? (
+                            <img
+                              src={user.avatar_url}
+                              alt={user.full_name}
+                              className="h-10 w-10 rounded-full object-cover border border-slate-100 shadow-sm"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-black shadow-sm">
+                              {user.full_name
+                                ? user.full_name.charAt(0).toUpperCase()
+                                : "U"}
+                            </div>
+                          )}
                           <div>
                             <p className="font-semibold text-slate-900">
                               {user.full_name}
