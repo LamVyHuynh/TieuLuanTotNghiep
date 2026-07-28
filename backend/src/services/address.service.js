@@ -82,7 +82,7 @@ async function deleteAddressAdmin(addressId) {
 // Trang admin: lấy tất cả địa chỉ của tất cả người dùng
 
 async function getAllAddressesForAdmin() {
-  const query = `SELECT a.id_address, a.user_id, a.receiver_name, a.phone, a.address, a.is_default, u.full_name AS user_name FROM user_addresses a JOIN users u ON a.user_id = u.id ORDER BY a.id_address DESC`;
+  const query = `SELECT a.id_address, a.user_id, a.receiver_name, a.phone, a.address, a.is_default, u.full_name AS user_name, u.avatar_url FROM user_addresses a JOIN users u ON a.user_id = u.id ORDER BY a.id_address DESC`;
   const [rows] = await pool.execute(query);
   return rows;
 }

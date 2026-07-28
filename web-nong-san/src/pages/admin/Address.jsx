@@ -240,11 +240,22 @@ function AddressPage() {
                     key={addr.id_address}
                     className="hover:bg-slate-50/80 transition-colors"
                   >
+                    {/* 🚀 ĐÃ CẬP NHẬT LOGIC AVATAR Ở ĐÂY */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                          <User size={18} />
-                        </div>
+                        {addr.avatar_url ? (
+                          <img
+                            src={addr.avatar_url}
+                            alt={addr.user_name}
+                            className="h-10 w-10 rounded-full object-cover border border-slate-100 shadow-sm"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-sm font-black shadow-sm">
+                            {addr.user_name
+                              ? addr.user_name.charAt(0).toUpperCase()
+                              : "U"}
+                          </div>
+                        )}
                         <div>
                           <p className="font-bold text-slate-900">
                             {addr.user_name}
