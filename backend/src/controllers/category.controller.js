@@ -6,16 +6,20 @@ const {
 } = require("../services/category.service");
 
 const { encodeId, decodeId } = require("../utils/hashid.util");
+const { uploadToSupabase } = require("../utils/uploadHelper");
 
 // Controller để thêm danh mục mới
 const createCategoryController = async (req, res) => {
   try {
     const categoryData = req.body;
-    if (
-      !categoryData.name ||
-      !categoryData.description ||
-      !categoryData.image_url
-    ) {
+    let imageUrl = ""; // Khởi tạo biến imageUrl
+
+    // Nếu có file ảnh được tải lên, gọi hàm uploadToSupabase để tải ảnh lên Supabase
+    if (req.file) {
+      imageUrl = await uploadToSupabase(req.file, "categories");
+    }
+
+    if (!categoryData.name || !categoryData.description || !imageUrl) {
       return res
         .status(400)
         .json({ message: "Vui lòng cung cấp đầy đủ thông tin danh mục!" });
@@ -74,6 +78,13 @@ const updateCategoryController = async (req, res) => {
     }
 
     const categoryData = req.body;
+
+    // Nếu có file ảnh được tải lên, gọi hàm uploadToSupabase để tải ảnh lên Supabase
+    if (req.file) {
+      const imageUrl = await uploadToSupabase(req.file, "categories");
+      categoryData.image_url = imageUrl; // Cập nhật đường dẫn ảnh mới vào dữ liệu danh mục
+    }
+
     const updateDataCategory = await updateCategory(categoryId, categoryData); // Chọc xuống DB bằng Số
 
     if (updateDataCategory) {

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
+const upload = require("../config/uploadConfig");
 const {
   createCategoryController,
   getAllCategoriesController,
@@ -16,10 +17,20 @@ const { authenticateToken } = require("../middlewares/auth.middleware");
 router.get("/", getAllCategoriesController);
 
 // Route thêm mới danh mục
-router.post("/add-category", authenticateToken, createCategoryController);
+router.post(
+  "/add-category",
+  authenticateToken,
+  upload.single("image"),
+  createCategoryController,
+);
 
 // Route cập nhật thông tin danh mục
-router.put("/:id", authenticateToken, updateCategoryController);
+router.put(
+  "/:id",
+  authenticateToken,
+  upload.single("image"),
+  updateCategoryController,
+);
 
 // Route xoá danh mục
 router.delete("/:id", authenticateToken, deleteCategoryController);

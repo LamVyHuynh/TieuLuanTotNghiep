@@ -318,6 +318,7 @@ function UserLayout() {
 
       if (avatarFile) {
         const formData = new FormData();
+        // gói hàng với nhãn dán là "avatar_file" để backend nhận ra là file ảnh đại diện
         formData.append("avatar_file", avatarFile);
 
         await axiosClient.put(

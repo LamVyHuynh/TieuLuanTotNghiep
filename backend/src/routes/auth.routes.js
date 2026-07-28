@@ -46,6 +46,7 @@ router.delete("/users/:id/delete-user", deleteUser);
 
 // Route cập nhật ảnh đại diện
 // upload.single("avatar_file") đứng ra làm "bảo vệ", hứng file ảnh rồi mới cho chạy vào updateAvatar
+// Nhận hàng với nhãn dán là "avatar_file" từ frontend, multer sẽ hứng file ảnh này và lưu tạm vào RAM (do cấu hình ở uploadConfig.js là memoryStorage)
 router.put("/users/:id/avatar", upload.single("avatar_file"), updateAvatar);
 
 module.exports = router;
