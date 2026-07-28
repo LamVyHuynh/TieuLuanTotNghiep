@@ -12,11 +12,12 @@ const {
   updateUserPassword,
   updateUserAvatar,
 } = require("../services/auth.service");
+const { uploadToSupabase } = require("../utils/uploadHelper");
 
 const jwt = require("jsonwebtoken");
 
 // 1. IMPORT MÁY DỊCH MÃ VÀO
-const { encodeId, decodeId } = require("../../utils/hashid.util");
+const { encodeId, decodeId } = require("../utils/hashid.util");
 const { PawPrint } = require("lucide-react");
 
 const register = async (req, res) => {
@@ -414,7 +415,9 @@ const updateAvatar = async (req, res) => {
     }
 
     // 3. Tạo đường link ảo để lưu vào DB (tên file đã được multer đổi tên)
-    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    // const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    // Dùng công cụ đẩy lên thư mục avatar trong kho của Supabase
+    const avatarUrl = await uploadToSupabase(req.file, "avatars");
 
     // 4. Gọi Service để lưu vào Database
     await updateUserAvatar(userId, avatarUrl);
@@ -430,7 +433,7 @@ const updateAvatar = async (req, res) => {
     }
     res.status(500).json({
       message: "Lỗi server khi cập nhật ảnh đại diện",
-      error: error.message,
+      error: "Lỗi: " + error.message,
     });
   }
 };

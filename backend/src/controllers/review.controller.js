@@ -1,5 +1,5 @@
 const reviewService = require("../services/review.service");
-const { encodeId, decodeId } = require("../../utils/hashid.util");
+const { encodeId, decodeId } = require("../utils/hashid.util");
 
 // Khách gửi đánh giá
 const addReview = async (req, res) => {
@@ -11,12 +11,10 @@ const addReview = async (req, res) => {
     const productId = decodeId(hashedProductId);
 
     if (!productId || !rating) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Thiếu thông tin đánh giá hoặc ID không hợp lệ!",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu thông tin đánh giá hoặc ID không hợp lệ!",
+      });
     }
 
     if (rating < 1 || rating > 5) {

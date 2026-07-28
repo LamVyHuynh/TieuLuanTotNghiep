@@ -6,7 +6,7 @@ const {
 } = require("../services/cart.service");
 
 // 1. IMPORT MÁY DỊCH MÃ
-const { encodeId, decodeId } = require("../../utils/hashid.util");
+const { encodeId, decodeId } = require("../utils/hashid.util");
 
 const addToCart = async (req, res) => {
   try {

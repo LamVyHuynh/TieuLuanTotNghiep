@@ -289,11 +289,14 @@ function UserLayout() {
     setAvatarFile(null);
 
     // Chú ý: Backend chạy ở cổng 5000, nếu khác mày sửa lại số này
-    setPreviewUrl(
-      currentUser?.avatar_url
-        ? `http://localhost:5000${currentUser.avatar_url}`
-        : "",
-    );
+    // setPreviewUrl(
+    //   currentUser?.avatar_url
+    //     ? `http://localhost:5000${currentUser.avatar_url}`
+    //     : "",
+    // );
+
+    // sửa lại chạy trực tiếp từ Supabase
+    setPreviewUrl(currentUser?.avatar_url || "");
 
     setShowUserMenu(false);
     setIsEditProfileOpen(true);
@@ -728,8 +731,9 @@ function UserLayout() {
                 >
                   {/* Logic hiện ảnh hoặc logo chữ cái */}
                   {currentUser.avatar_url ? (
+                    // sửa lại chạy trực tiếp từ Supabase
                     <img
-                      src={`http://localhost:5000${currentUser.avatar_url}`}
+                      src={currentUser.avatar_url}
                       alt="User"
                       className="w-7 h-7 rounded-full object-cover shadow-sm"
                     />

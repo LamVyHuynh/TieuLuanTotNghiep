@@ -7,7 +7,7 @@ const {
 } = require("../services/product.service");
 
 // Đổi lại tên hàm import cho đúng với file utils của mày nhé
-const { encodeId, decodeId } = require("../../utils/hashid.util");
+const { encodeId, decodeId } = require("../utils/hashid.util");
 
 const addProduct = async (req, res) => {
   try {

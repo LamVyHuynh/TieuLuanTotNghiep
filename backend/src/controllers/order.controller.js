@@ -6,7 +6,7 @@ const {
   getDashboardStats,
   getDetailReport,
 } = require("../services/order.service");
-const { encodeId, decodeId } = require("../../utils/hashid.util");
+const { encodeId, decodeId } = require("../utils/hashid.util");
 
 // Tạo đơn hàng mới (dùng cho trang Checkout)
 const createOrder = async (req, res) => {

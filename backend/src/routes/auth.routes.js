@@ -23,8 +23,6 @@ const {
   authenticateToken,
   isAdmin,
 } = require("../middlewares/auth.middleware");
-const { u } = require("framer-motion/client");
-
 // --- KHU VỰC CÔNG CỘNG (Không cần đăng nhập) ---
 router.post("/register", register);
 router.post("/login", loginRateLimiter, login);

@@ -3,7 +3,7 @@ const pool = require("../config/db");
 // 🚀 THÊM MỚI: Import hàm tạo thông báo từ service mới tạo
 const { createNotification } = require("./notification.service");
 
-const { encodeId } = require("../../utils/hashid.util");
+const { encodeId } = require("../utils/hashid.util");
 
 async function createOrderTransaction(userId, orderData, items) {
   // Lấy 1 connection riêng biệt từ pool để chạy về Transaction

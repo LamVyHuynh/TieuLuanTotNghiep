@@ -5,7 +5,7 @@ const {
   deleteCategory,
 } = require("../services/category.service");
 
-const { encodeId, decodeId } = require("../../utils/hashid.util");
+const { encodeId, decodeId } = require("../utils/hashid.util");
 
 // Controller để thêm danh mục mới
 const createCategoryController = async (req, res) => {

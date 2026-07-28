@@ -9,7 +9,7 @@ const {
 } = require("../services/address.service");
 
 // 1. IMPORT MÁY DỊCH MÃ
-const { encodeId, decodeId } = require("../../utils/hashid.util");
+const { encodeId, decodeId } = require("../utils/hashid.util");
 const { get } = require("../routes/address.routes");
 
 async function getDefaultAddressUser(req, res) {
