@@ -8,10 +8,18 @@ const {
 
 // Đổi lại tên hàm import cho đúng với file utils của mày nhé
 const { encodeId, decodeId } = require("../utils/hashid.util");
+const { uploadToSupabase } = require("../utils/uploadHelper");
 
 const addProduct = async (req, res) => {
   try {
     const productData = req.body;
+
+    const file = req.file; // Lấy file ảnh từ request
+    if (file) {
+      // Nếu có file ảnh, gọi hàm uploadToSupabase để tải ảnh lên Supabase
+      const imageUrl = await uploadToSupabase(file, "products");
+      productData.image_url = imageUrl; // Gán URL ảnh vào productData
+    }
 
     // 1. Validate dữ liệu bắt buộc
     if (!productData.name || !productData.price || !productData.id_category) {
@@ -106,6 +114,12 @@ const deleteSanPham = async (req, res) => {
 const updateInfoProduct = async (req, res) => {
   try {
     const productId = decodeId(req.params.id); // DỊCH CHIỀU VÀO TỪ URL
+
+    if (req.file) {
+      // Nếu có file ảnh, gọi hàm uploadToSupabase để tải ảnh lên Supabase
+      const imageUrl = await uploadToSupabase(req.file, "products");
+      req.body.image_url = imageUrl; // Gán URL ảnh vào productData
+    }
     if (!productId)
       return res.status(400).json({ message: "ID không hợp lệ!" });
 

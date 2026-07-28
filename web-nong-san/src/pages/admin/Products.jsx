@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-
 import {
   Plus,
   X,
@@ -13,6 +12,8 @@ import {
   AlertTriangle,
   DollarSign,
   Download,
+  UploadCloud,
+  ImageIcon,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 
@@ -26,6 +27,10 @@ function ProductsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentProductId, setCurrentProductId] = useState(null);
+
+  // --- 🚀 STATE LƯU FILE & PREVIEW ẢNH ---
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
 
   // --- STATE CHO MODAL XÁC NHẬN XOÁ ---
   const [deleteConfirm, setDeleteConfirm] = useState({
@@ -55,7 +60,6 @@ function ProductsPage() {
     protein: "",
     carbs: "",
     fat: "",
-    image_url: "",
   });
 
   const showToast = (type, message) => {
@@ -108,13 +112,11 @@ function ProductsPage() {
 
   const getCategoryName = (id) => categoryMap[id] || "Chưa có danh mục";
 
-  // 🚀 TÍNH TOÁN THỐNG KÊ (ĐÃ FIX THEO LOGIC MỚI CỦA MÀY)
   const stastics = {
     total: productList.length,
     lowStock: productList.filter((product) => product.stock_quantity <= 5)
       .length,
     totalValue: productList.reduce((sum, product) => {
-      // Lấy trực tiếp giá khuyến mãi nếu có, không có thì lấy giá gốc
       const activePrice =
         product.discount_price && Number(product.discount_price) > 0
           ? Number(product.discount_price)
@@ -131,6 +133,15 @@ function ProductsPage() {
     }));
   };
 
+  // 🚀 Lắng nghe khi người dùng chọn ảnh
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const openEditModal = (product) => {
     setFormData({
       id_category: product.id_category,
@@ -144,8 +155,9 @@ function ProductsPage() {
       protein: product.protein,
       carbs: product.carbs,
       fat: product.fat,
-      image_url: product.image_url || "",
     });
+    setImageFile(null);
+    setImagePreview(product.image_url || ""); // Hiện ảnh cũ
     setCurrentProductId(product.id_product);
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -153,7 +165,7 @@ function ProductsPage() {
 
   const openAddModal = () => {
     setFormData({
-      id_category: "",
+      id_category: categoryList.length > 0 ? categoryList[0].id_category : "", // Chọn sẵn danh mục đầu tiên
       name: "",
       description: "",
       price: "",
@@ -164,8 +176,9 @@ function ProductsPage() {
       protein: "",
       carbs: "",
       fat: "",
-      image_url: "",
     });
+    setImageFile(null);
+    setImagePreview("");
     setIsEditMode(false);
     setIsModalOpen(true);
   };
@@ -174,11 +187,26 @@ function ProductsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // 🚀 Đóng gói dữ liệu thành FormData
+      const submitData = new FormData();
+      Object.keys(formData).forEach((key) => {
+        submitData.append(key, formData[key]);
+      });
+
+      // Nếu có chọn ảnh mới thì nhét vào gói hàng với nhãn "image"
+      if (imageFile) {
+        submitData.append("image", imageFile);
+      }
+
       if (isEditMode) {
-        await axiosClient.put(`products/${currentProductId}`, formData);
+        await axiosClient.put(`products/${currentProductId}`, submitData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         showToast("success", "Bạn đã cập nhật thông tin thành công!");
       } else {
-        await axiosClient.post("products/add-product", formData);
+        await axiosClient.post("products/add-product", submitData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         showToast("success", "Bạn đã thêm món ăn thành công!");
       }
       setIsModalOpen(false);
@@ -210,7 +238,6 @@ function ProductsPage() {
     }
   };
 
-  // Hàm xuất dữ liệu ra CSV
   const exportToCSV = () => {
     if (productList.length === 0) {
       showToast("error", "Không có dữ liệu để xuất CSV!");
@@ -278,7 +305,6 @@ function ProductsPage() {
           </p>
         </div>
 
-        {/* 🚀 Cụm nút bấm */}
         <div className="flex items-center gap-3">
           <button
             onClick={exportToCSV}
@@ -454,7 +480,6 @@ function ProductsPage() {
                         </span>
                       </td>
 
-                      {/* 🚀 Cột hiển thị Giá Gốc (Gạch chéo nếu có giảm giá) */}
                       <td className="p-5 text-right font-bold text-slate-600">
                         <span
                           className={
@@ -467,7 +492,6 @@ function ProductsPage() {
                         </span>
                       </td>
 
-                      {/* 🚀 Cột hiển thị Giá Khuyến Mãi (Là giá thực bán) */}
                       <td className="p-5 text-right">
                         {discountPrice > 0 ? (
                           <span className="font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
@@ -579,9 +603,55 @@ function ProductsPage() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-8">
-              <div className="space-y-4">
+              {/* 🚀 KHU VỰC CHỌN HÌNH ẢNH SẢN PHẨM */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                  <ImageIcon size={14} /> Ảnh đại diện món ăn
+                </label>
+
+                <div className="relative border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-3xl p-4 bg-slate-50 transition-colors flex flex-col items-center justify-center min-h-[160px]">
+                  {imagePreview ? (
+                    <div className="relative w-full h-44 rounded-2xl overflow-hidden group/img">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <label className="cursor-pointer bg-white text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg hover:bg-emerald-50 hover:text-emerald-700 transition">
+                          Đổi ảnh khác
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFileChange}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer flex flex-col items-center justify-center w-full py-6 text-slate-400 hover:text-emerald-600 transition">
+                      <UploadCloud size={44} className="mb-2 text-slate-300" />
+                      <span className="text-sm font-bold text-slate-700">
+                        Nhấp vào đây để chọn ảnh từ máy tính
+                      </span>
+                      <span className="text-xs text-slate-400 mt-1">
+                        Hỗ trợ PNG, JPG, WEBP tối đa 5MB
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-slate-50">
                 <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm uppercase tracking-widest">
-                  <Box size={18} /> Thông tin
+                  <Box size={18} /> Thông tin món
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2">
@@ -594,6 +664,7 @@ function ProductsPage() {
                       value={formData.name}
                       onChange={handleChange}
                       className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+                      placeholder="Ví dụ: Salad ức gà..."
                     />
                   </div>
                   <div className="sm:col-span-1">
@@ -624,7 +695,7 @@ function ProductsPage() {
                   </div>
                   <div className="sm:col-span-1">
                     <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
-                      Giá gốc ($)
+                      Giá gốc (đ)
                     </label>
                     <input
                       name="price"
@@ -637,7 +708,7 @@ function ProductsPage() {
                   </div>
                   <div className="sm:col-span-1">
                     <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
-                      Giá giảm ($)
+                      Giá giảm (đ)
                     </label>
                     <input
                       name="discount_price"
@@ -659,7 +730,7 @@ function ProductsPage() {
                       className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
                     />
                   </div>
-                  <div className="sm:col-span-1">
+                  <div className="sm:col-span-2">
                     <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
                       Số lượng kho
                     </label>
@@ -674,6 +745,7 @@ function ProductsPage() {
                   </div>
                 </div>
               </div>
+
               <div className="space-y-4 pt-4 border-t border-slate-50">
                 <div className="flex items-center gap-2 text-amber-600 font-bold text-sm uppercase tracking-widest">
                   <Activity size={18} /> Dinh dưỡng
@@ -732,18 +804,7 @@ function ProductsPage() {
                   </div>
                 </div>
               </div>
-              <div className="space-y-4 pt-4 border-t border-slate-50">
-                <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
-                  Link ảnh sản phẩm
-                </label>
-                <input
-                  name="image_url"
-                  value={formData.image_url}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
-                  placeholder="https://..."
-                />
-              </div>
+
               <button
                 type="submit"
                 disabled={isSubmitting}

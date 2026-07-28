@@ -1,5 +1,8 @@
 const express = require("express");
 
+// import
+const upload = require("../config/uploadConfig");
+
 const router = express.Router();
 const {
   addProduct,
@@ -17,13 +20,23 @@ const { authenticateToken } = require("../middlewares/auth.middleware");
 router.get("/", getProducts);
 
 // Route để thêm sản phẩm mới
-router.post("/add-product", authenticateToken, addProduct);
+router.post(
+  "/add-product",
+  authenticateToken,
+  upload.single("image"),
+  addProduct,
+);
 
 // Route để xoá sản phẩm (nếu cần thiết)
 router.delete("/:id", authenticateToken, deleteSanPham);
 
 // Route để cập nhật thông tin sản phẩm
-router.put("/:id", authenticateToken, updateInfoProduct);
+router.put(
+  "/:id",
+  authenticateToken,
+  upload.single("image"),
+  updateInfoProduct,
+);
 
 // Route để lấy chi tiết sản phẩm theo ID
 router.get("/:id", getProductDetail);
