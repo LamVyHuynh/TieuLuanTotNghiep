@@ -254,7 +254,14 @@ async function getDashboardStats() {
     const revenueQuery = `SELECT SUM(total_amount) AS total_revenue FROM orders WHERE status != 'cancelled'`;
     const ordersCountQuery = `SELECT COUNT(*) AS total_orders FROM orders`;
     const usersCountQuery = `SELECT COUNT(*) AS total_users FROM users WHERE role_id = 2`;
-    const recentOrdersQuery = `SELECT id_order, full_name, total_amount, status, created_at FROM orders ORDER BY created_at DESC LIMIT 5`;
+    // Dùng LEFT JOIN móc sang bảng users để lôi u.avatar_url ra cho 5 đơn mới nhất
+    const recentOrdersQuery = `
+      SELECT o.id_order, o.full_name, o.total_amount, o.status, o.created_at, u.avatar_url 
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id 
+      ORDER BY o.created_at DESC 
+      LIMIT 5
+    `;
     const bestSellingQuery = `SELECT product_name, SUM(quantity) AS total_sold FROM order_items GROUP BY id_product, product_name ORDER BY total_sold DESC LIMIT 5`;
 
     // 🚀 ĐÃ THÊM LỆNH ĐẾM SỐ ĐƠN HÀNG: COUNT(id_order) as total_orders

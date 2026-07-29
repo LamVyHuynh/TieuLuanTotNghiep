@@ -446,9 +446,18 @@ function Dashboard() {
                           </td>
                           <td className="px-8 py-5 text-sm">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-[10px] font-black text-slate-500 uppercase">
-                                {order.full_name?.charAt(0) || "U"}
-                              </div>
+                              {/* 🚀 ĐÃ CẬP NHẬT LOGIC AVATAR VÀO ĐÂY */}
+                              {order.avatar_url ? (
+                                <img
+                                  src={order.avatar_url}
+                                  alt={order.full_name}
+                                  className="h-8 w-8 rounded-full object-cover border border-slate-200 shadow-sm"
+                                />
+                              ) : (
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-[10px] font-black text-slate-500 uppercase">
+                                  {order.full_name?.charAt(0) || "U"}
+                                </div>
+                              )}
                               <span className="font-semibold text-slate-800">
                                 {order.full_name}
                               </span>
