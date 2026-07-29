@@ -34,15 +34,42 @@ const register = async (req, res) => {
       throw new Error("Kết quả trả về từ service không hợp lệ");
     }
 
+    // 🚀 ĐÃ SỬA: Bắt mọi trường hợp trả về từ Service (dù là object hay con số)
+    const newUserId = result.id || result.insertId || result;
+
+    // Lấy thông tin user vừa tạo
+    const newUser = await getCurrentUserById(newUserId);
+
+    // LƯU Ý: JWT VẪN DÙNG ID THẬT
+    const accessToken = jwt.sign(
+      { id: newUser.id, role: newUser.role_id }, // Dùng newUser cho chuẩn
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" },
+    );
+
+    const refreshToken = jwt.sign(
+      { id: newUser.id, role: newUser.role_id }, // Dùng newUser
+      process.env.JWT_REFRESH_SECRET || "CaiNayLaSecretKhoaRefreshNheMay",
+      { expiresIn: "7d" },
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     // 2. MÃ HOÁ ID TRƯỚC KHI GỬI VỀ CHO REACT
     const safeUser = {
-      ...result,
-      id: encodeId(result.id),
+      ...newUser,
+      id: encodeId(newUser.id),
     };
 
-    res.status(201).json({
+    res.status(200).json({
       message: "Register successful",
-      data: safeUser, // Trả về user có ID đã mã hoá
+      token: accessToken,
+      user: safeUser,
     });
   } catch (error) {
     if (

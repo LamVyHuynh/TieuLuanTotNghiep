@@ -15,9 +15,12 @@ import {
   EyeOff,
 } from "lucide-react";
 
+import { useAuth } from "../context/AuthContext";
+
 function Register() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     full_name: "",
@@ -93,7 +96,20 @@ function Register() {
     setIsLoading(true);
 
     try {
-      const response = await axiosClient.post("/auth/register", formData);
+      //  BƯỚC 1: TẠO KIỆN HÀNG FORMDATA THỰC SỰ
+      const submitData = new FormData();
+      submitData.append("full_name", formData.full_name);
+      submitData.append("email", formData.email);
+      submitData.append("phone", formData.phone);
+      submitData.append("password", formData.password);
+
+      //  BƯỚC 2: GỬI KIỆN HÀNG VỚI ĐÚNG LOẠI CONTENT-TYPE
+      const response = await axiosClient.post("/auth/register", submitData);
+      const { user, token } = response.data;
+
+      if (user && token) {
+        login(user, token);
+      }
 
       setSuccessMessage(response.data.message || "Đăng ký thành công");
       setFormData({
@@ -105,9 +121,9 @@ function Register() {
       setAgreeTerms(false);
 
       setTimeout(() => {
-        setSlideDirection("translate-x-12"); // Đăng ký xong quay lùi về form Login
+        setSlideDirection("translate-x-12");
         setIsExiting(true);
-        setTimeout(() => navigate("/login"), 400);
+        setTimeout(() => navigate("/"), 400);
       }, 800);
     } catch (error) {
       setErrorMessage(

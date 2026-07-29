@@ -182,7 +182,9 @@ function UserLayout() {
   const notiMenuRef = useRef(null);
 
   useEffect(() => {
+    // 🚀 CHỈ CHẠY LOGIC KHI ĐÃ CÓ USER ĐĂNG NHẬP
     if (!currentUser) return;
+
     const fetchNotifications = async () => {
       try {
         const res = await axiosClient.get("/notifications");
@@ -196,10 +198,15 @@ function UserLayout() {
       }
     };
 
+    // Gọi lần đầu
     fetchNotifications();
+
+    // Thiết lập vòng lặp 15s một lần
     const intervalId = setInterval(fetchNotifications, 15000);
+
+    // Dọn dẹp khi component bị hủy hoặc user đăng xuất
     return () => clearInterval(intervalId);
-  }, [currentUser]);
+  }, [currentUser]); // <-- Theo dõi biến currentUser
 
   const handleReadNotification = async (notiId) => {
     try {
