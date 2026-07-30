@@ -13,7 +13,7 @@ const {
   updateUserAvatar,
 } = require("../services/auth.service");
 const { uploadToSupabase } = require("../utils/uploadHelper");
-
+const { OAuth2Client } = require("google-auth-library");
 const jwt = require("jsonwebtoken");
 
 // 1. IMPORT MÁY DỊCH MÃ VÀO
@@ -169,6 +169,47 @@ const login = async (req, res) => {
       return res.status(400).json({ message: error.message });
     }
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+/// Khởi tạo máy kiểm tra với Client ID từ Google
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Đăng nhập bằng tài khoản google
+const googleLogin = async (req, res) => {
+  try {
+    // 1. Nhận token từ Frontend gửi xuống
+    const { token } = req.body;
+    if (!token) {
+      return res
+        .status(400)
+        .json({ message: "Không tìm thấy token từ Google" });
+    }
+
+    // 2. Mang token đi hỏi Google có hợp lệ không
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    // 3. Nếu hợp lệ thì lấy thông tin người dùng ra
+    const payload = ticket.getPayload();
+
+    // 🚀 ĐÃ SỬA: Bắt buộc phải bóc chữ 'picture' vì đây là chuẩn của Google
+    const { email, name, picture } = payload;
+
+    // Trả về thành công để Frontend hiển thị thông tin người dùng
+    res.status(200).json({
+      message: "Xác minh Google thành công!",
+      user: {
+        email: email,
+        name: name,
+        avatar_url: picture, // 🚀 ĐÃ SỬA: Đổi cái picture của Google thành avatar_url của mày
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi xác minh token Google:", error);
+    res.status(401).json({ message: "Token không hợp lệ hoặc đã hết hạn!" });
   }
 };
 
@@ -488,4 +529,5 @@ module.exports = {
   updateUser,
   changePassword,
   updateAvatar,
+  googleLogin,
 };

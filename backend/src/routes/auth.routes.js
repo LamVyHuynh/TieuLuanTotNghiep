@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+
 // Import cỗ máy multer để xử lý file ảnh
 const upload = require("../config/uploadConfig");
 
@@ -16,6 +17,7 @@ const {
   updateUser,
   changePassword,
   updateAvatar,
+  googleLogin,
 } = require("../controllers/auth.controller");
 
 const { loginRateLimiter } = require("../middlewares/rateLimit.middleware");
@@ -26,6 +28,9 @@ const {
 // --- KHU VỰC CÔNG CỘNG (Không cần đăng nhập) ---
 router.post("/register", upload.single("avatar_file"), register);
 router.post("/login", loginRateLimiter, login);
+// Tạo đường dẫn API để Frontend gọi xuống
+// Khi Frontend gọi POST tới '/google', hàm googleLogin sẽ được chạy
+router.post("/google", googleLogin);
 router.post("/refresh-token", refreshToken);
 router.post("/logout", logout);
 
