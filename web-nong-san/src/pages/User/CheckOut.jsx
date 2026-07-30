@@ -25,25 +25,23 @@ import {
   Trash2,
   CheckCircle2,
   Clock,
-  ChevronDown, // 🚀 THÊM MỚI: Icon mũi tên sổ xuống cho Dropdown
+  ChevronDown,
+  AlertCircle,
+  Save,
+  PencilLine, // 🚀 Thêm icon cái bút chì cho đẹp
 } from "lucide-react";
 import { CheckoutContext } from "../../context/CheckoutContext";
 import { useAuth } from "../../context/AuthContext";
 import axiosClient from "../../api/axiosClient";
 
-// =================================================================
-// 🚀 HÀM TẠO KHUNG GIỜ THÔNG MINH (FULL 24H - PHÂN BUỔI - LÀM MỜ)
-// =================================================================
 const generateTimeSlots = () => {
   const groupedSlots = [];
   const now = new Date();
 
-  // Tính mốc giới hạn (Hiện tại + 45p chuẩn bị)
   now.setMinutes(now.getMinutes() + 45);
   const limitHour = now.getHours();
   const limitMinute = now.getMinutes();
 
-  // Định nghĩa Full 24h chia làm 5 Buổi cho đẹp mắt
   const sessions = [
     { name: "Khuya", start: 0, end: 6 },
     { name: "Sáng", start: 6, end: 11 },
@@ -54,11 +52,8 @@ const generateTimeSlots = () => {
 
   sessions.forEach((session) => {
     const slotsInThisSession = [];
-
-    // Quét từng giờ trong buổi đó
     for (let h = session.start; h < session.end; h++) {
-      const mins = [0, 30]; // Mỗi giờ chia làm 2 mốc 00 và 30
-
+      const mins = [0, 30];
       for (let m of mins) {
         const startTimeStr = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 
@@ -68,18 +63,15 @@ const generateTimeSlots = () => {
           nextM = 0;
           nextH += 1;
         }
-        // Fix lỗi hiển thị 24:00 thành 00:00
         const displayNextH =
           nextH === 24 ? "00" : nextH.toString().padStart(2, "0");
         const endTimeStr = `${displayNextH}:${nextM.toString().padStart(2, "0")}`;
 
-        // 🚀 KIỂM TRA: Giờ này đã qua chưa? (Nếu qua rồi thì đánh dấu isDisabled)
         let isDisabled = false;
         if (h < limitHour) isDisabled = true;
         if (h === limitHour && m < limitMinute) isDisabled = true;
 
-        // Giá trị thời gian chuẩn YYYY-MM-DD HH:mm:ss cho MySQL
-        const realNow = new Date(); // Lấy ngày hiện tại
+        const realNow = new Date();
         const year = realNow.getFullYear();
         const month = String(realNow.getMonth() + 1).padStart(2, "0");
         const date = String(realNow.getDate()).padStart(2, "0");
@@ -91,11 +83,10 @@ const generateTimeSlots = () => {
         slotsInThisSession.push({
           value: mysqlDateTime,
           label: `${startTimeStr} - ${endTimeStr}`,
-          isDisabled: isDisabled, // Lưu trạng thái mờ
+          isDisabled: isDisabled,
         });
       }
     }
-
     if (slotsInThisSession.length > 0) {
       groupedSlots.push({
         sessionName: session.name,
@@ -108,28 +99,16 @@ const generateTimeSlots = () => {
 };
 
 const paymentMethods = [
-  {
-    id: "cod",
-    label: "Thanh toán khi nhận hàng (COD)",
-    icon: Banknote,
-  },
-  {
-    id: "bank",
-    label: "Chuyển khoản ngân hàng",
-    icon: Landmark,
-  },
-  {
-    id: "momo",
-    label: "Ví điện tử MoMo",
-    icon: Wallet,
-  },
+  { id: "cod", label: "Thanh toán khi nhận hàng (COD)", icon: Banknote },
+  { id: "bank", label: "Chuyển khoản ngân hàng", icon: Landmark },
+  { id: "momo", label: "Ví điện tử MoMo", icon: Wallet },
 ];
 
 function CheckOut() {
   const navigate = useNavigate();
   const location = useLocation();
   const { checkoutList } = useContext(CheckoutContext);
-  const { currentUser } = useAuth();
+  const { currentUser, refetchUser } = useAuth();
 
   const [isExiting, setIsExiting] = useState(true);
   const [slideDirection, setSlideDirection] = useState("-translate-x-12");
@@ -158,10 +137,9 @@ function CheckOut() {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [note, setNote] = useState("");
 
-  // 🚀 STATE ĐẶT LỊCH GIAO HÀNG
   const [deliveryType, setDeliveryType] = useState("asap");
   const [scheduledTime, setScheduledTime] = useState("");
-  const [timeSlots, setTimeSlots] = useState([]); // Chứa danh sách giờ được tính toán
+  const [timeSlots, setTimeSlots] = useState([]);
 
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -180,6 +158,69 @@ function CheckOut() {
 
   const [newAddressText, setNewAddressText] = useState("");
 
+  // =================================================================
+  // 🚀 LOGIC TÊN TẠM THỜI VÀ SĐT LƯU DB
+  // =================================================================
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
+
+  const [tempOrderName, setTempOrderName] = useState("");
+
+  useEffect(() => {
+    if (currentUser) {
+      setProfileForm({
+        full_name: tempOrderName || currentUser.full_name || "",
+        phone: currentUser.phone || "",
+      });
+      if (!tempOrderName) {
+        setTempOrderName(currentUser.full_name || "");
+      }
+    }
+  }, [currentUser, showProfileModal, tempOrderName]);
+
+  const isPhoneMissing =
+    !currentUser?.phone || currentUser?.phone.trim() === "";
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    if (!profileForm.full_name.trim() || !profileForm.phone.trim()) {
+      showToast("Vui lòng điền đầy đủ tên và số điện thoại!", "error");
+      return;
+    }
+
+    if (!/^\d{10,11}$/.test(profileForm.phone.trim())) {
+      showToast("Số điện thoại phải từ 10-11 chữ số!", "error");
+      return;
+    }
+
+    setIsUpdatingProfile(true);
+    try {
+      // 🚀 CẬP NHẬT DB: Giữ nguyên tên gốc, chỉ lưu SĐT mới
+      await axiosClient.put(`/auth/users/${currentUser.id}/update-user`, {
+        full_name: currentUser.full_name,
+        phone: profileForm.phone,
+        email: currentUser.email,
+        role_id: currentUser.role_id,
+      });
+
+      // 🚀 LƯU TÊN MỚI VÀO BIẾN TẠM
+      setTempOrderName(profileForm.full_name);
+
+      showToast("Cập nhật thông tin giao hàng thành công! 🥰", "success");
+      setShowProfileModal(false);
+
+      if (refetchUser) await refetchUser();
+    } catch (error) {
+      showToast(
+        error.response?.data?.message || "Lỗi cập nhật thông tin",
+        "error",
+      );
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
   const [toast, setToast] = useState({
     show: false,
     message: "",
@@ -195,7 +236,6 @@ function CheckOut() {
     }, 2500);
   };
 
-  // Vừa load trang là tính toán ngay bộ khung giờ
   useEffect(() => {
     setTimeSlots(generateTimeSlots());
   }, []);
@@ -244,7 +284,7 @@ function CheckOut() {
     setIsSavingAddress(true);
     try {
       const addressPayload = {
-        receiver_name: currentUser?.full_name,
+        receiver_name: tempOrderName || currentUser?.full_name,
         phone: currentUser?.phone,
         address: newAddressText.trim(),
         is_default: 1,
@@ -315,6 +355,12 @@ function CheckOut() {
   const total = Math.max(subtotal + shippingFee - discount, 0);
 
   const handlePlaceOrder = () => {
+    if (isPhoneMissing) {
+      setShowProfileModal(true);
+      showToast("Vui lòng bổ sung SĐT trước khi đặt hàng!", "error");
+      return;
+    }
+
     if (!selectedAddress) {
       showToast("Vui lòng thêm địa chỉ giao hàng!", "error");
       return;
@@ -337,7 +383,7 @@ function CheckOut() {
     setIsSubmitting(true);
     try {
       const orderPayload = {
-        full_name: currentUser?.full_name,
+        full_name: tempOrderName || currentUser?.full_name,
         phone: currentUser?.phone,
         address: selectedAddress.address,
         note: note,
@@ -432,13 +478,22 @@ function CheckOut() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
             <div className="space-y-6 lg:col-span-8">
               <section className="rounded-[1.5rem] bg-white p-6 shadow-[0_12px_30px_rgba(15,23,42,0.05)] sm:p-8">
-                <div className="mb-6 flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">
-                    1
+                <div className="mb-6 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">
+                      1
+                    </div>
+                    <h2 className="text-xl font-black tracking-[-0.03em] text-slate-900">
+                      Thông tin giao nhận
+                    </h2>
                   </div>
-                  <h2 className="text-xl font-black tracking-[-0.03em] text-slate-900">
-                    Thông tin giao nhận
-                  </h2>
+                  {/* 🚀 NÚT SỬA THÔNG TIN ĐƯỢC MANG RA NGOÀI GÓC PHẢI */}
+                  <button
+                    onClick={() => setShowProfileModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition cursor-pointer"
+                  >
+                    <PencilLine size={16} /> Sửa đổi
+                  </button>
                 </div>
 
                 {isLoadingAddress ? (
@@ -449,6 +504,7 @@ function CheckOut() {
                 ) : (
                   <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
+                      {/* KHU VỰC TÊN NGƯỜI NHẬN - HIỂN THỊ TÊN TẠM */}
                       <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
                         <div className="flex items-center gap-2 mb-1">
                           <User size={14} className="text-slate-400" />
@@ -457,19 +513,42 @@ function CheckOut() {
                           </p>
                         </div>
                         <p className="font-bold text-slate-900 truncate">
-                          {currentUser?.full_name}
+                          {tempOrderName || currentUser?.full_name}
                         </p>
                       </div>
-                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+
+                      {/* KHU VỰC SĐT */}
+                      <div
+                        className={`rounded-xl border p-4 ${isPhoneMissing ? "border-rose-200 bg-rose-50" : "border-slate-100 bg-slate-50"}`}
+                      >
                         <div className="flex items-center gap-2 mb-1">
-                          <Phone size={14} className="text-slate-400" />
-                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                          <Phone
+                            size={14}
+                            className={
+                              isPhoneMissing
+                                ? "text-rose-400"
+                                : "text-slate-400"
+                            }
+                          />
+                          <p
+                            className={`text-[11px] font-bold uppercase tracking-widest ${isPhoneMissing ? "text-rose-500" : "text-slate-500"}`}
+                          >
                             Điện thoại
                           </p>
                         </div>
-                        <p className="font-bold text-slate-900">
-                          {currentUser?.phone}
-                        </p>
+
+                        {isPhoneMissing ? (
+                          <button
+                            onClick={() => setShowProfileModal(true)}
+                            className="flex items-center gap-1.5 text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 px-3 py-1 rounded-md transition mt-1 cursor-pointer shadow-sm"
+                          >
+                            <AlertCircle size={14} /> Cần bổ sung
+                          </button>
+                        ) : (
+                          <p className="font-bold text-slate-900">
+                            {currentUser?.phone}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -527,7 +606,6 @@ function CheckOut() {
                       )}
                     </div>
 
-                    {/* 🚀 KHU VỰC CHỌN THỜI GIAN GIAO HÀNG (CẬP NHẬT GIAO DIỆN MỚI) */}
                     <div className="border-t border-slate-100 pt-6">
                       <label className="ml-1 mb-3 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                         <span className="flex items-center gap-1.5">
@@ -562,7 +640,6 @@ function CheckOut() {
                         </button>
                       </div>
 
-                      {/* 🚀 DROPDOWN THÔNG MINH HIỆN RA KHI CHỌN HẸN GIỜ */}
                       {deliveryType === "scheduled" && (
                         <div className="animate-in fade-in slide-in-from-top-2 duration-200 bg-slate-50 p-4 rounded-xl border border-slate-200">
                           <label className="block text-xs font-medium text-slate-500 mb-2">
@@ -577,8 +654,6 @@ function CheckOut() {
                               <option value="" disabled>
                                 -- Chọn khung giờ nhận hàng --
                               </option>
-
-                              {/* Render danh sách Full 24h Cha - Con */}
                               {timeSlots.map((group, idx) => (
                                 <optgroup
                                   key={idx}
@@ -630,7 +705,6 @@ function CheckOut() {
                 )}
               </section>
 
-              {/* SECTION 2: THANH TOÁN */}
               <section className="rounded-[1.5rem] bg-white p-6 shadow-[0_12px_30px_rgba(15,23,42,0.05)] sm:p-8">
                 <div className="mb-8 flex items-center gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">
@@ -675,7 +749,6 @@ function CheckOut() {
               </section>
             </div>
 
-            {/* --- CỘT PHẢI TÓM TẮT ĐƠN HÀNG --- */}
             <aside className="sticky top-24 lg:col-span-4">
               <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
                 <div className="border-b border-slate-200/70 p-6">
@@ -769,7 +842,107 @@ function CheckOut() {
         </main>
       </div>
 
-      {/* ================= MODAL SỔ ĐỊA CHỈ ================= */}
+      {/* ================= 🚀 MODAL BỔ SUNG THÔNG TIN ================= */}
+      {showProfileModal &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
+            <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-md overflow-hidden rounded-[2rem] bg-white shadow-2xl relative">
+              <div className="flex items-center justify-between bg-emerald-50 px-6 py-5 border-b border-emerald-100">
+                <div className="flex items-center gap-3">
+                  <div className="bg-emerald-100 p-2 rounded-full text-emerald-600">
+                    <PencilLine size={24} />
+                  </div>
+                  <h3 className="text-lg font-black text-emerald-900">
+                    Thông tin giao nhận
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="rounded-full p-2 text-emerald-400 hover:bg-emerald-200 transition cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-6">
+                <p className="text-sm text-slate-600 mb-6">
+                  Bạn có thể thay đổi tên người nhận cho đơn hàng này. Riêng{" "}
+                  <span className="font-bold">Số điện thoại</span> sẽ được lưu
+                  lại vào hệ thống để dùng cho các lần sau.
+                </p>
+
+                <form onSubmit={handleUpdateProfile} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Tên người nhận (Dùng cho đơn này)
+                    </label>
+                    <div className="relative">
+                      <User
+                        size={18}
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      />
+                      <input
+                        type="text"
+                        value={profileForm.full_name}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            full_name: e.target.value,
+                          })
+                        }
+                        placeholder="Nhập tên thật của bạn..."
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Số điện thoại <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone
+                        size={18}
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      />
+                      <input
+                        type="text"
+                        value={profileForm.phone}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            phone: e.target.value,
+                          })
+                        }
+                        placeholder="Vd: 0901234567"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isUpdatingProfile}
+                    className="w-full mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-md hover:bg-emerald-700 transition cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isUpdatingProfile ? (
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <>
+                        <Save size={18} /> Lưu & Tiếp tục đặt hàng
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {/* ================= CÁC MODAL KHÁC BÊN DƯỚI GIỮ NGUYÊN ================= */}
+
+      {/* MODAL SỔ ĐỊA CHỈ */}
       {showAddressModal &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
@@ -865,7 +1038,6 @@ function CheckOut() {
                           </p>
                         </div>
 
-                        {/* NÚT KÍCH HOẠT MODAL XOÁ */}
                         <button
                           onClick={(e) => triggerDelete(addr.id_address, e)}
                           className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition cursor-pointer shrink-0"
@@ -893,7 +1065,7 @@ function CheckOut() {
           document.body,
         )}
 
-      {/* ================= MODAL XÁC NHẬN XOÁ ĐỊA CHỈ ================= */}
+      {/* MODAL XÁC NHẬN XOÁ ĐỊA CHỈ */}
       {showDeleteModal &&
         createPortal(
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
@@ -932,7 +1104,7 @@ function CheckOut() {
           document.body,
         )}
 
-      {/* ================= MODAL MÃ QR THANH TOÁN ================= */}
+      {/* MODAL MÃ QR THANH TOÁN */}
       {showQRModal &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
@@ -974,7 +1146,7 @@ function CheckOut() {
           document.body,
         )}
 
-      {/* ================= TOAST ================= */}
+      {/* TOAST */}
       {toast.show &&
         createPortal(
           <div
