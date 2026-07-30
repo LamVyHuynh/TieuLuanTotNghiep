@@ -240,6 +240,9 @@ function CheckOut() {
     setTimeSlots(generateTimeSlots());
   }, []);
 
+  // Khi mở trang checkout lên thì fetchAddresses để lấy danh sách địa chỉ của user hiện tại
+  // Trong khi chờ tải dữ liệu thì khung sẽ hiện lên
+  // Khi tải liệu xong thì hiện ra - giải thích cho phần thay đổi username tạm và phone user ở bên dưới
   const fetchAddresses = useCallback(async (newIdToSelect = null) => {
     try {
       setIsLoadingAddress(true);
@@ -487,7 +490,7 @@ function CheckOut() {
                       Thông tin giao nhận
                     </h2>
                   </div>
-                  {/* 🚀 NÚT SỬA THÔNG TIN ĐƯỢC MANG RA NGOÀI GÓC PHẢI */}
+                  {/*  NÚT SỬA THÔNG TIN ĐƯỢC MANG RA NGOÀI GÓC PHẢI */}
                   <button
                     onClick={() => setShowProfileModal(true)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition cursor-pointer"

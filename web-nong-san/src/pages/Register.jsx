@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
+// Đăng ký tài khoản mới bằng google
+import { useGoogleLogin } from "@react-oauth/google";
 
 function Register() {
   const navigate = useNavigate();
@@ -135,6 +137,49 @@ function Register() {
       setIsLoading(false);
     }
   };
+
+  // Hàm đăng ký bằng Google
+  const handleGoogleAuth = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      setErrorMessage("");
+      try {
+        // Gửi cái access_token mà Google vừa cấp xuống Backend của mình
+        const response = await axiosClient.post("/auth/google-login", {
+          access_token: tokenResponse.access_token,
+        });
+        // Backend xử lý xong sẽ trả về user và token của hệ thống HealthyGO
+        const { user, token } = response.data;
+        if (user && token) {
+          login(user, token); // Lưu vào AuthContext
+        }
+        setSuccessMessage("Đăng nhập Google thành công! 🥰");
+
+        // Trượt trang và chuyển hướng
+        setTimeout(() => {
+          setSlideDirection("-translate-x-12");
+          setIsExiting(true);
+          setTimeout(() => {
+            if (user.role_id === 1) {
+              navigate("/admin");
+            } else {
+              navigate("/");
+            }
+          }, 400);
+        }, 800);
+      } catch (error) {
+        console.error("Lỗi Google Auth:", error);
+        setErrorMessage(
+          error.response?.data?.message || "Lỗi xác thực Google từ máy chủ!",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: () => {
+      setErrorMessage("Đăng nhập Google bị hủy hoặc thất bại!");
+    },
+  });
 
   return (
     <div
@@ -362,13 +407,18 @@ function Register() {
           </div>
 
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <button
-              type="button"
-              className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-100 px-6 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200"
-            >
-              <UserPlus size={16} />
-              Google
-            </button>
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              {/* 🚀 THÊM sự kiện onClick vào đây */}
+              <button
+                type="button"
+                onClick={() => handleGoogleAuth()}
+                disabled={isLoading}
+                className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-100 px-6 py-2.5 text-sm font-bold tracking-[-0.01em] text-slate-800 transition-all hover:bg-slate-200 active:scale-[0.98] disabled:opacity-50"
+              >
+                <Leaf size={18} className="text-emerald-700" />
+                Tiếp tục với Google
+              </button>
+            </div>
             <button
               type="button"
               className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-100 px-6 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200"
