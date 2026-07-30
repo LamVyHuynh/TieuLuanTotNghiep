@@ -152,6 +152,58 @@ async function loginUser(email, password) {
   };
 }
 
+// Hàm đăng nhập bằng Google
+async function handleGoogleUser(email, full_name, avatar_url) {
+  // 1. kiểm tra xem email đã tồn tại trong DB chưa
+  const [existingUsers] = await pool.query(
+    "SELECT * FROM users WHERE email = ?",
+    [email],
+  );
+  // 2. NẾU ĐÃ CÓ TÀI KHOẢN (User cũ)
+  if (existingUsers.length > 0) {
+    const user = existingUsers[0];
+    //Kiểm tra xem tại khoản user có bị khoá hay chưa
+    if (!user.is_active) {
+      throw new Error(
+        "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.",
+      );
+    }
+    // Nếu tồn tại thì trả về thông tin user
+    return user;
+  }
+
+  // 3. NẾU CHƯA CÓ TÀI KHOẢN (User mới tinh)
+  // Gán role_id mặc định là 2 (customer) cho user mới
+  const [roleRows] = await pool.query("SELECT id FROM roles WHERE name = ?", [
+    "customer",
+  ]);
+
+  if (roleRows.length === 0) {
+    throw new Error("Role 'customer' không tồn tại trong database");
+  }
+  const role_id = roleRows[0].id;
+
+  // Tạo một mật khẩu ngẫu nhiên cho user này (vì họ đăng nhập bằng Google) và hash nó
+  const randomPassword = Math.random().toString(36).slice(-10); // Tạo mật khẩu ngẫu nhiên 10 ký tự
+  // Mã hóa mật khẩu ngẫu nhiên trước khi lưu vào cơ sở dữ liệu
+  const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+  // Insert user mới vào database (Lưu ý: số điện thoại mặc định là chuỗi rỗng)
+  const [insertResult] = await pool.query(
+    "INSERT INTO users(full_name, email, phone, password_hash, role_id, avatar_url) VALUES (?,?,?,?,?,?)",
+    [full_name, email, "", hashedPassword, role_id, avatar_url],
+  );
+
+  return {
+    id: insertResult.insertId,
+    full_name,
+    email,
+    phone: "",
+    role_id,
+    avatar_url,
+  };
+}
+
 async function getCurrentUserById(userId) {
   // 1. Thêm avatar_url vào câu lệnh SELECT
   const [rows] = await pool.query(
@@ -392,4 +444,5 @@ module.exports = {
   updateUserById,
   updateUserPassword,
   updateUserAvatar,
+  handleGoogleUser,
 };

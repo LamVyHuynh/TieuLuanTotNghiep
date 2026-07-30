@@ -10,14 +10,13 @@ import {
   Phone,
   Truck,
   User,
-  UserPlus,
   Eye,
   EyeOff,
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
-// Đăng ký tài khoản mới bằng google
-import { useGoogleLogin } from "@react-oauth/google";
+// IMPORT: Lấy component GoogleLogin chính chủ
+import { GoogleLogin } from "@react-oauth/google";
 
 function Register() {
   const navigate = useNavigate();
@@ -98,14 +97,14 @@ function Register() {
     setIsLoading(true);
 
     try {
-      //  BƯỚC 1: TẠO KIỆN HÀNG FORMDATA THỰC SỰ
+      // BƯỚC 1: TẠO KIỆN HÀNG FORMDATA THỰC SỰ
       const submitData = new FormData();
       submitData.append("full_name", formData.full_name);
       submitData.append("email", formData.email);
       submitData.append("phone", formData.phone);
       submitData.append("password", formData.password);
 
-      //  BƯỚC 2: GỬI KIỆN HÀNG VỚI ĐÚNG LOẠI CONTENT-TYPE
+      // BƯỚC 2: GỬI KIỆN HÀNG VỚI ĐÚNG LOẠI CONTENT-TYPE
       const response = await axiosClient.post("/auth/register", submitData);
       const { user, token } = response.data;
 
@@ -138,48 +137,53 @@ function Register() {
     }
   };
 
-  // Hàm đăng ký bằng Google
-  const handleGoogleAuth = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setIsLoading(true);
-      setErrorMessage("");
-      try {
-        // Gửi cái access_token mà Google vừa cấp xuống Backend của mình
-        const response = await axiosClient.post("/auth/google-login", {
-          access_token: tokenResponse.access_token,
-        });
-        // Backend xử lý xong sẽ trả về user và token của hệ thống HealthyGO
-        const { user, token } = response.data;
-        if (user && token) {
-          login(user, token); // Lưu vào AuthContext
-        }
-        setSuccessMessage("Đăng nhập Google thành công! 🥰");
+  // =================================================================
+  // 🚀 XỬ LÝ ĐĂNG KÝ / ĐĂNG NHẬP BẰNG GOOGLE CHUẨN XÁC
+  // =================================================================
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      // Lấy id_token từ Google
+      const googleIdToken = credentialResponse.credential;
+      console.log("Token chuẩn lấy từ Google (Register):", googleIdToken);
 
-        // Trượt trang và chuyển hướng
-        setTimeout(() => {
-          setSlideDirection("-translate-x-12");
-          setIsExiting(true);
-          setTimeout(() => {
-            if (user.role_id === 1) {
-              navigate("/admin");
-            } else {
-              navigate("/");
-            }
-          }, 400);
-        }, 800);
-      } catch (error) {
-        console.error("Lỗi Google Auth:", error);
-        setErrorMessage(
-          error.response?.data?.message || "Lỗi xác thực Google từ máy chủ!",
-        );
-      } finally {
-        setIsLoading(false);
+      // Gửi xuống Backend
+      const response = await axiosClient.post("/auth/google", {
+        token: googleIdToken,
+      });
+
+      const { user, token } = response.data;
+      if (user && token) {
+        login(user, token);
       }
-    },
-    onError: () => {
-      setErrorMessage("Đăng nhập Google bị hủy hoặc thất bại!");
-    },
-  });
+
+      setSuccessMessage("Đăng nhập Google thành công! 🥰");
+
+      setTimeout(() => {
+        setSlideDirection("translate-x-12");
+        setIsExiting(true);
+        setTimeout(() => {
+          if (user.role_id === 1) {
+            navigate("/admin");
+          } else {
+            navigate("/");
+          }
+        }, 400);
+      }, 800);
+    } catch (error) {
+      console.error("Lỗi Google Auth:", error);
+      setErrorMessage(
+        error.response?.data?.message || "Lỗi xác thực Google từ máy chủ!",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setErrorMessage("Đăng ký Google bị hủy hoặc thất bại!");
+  };
 
   return (
     <div
@@ -393,6 +397,29 @@ function Register() {
             </button>
           </form>
 
+          {/* 🚀 ĐÃ SỬA: Chèn nút Google chính chủ và vạch phân cách giống trang Login */}
+          <div className="relative py-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-300/40" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-4 font-bold tracking-[0.2em] text-slate-400">
+                Hoặc đăng ký bằng
+              </span>
+            </div>
+          </div>
+
+          <div className="flex w-full justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              theme="outline"
+              size="large"
+              text="signup_with" /* 🚀 Thay chữ hiển thị thành "Đăng ký với Google" */
+              shape="pill"
+            />
+          </div>
+
           <div className="mt-8 border-t border-slate-200 pt-8 text-center">
             <p className="text-sm text-slate-500">
               Bạn đã có tài khoản?
@@ -404,28 +431,6 @@ function Register() {
                 Đăng nhập ngay
               </button>
             </p>
-          </div>
-
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
-              {/* 🚀 THÊM sự kiện onClick vào đây */}
-              <button
-                type="button"
-                onClick={() => handleGoogleAuth()}
-                disabled={isLoading}
-                className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-100 px-6 py-2.5 text-sm font-bold tracking-[-0.01em] text-slate-800 transition-all hover:bg-slate-200 active:scale-[0.98] disabled:opacity-50"
-              >
-                <Leaf size={18} className="text-emerald-700" />
-                Tiếp tục với Google
-              </button>
-            </div>
-            <button
-              type="button"
-              className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-100 px-6 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200"
-            >
-              <UserPlus size={16} />
-              Facebook
-            </button>
           </div>
         </div>
       </div>

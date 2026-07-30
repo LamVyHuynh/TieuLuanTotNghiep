@@ -11,6 +11,7 @@ const {
   updateUserById,
   updateUserPassword,
   updateUserAvatar,
+  handleGoogleUser,
 } = require("../services/auth.service");
 const { uploadToSupabase } = require("../utils/uploadHelper");
 const { OAuth2Client } = require("google-auth-library");
@@ -195,17 +196,45 @@ const googleLogin = async (req, res) => {
     // 3. Nếu hợp lệ thì lấy thông tin người dùng ra
     const payload = ticket.getPayload();
 
-    // 🚀 ĐÃ SỬA: Bắt buộc phải bóc chữ 'picture' vì đây là chuẩn của Google
+    // Bắt buộc phải bóc chữ 'picture' vì đây là chuẩn của Google
     const { email, name, picture } = payload;
+    const avatar_url = picture; // Lấy link ảnh từ Google
 
-    // Trả về thành công để Frontend hiển thị thông tin người dùng
+    //  4. KẾT NỐI DATABASE (Gọi Service)
+    const user = await handleGoogleUser(email, name, avatar_url);
+
+    // 5. CẤP PHÁT THẺ THÔNG HÀNH (JWT)
+    const accessToken = jwt.sign(
+      { id: user.id, role: user.role_id },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" },
+    );
+
+    const refreshToken = jwt.sign(
+      { id: user.id, role: user.role_id },
+      process.env.JWT_REFRESH_SECRET || "CaiNayLaSecretKhoaRefreshNheMay",
+      { expiresIn: "7d" },
+    );
+
+    // Lưu Refresh Token vào Cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    // 6. MÃ HOÁ ID TRƯỚC KHI TRẢ VỀ CHO REACT
+    const safeUser = {
+      ...user,
+      id: encodeId(user.id),
+    };
+
+    // 7. GỬI PHẢN HỒI THÀNH CÔNG
     res.status(200).json({
-      message: "Xác minh Google thành công!",
-      user: {
-        email: email,
-        name: name,
-        avatar_url: picture, // 🚀 ĐÃ SỬA: Đổi cái picture của Google thành avatar_url của mày
-      },
+      message: "Đăng nhập Google thành công!",
+      token: accessToken,
+      user: safeUser,
     });
   } catch (error) {
     console.error("Lỗi xác minh token Google:", error);

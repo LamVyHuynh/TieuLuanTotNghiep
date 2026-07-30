@@ -3,8 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
 import { Leaf, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-// Đăng nhập bằng google
-import { useGoogleLogin } from "@react-oauth/google";
+
+// IMPORT: Lấy component GoogleLogin chính chủ
+import { GoogleLogin } from "@react-oauth/google";
 
 function Login() {
   const [frmDataLogin, setFrmDataLogin] = useState({
@@ -22,9 +23,6 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // =================================================================
-  // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG
-  // =================================================================
   const [isExiting, setIsExiting] = useState(true);
   const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
@@ -37,13 +35,11 @@ function Login() {
 
   const handleNavigate = (path) => {
     if (location.pathname === path) return;
-
     if (path === "/" || path === -1) {
       setSlideDirection("translate-x-12");
     } else {
       setSlideDirection("-translate-x-12");
     }
-
     setIsExiting(true);
     setTimeout(() => {
       navigate(path);
@@ -97,7 +93,7 @@ function Login() {
       }
 
       setTimeout(() => {
-        setSlideDirection("-translate-x-12"); // Đăng nhập thì tiến vào app
+        setSlideDirection("-translate-x-12");
         setIsExiting(true);
         setTimeout(() => {
           if (user.role_id === 1) {
@@ -127,51 +123,59 @@ function Login() {
   }, []);
 
   // =================================================================
-  // 🚀 XỬ LÝ ĐĂNG NHẬP BẰNG GOOGLE
+  // 🚀 ĐÃ SỬA: HÀM XỬ LÝ ĐĂNG NHẬP GOOGLE CHUẨN XÁC
   // =================================================================
-  const handleGoogleAuth = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setIsLoading(true);
-      setErrorMessage("");
-      try {
-        // Gửi cái access_token mà Google vừa cấp xuống Backend của mình
-        const response = await axiosClient.post("/auth/google", {
-          access_token: tokenResponse.access_token,
-        });
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      // 1. Lấy đúng cái "id_token" (ở đây gọi là credential) từ Google
+      const googleIdToken = credentialResponse.credential;
+      console.log("Token chuẩn lấy từ Google:", googleIdToken);
 
-        // Backend xử lý xong sẽ trả về user và token của hệ thống HealthyGO
-        const { user, token } = response.data;
-        if (user && token) {
-          login(user, token); // Lưu vào AuthContext
-        }
+      // 2. Gửi xuống Backend với key là 'token' cho khớp hoàn toàn
+      const response = await axiosClient.post("/auth/google", {
+        token: googleIdToken,
+      });
 
-        setSuccessMessage("Đăng nhập Google thành công! 🥰");
-
-        // Trượt trang và chuyển hướng
-        setTimeout(() => {
-          setSlideDirection("-translate-x-12");
-          setIsExiting(true);
-          setTimeout(() => {
-            if (user.role_id === 1) {
-              navigate("/admin");
-            } else {
-              navigate("/");
-            }
-          }, 400);
-        }, 800);
-      } catch (error) {
-        console.error("Lỗi Google Auth:", error);
-        setErrorMessage(
-          error.response?.data?.message || "Lỗi xác thực Google từ máy chủ!",
-        );
-      } finally {
-        setIsLoading(false);
+      const { user, token } = response.data;
+      if (user && token) {
+        login(user, token);
       }
-    },
-    onError: () => {
-      setErrorMessage("Đăng nhập Google bị hủy hoặc thất bại!");
-    },
-  });
+
+      // Hiện ra thông tin user
+      console.log("Thông tin user từ Backend sau khi xác thực Google:", user);
+      // Hiện ra token
+      console.log("Token từ Backend sau khi xác thực Google:", token);
+      // Hiện ra hình ảnh avatar
+      console.log("Avatar URL:", user.avatar_url);
+
+      setSuccessMessage("Đăng nhập Google thành công! 🥰");
+
+      setTimeout(() => {
+        setSlideDirection("-translate-x-12");
+        setIsExiting(true);
+        setTimeout(() => {
+          if (user.role_id === 1) {
+            navigate("/admin");
+          } else {
+            navigate("/");
+          }
+        }, 400);
+      }, 800);
+    } catch (error) {
+      console.error("Lỗi Google Auth:", error);
+      setErrorMessage(
+        error.response?.data?.message || "Lỗi xác thực Google từ máy chủ!",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setErrorMessage("Đăng nhập Google bị hủy hoặc thất bại!");
+  };
 
   return (
     <main
@@ -338,16 +342,17 @@ function Login() {
               </div>
             </div>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
-              {/* 🚀 THÊM sự kiện onClick vào đây */}
-              <button
-                type="button"
-                onClick={() => handleGoogleAuth()}
-                disabled={isLoading}
-                className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-100 px-6 py-2.5 text-sm font-bold tracking-[-0.01em] text-slate-800 transition-all hover:bg-slate-200 active:scale-[0.98] disabled:opacity-50"
-              >
-                <Leaf size={18} className="text-emerald-700" />
-                Tiếp tục với Google
-              </button>
+              {/* Thay thế bằng nút chuẩn của Google */}
+              <div className="w-full flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="outline"
+                  size="large"
+                  text="continue_with"
+                  shape="pill"
+                />
+              </div>
             </div>
           </form>
 
