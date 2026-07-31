@@ -6,6 +6,8 @@ import { useAuth } from "../context/AuthContext";
 
 // IMPORT: Lấy component GoogleLogin chính chủ
 import { GoogleLogin } from "@react-oauth/google";
+// IMPORT: Lấy component Facebook Login bản cho phép tùy chỉnh giao diện
+import FacebookLogin from "react-facebook-login/dist/facebook-login-render-props";
 
 function Login() {
   const [frmDataLogin, setFrmDataLogin] = useState({
@@ -123,17 +125,15 @@ function Login() {
   }, []);
 
   // =================================================================
-  // 🚀 ĐÃ SỬA: HÀM XỬ LÝ ĐĂNG NHẬP GOOGLE CHUẨN XÁC
+  // HÀM XỬ LÝ ĐĂNG NHẬP GOOGLE CHUẨN XÁC
   // =================================================================
   const handleGoogleSuccess = async (credentialResponse) => {
     setIsLoading(true);
     setErrorMessage("");
     try {
-      // 1. Lấy đúng cái "id_token" (ở đây gọi là credential) từ Google
       const googleIdToken = credentialResponse.credential;
       console.log("Token chuẩn lấy từ Google:", googleIdToken);
 
-      // 2. Gửi xuống Backend với key là 'token' cho khớp hoàn toàn
       const response = await axiosClient.post("/auth/google", {
         token: googleIdToken,
       });
@@ -142,13 +142,6 @@ function Login() {
       if (user && token) {
         login(user, token);
       }
-
-      // Hiện ra thông tin user
-      console.log("Thông tin user từ Backend sau khi xác thực Google:", user);
-      // Hiện ra token
-      console.log("Token từ Backend sau khi xác thực Google:", token);
-      // Hiện ra hình ảnh avatar
-      console.log("Avatar URL:", user.avatar_url);
 
       setSuccessMessage("Đăng nhập Google thành công! 🥰");
 
@@ -175,6 +168,31 @@ function Login() {
 
   const handleGoogleError = () => {
     setErrorMessage("Đăng nhập Google bị hủy hoặc thất bại!");
+  };
+
+  // =================================================================
+  // HÀM XỬ LÝ ĐĂNG NHẬP FACEBOOK CHUẨN XÁC
+  // =================================================================
+  const handleFacebookResponse = async (response) => {
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      if (response.accessToken) {
+        console.log("Access Token từ Facebook:", response.accessToken);
+        console.log("Thông tin user từ Facebook:", response);
+
+        setSuccessMessage(
+          "Đăng nhập Facebook thành công! 🥰 (Đang chờ code Backend)",
+        );
+      } else {
+        setErrorMessage("Người dùng hủy đăng nhập Facebook!");
+      }
+    } catch (error) {
+      setErrorMessage("Đăng nhập Facebook thất bại!");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -341,16 +359,50 @@ function Login() {
                 </span>
               </div>
             </div>
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
-              {/* Thay thế bằng nút chuẩn của Google */}
-              <div className="w-full flex justify-center">
+
+            {/* KHU VỰC CÁC NÚT ĐĂNG NHẬP MXH */}
+            <div className="mt-8 flex flex-col items-center gap-3">
+              {/* 🚀 Nút Google dạng dài chuẩn */}
+              <div className="w-full flex justify-center transition-all duration-300 hover:scale-[1.01]">
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   theme="outline"
                   size="large"
-                  text="continue_with"
+                  text="signin_with"
                   shape="pill"
+                  width="340"
+                />
+              </div>
+
+              {/* 🚀 Nút Facebook dạng dài chuẩn (Thiết kế y hệt Google) */}
+              <div className="w-full flex justify-center">
+                <FacebookLogin
+                  appId={import.meta.env.VITE_FACEBOOK_APP_ID}
+                  autoLoad={false}
+                  fields="name,email,picture"
+                  callback={handleFacebookResponse}
+                  render={(renderProps) => (
+                    <button
+                      type="button"
+                      onClick={renderProps.onClick}
+                      className="relative flex w-[340px] cursor-pointer items-center justify-center rounded-full border border-slate-300 bg-white py-[9px] px-6 text-sm font-medium text-slate-700 shadow-sm transition-all duration-300 hover:border-[#1877F2] hover:bg-[#1877F2] hover:text-white hover:shadow-md active:scale-[0.98] group"
+                    >
+                      <span className="absolute left-6 flex items-center">
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="20"
+                          height="20"
+                          className="fill-[#1877F2] transition-colors duration-300 group-hover:fill-white"
+                        >
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </svg>
+                      </span>
+                      <span className="tracking-wide">
+                        Đăng nhập bằng Facebook
+                      </span>
+                    </button>
+                  )}
                 />
               </div>
             </div>
