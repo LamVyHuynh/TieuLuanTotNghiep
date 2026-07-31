@@ -156,7 +156,7 @@ function Register() {
         login(user, token);
       }
 
-      setSuccessMessage("Đăng nhập Google thành công! 🥰");
+      setSuccessMessage("Đăng ký bằng Google thành công! 🥰");
 
       setTimeout(() => {
         setSlideDirection("translate-x-12");
@@ -192,17 +192,40 @@ function Register() {
     try {
       if (response.accessToken) {
         console.log("Access Token từ Facebook:", response.accessToken);
-        console.log("Thông tin user từ Facebook:", response);
 
-        setSuccessMessage(
-          "Đăng ký Facebook thành công! 🥰 (Đang chờ code Backend)",
-        );
+        // Gọi API backend để xác thực token Facebook và Đăng ký/Đăng nhập
+        const apiResponse = await axiosClient.post("/auth/facebook", {
+          token: response.accessToken, // Đã khớp với backend
+          userID: response.userID,
+        });
+
+        const { user, token } = apiResponse.data;
+        if (user && token) {
+          login(user, token);
+        }
+
+        setSuccessMessage("Đăng ký bằng Facebook thành công! 🥰");
+
+        // Điều hướng sau khi thành công
+        setTimeout(() => {
+          setSlideDirection("translate-x-12");
+          setIsExiting(true);
+          setTimeout(() => {
+            if (user.role_id === 1) {
+              navigate("/admin");
+            } else {
+              navigate("/");
+            }
+          }, 400);
+        }, 800);
       } else {
         setErrorMessage("Người dùng hủy đăng ký Facebook!");
       }
     } catch (error) {
-      setErrorMessage("Đăng ký Facebook thất bại!");
-      console.error(error);
+      console.error("Lỗi xác minh token Facebook:", error);
+      setErrorMessage(
+        error.response?.data?.message || "Đăng ký Facebook thất bại!",
+      );
     } finally {
       setIsLoading(false);
     }

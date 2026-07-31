@@ -181,6 +181,31 @@ function Login() {
         console.log("Access Token từ Facebook:", response.accessToken);
         console.log("Thông tin user từ Facebook:", response);
 
+        // Gọi API backend để xác thực token Facebook
+        const responseBackend = await axiosClient.post("/auth/facebook", {
+          token: response.accessToken,
+          userID: response.userID,
+        });
+
+        const { user, token } = responseBackend.data;
+        if (user && token) {
+          login(user, token);
+        }
+
+        console.log("Đăng nhập Facebook thành công! User:", user);
+        console.log("Token từ backend:", token);
+
+        setTimeout(() => {
+          setSlideDirection("-translate-x-12");
+          setIsExiting(true);
+          setTimeout(() => {
+            if (user.role_id === 1) {
+              navigate("/admin");
+            } else {
+              navigate("/");
+            }
+          }, 400);
+        }, 800);
         setSuccessMessage(
           "Đăng nhập Facebook thành công! 🥰 (Đang chờ code Backend)",
         );

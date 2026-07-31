@@ -11,7 +11,7 @@ const {
   updateUserById,
   updateUserPassword,
   updateUserAvatar,
-  handleGoogleUser,
+  handleSocialUser,
 } = require("../services/auth.service");
 const { uploadToSupabase } = require("../utils/uploadHelper");
 const { OAuth2Client } = require("google-auth-library");
@@ -188,6 +188,10 @@ const googleLogin = async (req, res) => {
     }
 
     // 2. Mang token đi hỏi Google có hợp lệ không
+    // Với Google: Vì nó là cái "CCCD" (ID Token),
+    // Backend của mày không cần phải gọi điện (gọi API mạng) lên máy chủ Google.
+    //  chỉ cần dùng máy quét (chính là thư viện OAuth2Client của Google) để "soi" chữ ký điện tử của token là đủ.
+    // Nếu token hợp lệ thì nó sẽ trả về thông tin người dùng.
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -197,11 +201,15 @@ const googleLogin = async (req, res) => {
     const payload = ticket.getPayload();
 
     // Bắt buộc phải bóc chữ 'picture' vì đây là chuẩn của Google
+    // Với Google: Vì thông tin người dùng đã được "đóng gói" sẵn bên trong ID Token
+    //  từ lúc ở Frontend, mày chỉ cần dùng lệnh "bóc vỏ" là lấy ra được luôn, không tốn thời gian tải qua mạng:
     const { email, name, picture } = payload;
+
+    // Google: Nó chơi hệ đơn giản, đưa luôn cái link ảnh trực tiếp dạng chuỗi (String):
     const avatar_url = picture; // Lấy link ảnh từ Google
 
     //  4. KẾT NỐI DATABASE (Gọi Service)
-    const user = await handleGoogleUser(email, name, avatar_url);
+    const user = await handleSocialUser(email, name, avatar_url, "google");
 
     // 5. CẤP PHÁT THẺ THÔNG HÀNH (JWT)
     const accessToken = jwt.sign(
@@ -242,6 +250,83 @@ const googleLogin = async (req, res) => {
   }
 };
 
+// Đăng nhập bằng facebook
+const facebookLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res
+        .status(400)
+        .json({ message: "Không tìm thấy token từ Facebook" });
+    }
+
+    const response = await fetch(
+      `https://graph.facebook.com/me?access_token=${token}&fields=id,name,email,picture`,
+    );
+    const data = await response.json();
+
+    if (data.error) {
+      return res.status(401).json({ message: "Token không hợp lệ!" });
+    }
+
+    let { email, name, picture, id: facebookId } = data;
+
+    if (!email || email.trim() === "" || email === null) {
+      email = `${facebookId}@facebook.local`;
+      console.log("User Facebook không có email, đã tự tạo email ảo: ", email);
+    }
+
+    const avatar_url = picture?.data?.url || "";
+
+    // 🚀 SỬA: Truyền thêm 'facebookId' để nó có cái bẻ lái tạo mail ảo
+    const user = await handleSocialUser(
+      email,
+      name,
+      avatar_url,
+      "facebook",
+      facebookId,
+    );
+
+    const accessToken = jwt.sign(
+      { id: user.id, role: user.role_id },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" },
+    );
+
+    const refreshToken = jwt.sign(
+      { id: user.id, role: user.role_id },
+      process.env.JWT_REFRESH_SECRET || "CaiNayLaSecretKhoaRefreshNheMay",
+      { expiresIn: "7d" },
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const safeUser = {
+      ...user,
+      id: encodeId(user.id),
+    };
+
+    res.status(200).json({
+      message: "Đăng nhập Facebook thành công!",
+      token: accessToken,
+      user: safeUser,
+    });
+  } catch (error) {
+    console.error("Lỗi xác minh token Facebook:", error.message);
+
+    // 🚀 SỬA: Bắt đúng câu chửi của Service ném ra để gửi về cho Frontend báo lỗi
+    if (error.message.includes("đã được đăng ký bằng")) {
+      return res.status(409).json({ message: error.message });
+    }
+
+    res.status(401).json({ message: "Token không hợp lệ hoặc đã hết hạn!" });
+  }
+};
 const logout = async (req, res) => {
   try {
     res.clearCookie("refreshToken", {
@@ -559,4 +644,5 @@ module.exports = {
   changePassword,
   updateAvatar,
   googleLogin,
+  facebookLogin,
 };

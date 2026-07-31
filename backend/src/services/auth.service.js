@@ -152,28 +152,61 @@ async function loginUser(email, password) {
   };
 }
 
-// Hàm đăng nhập bằng Google
-async function handleGoogleUser(email, full_name, avatar_url) {
-  // 1. kiểm tra xem email đã tồn tại trong DB chưa
+// Hàm xử lý chung cho TẤT CẢ các loại đăng nhập mạng xã hội
+//  Nhận thêm tham số social_id
+async function handleSocialUser(
+  email,
+  full_name,
+  avatar_url,
+  provider,
+  social_id = null,
+) {
+  let targetEmail = email; // Dùng biến phụ để có thể linh hoạt đổi email
+
+  // 1. Kiểm tra xem email đã tồn tại trong DB chưa
   const [existingUsers] = await pool.query(
     "SELECT * FROM users WHERE email = ?",
-    [email],
+    [targetEmail],
   );
-  // 2. NẾU ĐÃ CÓ TÀI KHOẢN (User cũ)
+
+  // 2. NẾU ĐÃ CÓ TÀI KHOẢN (Trùng Email)
   if (existingUsers.length > 0) {
     const user = existingUsers[0];
-    //Kiểm tra xem tại khoản user có bị khoá hay chưa
+
+    // Kiểm tra xem tài khoản user có bị khoá hay chưa
     if (!user.is_active) {
       throw new Error(
         "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.",
       );
     }
-    // Nếu tồn tại thì trả về thông tin user
-    return user;
+
+    //  KIỂM TRA NGUỒN ĐĂNG NHẬP VÀ XỬ LÝ TRÙNG LẶP
+    if (user.auth_provider !== provider) {
+      // Nếu là Facebook bị trùng email -> Tự động bẻ lái sang email ảo để tạo nick riêng
+      if (provider === "facebook" && social_id) {
+        targetEmail = `${social_id}@facebook.local`;
+
+        // Kiểm tra xem email ảo này đã từng được tạo chưa
+        const [fakeEmailUsers] = await pool.query(
+          "SELECT * FROM users WHERE email = ?",
+          [targetEmail],
+        );
+        if (fakeEmailUsers.length > 0) {
+          return fakeEmailUsers[0]; // Trả về nick facebook cũ nếu đã tạo
+        }
+      } else {
+        // Nếu là Google đụng hàng, hoặc không có ID -> Báo lỗi thẳng mặt
+        throw new Error(
+          `Email này đã được đăng ký bằng ${user.auth_provider}. Vui lòng đăng nhập bằng ${user.auth_provider}!`,
+        );
+      }
+    } else {
+      // Đúng nguồn đăng nhập -> Trả về user
+      return user;
+    }
   }
 
-  // 3. NẾU CHƯA CÓ TÀI KHOẢN (User mới tinh)
-  // Gán role_id mặc định là 2 (customer) cho user mới
+  // 3. NẾU CHƯA CÓ TÀI KHOẢN (Hoặc vừa được bẻ lái sang email ảo) -> Khởi tạo tài khoản
   const [roleRows] = await pool.query("SELECT id FROM roles WHERE name = ?", [
     "customer",
   ]);
@@ -183,27 +216,27 @@ async function handleGoogleUser(email, full_name, avatar_url) {
   }
   const role_id = roleRows[0].id;
 
-  // Tạo một mật khẩu ngẫu nhiên cho user này (vì họ đăng nhập bằng Google) và hash nó
-  const randomPassword = Math.random().toString(36).slice(-10); // Tạo mật khẩu ngẫu nhiên 10 ký tự
-  // Mã hóa mật khẩu ngẫu nhiên trước khi lưu vào cơ sở dữ liệu
+  const randomPassword =
+    Math.random().toString(36).slice(-10) +
+    Math.random().toString(36).slice(-10);
   const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-  // Insert user mới vào database (Lưu ý: số điện thoại mặc định là chuỗi rỗng)
+  // 🚀 LƯU VÀO DATABASE VỚI TARGET_EMAIL
   const [insertResult] = await pool.query(
-    "INSERT INTO users(full_name, email, phone, password_hash, role_id, avatar_url) VALUES (?,?,?,?,?,?)",
-    [full_name, email, "", hashedPassword, role_id, avatar_url],
+    "INSERT INTO users(full_name, email, phone, password_hash, role_id, avatar_url, auth_provider) VALUES (?,?,?,?,?,?,?)",
+    [full_name, targetEmail, "", hashedPassword, role_id, avatar_url, provider],
   );
 
   return {
     id: insertResult.insertId,
     full_name,
-    email,
+    email: targetEmail, // Trả về email đúng chuẩn
     phone: "",
     role_id,
     avatar_url,
+    auth_provider: provider,
   };
 }
-
 async function getCurrentUserById(userId) {
   // 1. Thêm avatar_url vào câu lệnh SELECT
   const [rows] = await pool.query(
@@ -444,5 +477,5 @@ module.exports = {
   updateUserById,
   updateUserPassword,
   updateUserAvatar,
-  handleGoogleUser,
+  handleSocialUser, // Xuất ra hàm xử lý chung cho MXH
 };

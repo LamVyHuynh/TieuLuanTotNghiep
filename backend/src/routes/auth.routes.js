@@ -18,6 +18,7 @@ const {
   changePassword,
   updateAvatar,
   googleLogin,
+  facebookLogin,
 } = require("../controllers/auth.controller");
 
 const { loginRateLimiter } = require("../middlewares/rateLimit.middleware");
@@ -31,6 +32,10 @@ router.post("/login", loginRateLimiter, login);
 // Tạo đường dẫn API để Frontend gọi xuống
 // Khi Frontend gọi POST tới '/google', hàm googleLogin sẽ được chạy
 router.post("/google", googleLogin);
+
+// Tạo đường dẫn API để Frontend gọi xuống
+// Khi Frontend gọi POST tới '/facebook', hàm facebookLogin sẽ được chạy
+router.post("/facebook", facebookLogin);
 router.post("/refresh-token", refreshToken);
 router.post("/logout", logout);
 
