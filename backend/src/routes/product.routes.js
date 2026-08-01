@@ -10,6 +10,7 @@ const {
   deleteSanPham,
   updateInfoProduct,
   getProductDetail,
+  importProducts,
 } = require("../controllers/product.controller");
 const { authenticateToken } = require("../middlewares/auth.middleware");
 
@@ -36,6 +37,14 @@ router.put(
   authenticateToken,
   upload.single("image"),
   updateInfoProduct,
+);
+
+// Route để import sản phẩm từ file Excel
+router.post(
+  "/import",
+  authenticateToken,
+  upload.single("file"), // Multer sẽ đón file với cái nhãn tên là "file"
+  importProducts,
 );
 
 // Route để lấy chi tiết sản phẩm theo ID

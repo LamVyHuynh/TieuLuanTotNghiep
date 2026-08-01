@@ -10,6 +10,9 @@ const {
 const { encodeId, decodeId } = require("../utils/hashid.util");
 const { uploadToSupabase } = require("../utils/uploadHelper");
 
+// Import thư viện xlsx để xử lý file Excel
+const xlsx = require("xlsx");
+
 const addProduct = async (req, res) => {
   try {
     const productData = req.body;
@@ -182,10 +185,76 @@ const getProductDetail = async (req, res) => {
   }
 };
 
+// Hàm inmport từ file Excel
+const importProducts = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ message: "Vui lòng chọn một file Excel hoặc CSV!" });
+    }
+
+    // đọc file từ buffer(bộ nhớ tạm thời) do multer cung cấp
+    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0]; // Lấy sheet đầu tiên
+    const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    if (sheetData.length === 0) {
+      return res.status(400).json({ message: "File của bạn đang trống rỗng!" });
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Lặp qua từng dòng dữ liệu trong file Excel
+    for (const row of sheetData) {
+      try {
+        // Map các cột từ Excel (tiếng Việt) sang tên biến của DB
+        const productData = {
+          name: row["Tên món ăn"],
+          id_category: row["ID Danh mục"],
+          price: row["Giá gốc"],
+          discount_price: row["Giá giảm"] || null,
+          unit: row["Đơn vị"] || "phần",
+          stock_quantity: row["Tồn kho"] || 0,
+          calories: row["Calo"] || 0,
+          protein: row["Đạm"] || 0,
+          carbs: row["Carb"] || 0,
+          fat: row["Béo"] || 0,
+          description: row["Mô tả"] || "",
+          image_url: "", // Import hàng loạt tạm thời bỏ trống ảnh
+        };
+
+        // Bỏ qua nếu thiếu trường bắt buộc
+        if (
+          !productData.name ||
+          !productData.price ||
+          !productData.id_category
+        ) {
+          errorCount++;
+          continue;
+        }
+
+        await createProduct(productData);
+        successCount++;
+      } catch (error) {
+        console.error("Lỗi dòng:", row, err.message);
+        errorCount++;
+      }
+    }
+  } catch (error) {
+    console.error("Lỗi import file:", error);
+    res
+      .status(500)
+      .json({ message: "Lỗi server khi đọc file!", error: error.message });
+  }
+};
+
 module.exports = {
   addProduct,
   getProducts,
   deleteSanPham,
   updateInfoProduct,
   getProductDetail,
+  importProducts,
 };

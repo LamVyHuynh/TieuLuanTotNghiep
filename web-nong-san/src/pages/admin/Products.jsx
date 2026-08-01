@@ -133,7 +133,7 @@ function ProductsPage() {
     }));
   };
 
-  // 🚀 Lắng nghe khi người dùng chọn ảnh
+  // Lắng nghe khi người dùng chọn ảnh
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -187,13 +187,11 @@ function ProductsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // 🚀 Đóng gói dữ liệu thành FormData
       const submitData = new FormData();
       Object.keys(formData).forEach((key) => {
         submitData.append(key, formData[key]);
       });
 
-      // Nếu có chọn ảnh mới thì nhét vào gói hàng với nhãn "image"
       if (imageFile) {
         submitData.append("image", imageFile);
       }
@@ -238,6 +236,83 @@ function ProductsPage() {
     }
   };
 
+  // =========================================================
+  // 🚀 TÍNH NĂNG: TẢI TEMPLATE MẪU CSV
+  // =========================================================
+  const downloadTemplate = () => {
+    const headers = [
+      "Tên món ăn",
+      "ID Danh mục",
+      "Giá gốc",
+      "Giá giảm",
+      "Đơn vị",
+      "Tồn kho",
+      "Calo",
+      "Đạm",
+      "Carb",
+      "Béo",
+      "Mô tả",
+    ];
+
+    const sampleRow = [
+      "Salad Ức Gà Mẫu",
+      categoryList.length > 0 ? categoryList[0].id_category : "1", // Gợi ý ID danh mục
+      "65000",
+      "50000",
+      "phần",
+      "100",
+      "350",
+      "25.5",
+      "10",
+      "5.2",
+      "Salad rất ngon và healthy",
+    ];
+
+    const csvString =
+      "\uFEFF" + [headers.join(","), sampleRow.join(",")].join("\n");
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "Template_Nhap_SanPham_HealthyGO.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // =========================================================
+  // 🚀 TÍNH NĂNG: XỬ LÝ IMPORT FILE EXCEL/CSV
+  // =========================================================
+  const handleImportFile = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    const importData = new FormData();
+    importData.append("file", file);
+
+    try {
+      const res = await axiosClient.post("products/import", importData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      showToast("success", res.data.message || "Import dữ liệu thành công!");
+      fetchData(); // Tải lại danh sách sản phẩm
+    } catch (error) {
+      showToast(
+        "error",
+        "Lỗi Import: " +
+          (error.response?.data?.message || "Kiểm tra lại file!"),
+      );
+    } finally {
+      setIsLoading(false);
+      e.target.value = null; // Reset input để có thể chọn lại cùng 1 file
+    }
+  };
+
+  // =========================================================
+  // TÍNH NĂNG: XUẤT CSV
+  // =========================================================
   const exportToCSV = () => {
     if (productList.length === 0) {
       showToast("error", "Không có dữ liệu để xuất CSV!");
@@ -295,7 +370,7 @@ function ProductsPage() {
   return (
     <div className="min-h-screen p-4 text-slate-900 sm:p-6 lg:p-8 relative bg-slate-50/50 overflow-hidden">
       {/* HEADER TRANG CHÍNH */}
-      <header className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between px-2">
+      <header className="mb-10 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between px-2">
         <div>
           <h2 className="text-4xl font-black text-slate-900 tracking-tighter">
             Quản lý sản phẩm
@@ -305,21 +380,44 @@ function ProductsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* NÚT TẢI TEMPLATE MẪU */}
           <button
-            onClick={exportToCSV}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-slate-200 px-6 py-4 font-bold text-slate-700 shadow-sm transition hover:scale-105 active:scale-95"
+            onClick={downloadTemplate}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-indigo-50 px-4 py-3 font-bold text-indigo-700 hover:bg-indigo-100 transition shadow-sm"
           >
-            <Download size={22} />
-            <span className="text-base">Xuất CSV</span>
+            <Download size={20} />
+            <span className="text-sm">Tải Template mẫu</span>
           </button>
 
+          {/* NÚT NHẬP FILE */}
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-amber-50 px-4 py-3 font-bold text-amber-700 hover:bg-amber-100 transition shadow-sm">
+            <UploadCloud size={20} />
+            <span className="text-sm">Nhập Excel</span>
+            <input
+              type="file"
+              accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+              className="hidden"
+              onChange={handleImportFile}
+            />
+          </label>
+
+          {/* NÚT XUẤT CSV */}
+          <button
+            onClick={exportToCSV}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-slate-200 px-4 py-3 font-bold text-slate-700 shadow-sm transition hover:scale-105 active:scale-95"
+          >
+            <Download size={20} />
+            <span className="text-sm">Xuất CSV</span>
+          </button>
+
+          {/* NÚT THÊM MỚI */}
           <button
             onClick={openAddModal}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:bg-[#1b5e20] active:scale-95"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-6 py-3 font-bold text-white shadow-lg transition hover:scale-105 hover:bg-[#1b5e20] active:scale-95"
           >
-            <Plus size={22} />
-            <span className="text-base">Thêm món mới</span>
+            <Plus size={20} />
+            <span className="text-sm">Thêm món mới</span>
           </button>
         </div>
       </header>
