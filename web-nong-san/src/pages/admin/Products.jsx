@@ -237,44 +237,91 @@ function ProductsPage() {
   };
 
   // =========================================================
-  // 🚀 TÍNH NĂNG: TẢI TEMPLATE MẪU CSV
+  // TÍNH NĂNG: TẢI TEMPLATE MẪU EXCEL (BẢN ĐẸP + CÓ KẺ LƯỚI)
   // =========================================================
   const downloadTemplate = () => {
-    const headers = [
-      "Tên món ăn",
-      "ID Danh mục",
-      "Giá gốc",
-      "Giá giảm",
-      "Đơn vị",
-      "Tồn kho",
-      "Calo",
-      "Đạm",
-      "Carb",
-      "Béo",
-      "Mô tả",
-    ];
+    const suggestCategoryId =
+      categoryList.length > 0 ? categoryList[0].id_category : "1";
 
-    const sampleRow = [
-      "Salad Ức Gà Mẫu",
-      categoryList.length > 0 ? categoryList[0].id_category : "1", // Gợi ý ID danh mục
-      "65000",
-      "50000",
-      "phần",
-      "100",
-      "350",
-      "25.5",
-      "10",
-      "5.2",
-      "Salad rất ngon và healthy",
-    ];
+    // 🚀 Bổ sung thẻ <xml> để cấu hình Excel, ép buộc bật DisplayGridlines
+    const templateHtml = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+            xmlns:x="urn:schemas-microsoft-com:office:excel" 
+            xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <!-- ĐOẠN XML NÀY GIÚP BẬT ĐƯỜNG KẺ LƯỚI TRONG EXCEL -->
+        <xml>
+          <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+              <x:ExcelWorksheet>
+                <x:Name>Template Nhập Sản Phẩm</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+          </x:ExcelWorkbook>
+        </xml>
+        <style>
+          .header {
+            background-color: #059669; /* Màu xanh ngọc */
+            color: #ffffff;
+            font-weight: bold;
+            text-align: center;
+            height: 40px;
+            vertical-align: middle;
+            border: 1px solid #047857;
+          }
+          .cell {
+            border: 1px solid #d1d5db;
+            vertical-align: middle;
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <table>
+          <thead>
+            <tr>
+              <th class="header" style="width: 200px;">Tên món ăn</th>
+              <th class="header" style="width: 120px;">ID Danh mục</th>
+              <th class="header" style="width: 120px;">Giá gốc</th>
+              <th class="header" style="width: 120px;">Giá giảm</th>
+              <th class="header" style="width: 100px;">Đơn vị</th>
+              <th class="header" style="width: 100px;">Tồn kho</th>
+              <th class="header" style="width: 80px;">Calo</th>
+              <th class="header" style="width: 80px;">Đạm</th>
+              <th class="header" style="width: 80px;">Carb</th>
+              <th class="header" style="width: 80px;">Béo</th>
+              <th class="header" style="width: 300px;">Mô tả</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cell">Salad Ức Gà Mẫu</td>
+              <td class="cell">${suggestCategoryId}</td>
+              <td class="cell">65000</td>
+              <td class="cell">50000</td>
+              <td class="cell">phần</td>
+              <td class="cell">100</td>
+              <td class="cell">350</td>
+              <td class="cell">25.5</td>
+              <td class="cell">10</td>
+              <td class="cell">5.2</td>
+              <td class="cell">Món salad rất ngon, phù hợp ăn kiêng.</td>
+            </tr>
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
 
-    const csvString =
-      "\uFEFF" + [headers.join(","), sampleRow.join(",")].join("\n");
-    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([templateHtml], { type: "application/vnd.ms-excel" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "Template_Nhap_SanPham_HealthyGO.csv");
+    link.href = url;
+    link.download = "Template_Nhap_SanPham_HealthyGO.xls";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
