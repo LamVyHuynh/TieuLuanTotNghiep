@@ -220,18 +220,28 @@ const importProducts = async (req, res) => {
     // Lặp qua từng dòng dữ liệu trong file Excel
     for (const row of sheetData) {
       try {
-        // 🚀 BƯỚC QUAN TRỌNG: Giải mã ID Danh mục nếu nó là chuỗi Hash (VD: nr4PkzEo -> 1)
-        let rawCategoryId = row["ID Danh mục"];
-        let realCategoryId = rawCategoryId;
+        // 1. Lấy dữ liệu cột "Danh mục" (Bây giờ nó có dạng: "Salad - [ID: 1]")
+        const rawCategoryStr = row["Danh mục"];
+        let realCategoryId = null;
 
-        if (typeof rawCategoryId === "string") {
-          realCategoryId = decodeId(rawCategoryId) || rawCategoryId;
+        if (rawCategoryStr && typeof rawCategoryStr === "string") {
+          // Mổ chuỗi: Tìm đoạn chữ nằm trong [ID: ...]
+          const match = rawCategoryStr.match(/\[ID:\s*(.+)\]/);
+          if (match && match[1]) {
+            const extractedId = match[1].trim(); // Lấy được số 1 (hoặc mã nr4PkzEo)
+            realCategoryId = decodeId(extractedId) || extractedId;
+          } else {
+            // Lỡ người dùng tự gõ tay đúng mỗi cái ID
+            realCategoryId = decodeId(rawCategoryStr) || rawCategoryStr;
+          }
+        } else {
+          realCategoryId = rawCategoryStr;
         }
 
-        // Map các cột từ Excel và ép kiểu dữ liệu cho chuẩn với Database
+        // 2. Map dữ liệu chuẩn bị lưu
         const productData = {
           name: row["Tên món ăn"],
-          id_category: realCategoryId, // Dùng ID đã giải mã
+          id_category: realCategoryId, // 👈 Gắn ID vừa mổ được vào đây
           price: parseFloat(row["Giá gốc"]) || 0,
           discount_price: parseFloat(row["Giá giảm"]) || null,
           unit: row["Đơn vị"] || "phần",
@@ -241,7 +251,7 @@ const importProducts = async (req, res) => {
           carbs: parseFloat(row["Carb"]) || 0,
           fat: parseFloat(row["Béo"]) || 0,
           description: row["Mô tả"] || "",
-          image_url: "", // Import hàng loạt tạm thời bỏ trống ảnh
+          image_url: "",
         };
 
         // Bỏ qua nếu thiếu trường bắt buộc
@@ -251,14 +261,13 @@ const importProducts = async (req, res) => {
           !productData.id_category
         ) {
           errorCount++;
-          continue; // Bỏ qua và chạy tiếp dòng sau
+          continue;
         }
 
-        // Gọi service lưu vào DB
         await createProduct(productData);
         successCount++;
       } catch (error) {
-        console.error("Lỗi khi lưu dòng:", row["Tên món ăn"], error.message);
+        console.error("Lỗi dòng:", row, error.message);
         errorCount++;
       }
     }

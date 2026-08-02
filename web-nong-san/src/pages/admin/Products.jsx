@@ -19,7 +19,8 @@ import axiosClient from "../../api/axiosClient";
 
 // 🚀 IMPORT THƯ VIỆN EXCEL Ở FRONTEND
 import * as XLSX from "xlsx";
-
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 function ProductsPage() {
   const [categoryList, setCategoryList] = useState([]);
   const [productList, setProductList] = useState([]);
@@ -240,69 +241,100 @@ function ProductsPage() {
   };
 
   // =========================================================
-  // 🚀 TÍNH NĂNG: TẢI TEMPLATE MẪU EXCEL (CHUẨN .XLSX)
+  // 🚀 TÍNH NĂNG: TẢI TEMPLATE MẪU EXCEL (CÓ DROPDOWN CHỌN DANH MỤC)
   // =========================================================
-  const downloadTemplate = () => {
-    const suggestCategoryId =
-      categoryList.length > 0 ? categoryList[0].id_category : "1";
+  const downloadTemplate = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Template Nhập Sản Phẩm");
 
-    // 1. Tạo mảng chứa Header và Dòng mẫu
-    const headers = [
-      "Tên món ăn",
-      "ID Danh mục",
-      "Giá gốc",
-      "Giá giảm",
-      "Đơn vị",
-      "Tồn kho",
-      "Calo",
-      "Đạm",
-      "Carb",
-      "Béo",
-      "Mô tả",
+    // 1. Gộp Tên và ID danh mục lại (VD: Salad - [ID: 1])
+    const categoryOptions = categoryList.map(
+      (cat) => `${cat.name} - [ID: ${cat.id_category}]`,
+    );
+    const suggestCategory =
+      categoryOptions.length > 0 ? categoryOptions[0] : "";
+
+    // 2. Thiết lập các Cột (Đổi tên "ID Danh mục" thành "Danh mục")
+    worksheet.columns = [
+      { header: "Tên món ăn", key: "name", width: 25 },
+      { header: "Danh mục", key: "category", width: 35 }, // 👈 Cột B
+      { header: "Giá gốc", key: "price", width: 15 },
+      { header: "Giá giảm", key: "discount_price", width: 15 },
+      { header: "Đơn vị", key: "unit", width: 10 },
+      { header: "Tồn kho", key: "stock", width: 10 },
+      { header: "Calo", key: "calories", width: 10 },
+      { header: "Đạm", key: "protein", width: 10 },
+      { header: "Carb", key: "carbs", width: 10 },
+      { header: "Béo", key: "fat", width: 10 },
+      { header: "Mô tả", key: "description", width: 40 },
     ];
 
-    const sampleRow = [
-      "Salad Ức Gà Mẫu",
-      suggestCategoryId,
-      65000,
-      50000,
-      "phần",
-      100,
-      350,
-      25.5,
-      10,
-      5.2,
-      "Món salad rất ngon, phù hợp ăn kiêng.",
-    ];
+    // 3. Style cho Dòng tiêu đề (Xanh ngọc, in đậm)
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "059669" }, // Xanh ngọc
+      };
+      cell.font = { color: { argb: "FFFFFF" }, bold: true };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
 
-    // 2. Chuyển mảng thành dạng Bảng tính (Worksheet)
-    const worksheet = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
+    // 4. Thêm dòng dữ liệu mẫu
+    worksheet.addRow({
+      name: "Salad Ức Gà Mẫu",
+      category: suggestCategory,
+      price: 65000,
+      discount_price: 50000,
+      unit: "phần",
+      stock: 100,
+      calories: 350,
+      protein: 25.5,
+      carbs: 10,
+      fat: 5.2,
+      description: "Món salad rất ngon, phù hợp ăn kiêng.",
+    });
 
-    // 3. Set độ rộng cột cho đẹp và dễ nhìn (wch = width of character)
-    worksheet["!cols"] = [
-      { wch: 25 }, // Tên món ăn
-      { wch: 15 }, // ID Danh mục
-      { wch: 12 }, // Giá gốc
-      { wch: 12 }, // Giá giảm
-      { wch: 10 }, // Đơn vị
-      { wch: 10 }, // Tồn kho
-      { wch: 10 }, // Calo
-      { wch: 10 }, // Đạm
-      { wch: 10 }, // Carb
-      { wch: 10 }, // Béo
-      { wch: 40 }, // Mô tả
-    ];
+    // 5. 🚀 TẠO DROPDOWN CHO CỘT DANH MỤC
+    if (categoryOptions.length > 0) {
+      // Tạo một Sheet ẩn để chứa danh sách danh mục (Tránh lỗi giới hạn ký tự của Excel)
+      const hiddenSheet = workbook.addWorksheet("HiddenCategories", {
+        state: "hidden",
+      });
+      categoryOptions.forEach((cat, index) => {
+        hiddenSheet.getCell(`A${index + 1}`).value = cat;
+      });
 
-    // 4. Tạo file Excel mới và nhét Bảng tính vào
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+      // Gắn rule Dropdown cho cột B (Cột Danh mục) từ dòng 2 đến dòng 1000
+      for (let i = 2; i <= 1000; i++) {
+        worksheet.getCell(`B${i}`).dataValidation = {
+          type: "list",
+          allowBlank: true,
+          formulae: [`HiddenCategories!$A$1:$A$${categoryOptions.length}`],
+          showErrorMessage: true,
+          errorTitle: "Lỗi danh mục",
+          error:
+            "Vui lòng click vào mũi tên và chọn danh mục có sẵn trong danh sách!",
+        };
+      }
+    }
 
-    // 5. Kích hoạt tải xuống tự động
-    XLSX.writeFile(workbook, "Template_Nhap_SanPham_HealthyGO.xlsx");
+    // 6. Đóng gói và tải file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    saveAs(blob, "Template_Nhap_SanPham_HealthyGO.xlsx");
   };
 
   // =========================================================
-  // 🚀 TÍNH NĂNG: XỬ LÝ IMPORT FILE EXCEL/CSV
+  //  TÍNH NĂNG: XỬ LÝ IMPORT FILE EXCEL/CSV
   // =========================================================
   const handleImportFile = async (e) => {
     const file = e.target.files[0];
@@ -547,7 +579,7 @@ function ProductsPage() {
                           <img
                             src={
                               product.image_url ||
-                              "https://via.placeholder.com/150"
+                              "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
                             }
                             alt=""
                             className="h-14 w-14 rounded-2xl object-cover shadow-sm"

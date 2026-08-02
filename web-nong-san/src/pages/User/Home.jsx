@@ -220,14 +220,15 @@ function Home() {
                     }
                   >
                     <div
-                      className={`overflow-hidden rounded-2xl relative ${getMasonryHeart(
+                      className={`overflow-hidden rounded-2xl relative flex items-center justify-center bg-zinc-100 ${getMasonryHeart(
                         index,
                       )}`}
                     >
+                      {/* 🚀 ĐÃ THAY ĐỔI LINK ẢNH VỀ BẢN NO IMAGE CHUẨN */}
                       <img
                         src={
                           item.image_url ||
-                          "https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=700&q=80"
+                          "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
                         }
                         alt={item.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
@@ -278,7 +279,7 @@ function Home() {
                           )}
                         </div>
 
-                        {/* NÚT THÊM VÀO GIỎ HÀNG (GIỮ NGUYÊN) */}
+                        {/* NÚT THÊM VÀO GIỎ HÀNG */}
                         <button
                           className="bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer shrink-0"
                           onClick={async (e) => {
