@@ -185,7 +185,7 @@ const getProductDetail = async (req, res) => {
   }
 };
 
-// Hàm inmport từ file Excel
+/// Hàm import từ file Excel
 const importProducts = async (req, res) => {
   try {
     if (!req.file) {
@@ -194,8 +194,19 @@ const importProducts = async (req, res) => {
         .json({ message: "Vui lòng chọn một file Excel hoặc CSV!" });
     }
 
-    // đọc file từ buffer(bộ nhớ tạm thời) do multer cung cấp
-    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    let workbook;
+
+    // Kiểm tra xem multer đang lưu file ở đâu (RAM hay Ổ cứng)
+    if (req.file.buffer) {
+      workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    } else if (req.file.path) {
+      workbook = xlsx.readFile(req.file.path);
+    } else {
+      return res
+        .status(400)
+        .json({ message: "Định dạng file tải lên không hợp lệ!" });
+    }
+
     const sheetName = workbook.SheetNames[0]; // Lấy sheet đầu tiên
     const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
@@ -209,18 +220,26 @@ const importProducts = async (req, res) => {
     // Lặp qua từng dòng dữ liệu trong file Excel
     for (const row of sheetData) {
       try {
-        // Map các cột từ Excel (tiếng Việt) sang tên biến của DB
+        // 🚀 BƯỚC QUAN TRỌNG: Giải mã ID Danh mục nếu nó là chuỗi Hash (VD: nr4PkzEo -> 1)
+        let rawCategoryId = row["ID Danh mục"];
+        let realCategoryId = rawCategoryId;
+
+        if (typeof rawCategoryId === "string") {
+          realCategoryId = decodeId(rawCategoryId) || rawCategoryId;
+        }
+
+        // Map các cột từ Excel và ép kiểu dữ liệu cho chuẩn với Database
         const productData = {
           name: row["Tên món ăn"],
-          id_category: row["ID Danh mục"],
-          price: row["Giá gốc"],
-          discount_price: row["Giá giảm"] || null,
+          id_category: realCategoryId, // Dùng ID đã giải mã
+          price: parseFloat(row["Giá gốc"]) || 0,
+          discount_price: parseFloat(row["Giá giảm"]) || null,
           unit: row["Đơn vị"] || "phần",
-          stock_quantity: row["Tồn kho"] || 0,
-          calories: row["Calo"] || 0,
-          protein: row["Đạm"] || 0,
-          carbs: row["Carb"] || 0,
-          fat: row["Béo"] || 0,
+          stock_quantity: parseInt(row["Tồn kho"]) || 0,
+          calories: parseInt(row["Calo"]) || 0,
+          protein: parseFloat(row["Đạm"]) || 0,
+          carbs: parseFloat(row["Carb"]) || 0,
+          fat: parseFloat(row["Béo"]) || 0,
           description: row["Mô tả"] || "",
           image_url: "", // Import hàng loạt tạm thời bỏ trống ảnh
         };
@@ -232,16 +251,21 @@ const importProducts = async (req, res) => {
           !productData.id_category
         ) {
           errorCount++;
-          continue;
+          continue; // Bỏ qua và chạy tiếp dòng sau
         }
 
+        // Gọi service lưu vào DB
         await createProduct(productData);
         successCount++;
       } catch (error) {
-        console.error("Lỗi dòng:", row, err.message);
+        console.error("Lỗi khi lưu dòng:", row["Tên món ăn"], error.message);
         errorCount++;
       }
     }
+
+    res.status(200).json({
+      message: `Import hoàn tất! Thành công: ${successCount} món. Lỗi/Bỏ qua: ${errorCount} món.`,
+    });
   } catch (error) {
     console.error("Lỗi import file:", error);
     res
