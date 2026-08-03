@@ -7,7 +7,8 @@ const {
   getDetailReport,
 } = require("../services/order.service");
 const { encodeId, decodeId } = require("../utils/hashid.util");
-
+const axios = require("axios");
+const crypto = require("crypto");
 // Tạo đơn hàng mới (dùng cho trang Checkout)
 const createOrder = async (req, res) => {
   try {
@@ -248,6 +249,89 @@ const getReportsAdmin = async (req, res) => {
   }
 };
 
+// =================================================================
+// TẠO MÃ QR THANH TOÁN MOMO UAT (BẢN CHUẨN DEEPLINK NATIVE APP)
+// =================================================================
+const createMomoPayment = async (req, res) => {
+  try {
+    const { orderId, amount } = req.body;
+
+    // 1. GẮN CỨNG BỘ KEY
+    const partnerCode = "MOMO5RGX20191128";
+    const accessKey = "M8brj9K6E22vXoDB";
+    const secretKey = "nqQiVSgDMy809JoPF6OzP5OdBUB550Y4";
+    const redirectUrl = "http://localhost:3000/order";
+    const ipnUrl = "http://localhost:3000/order";
+
+    // 2. Chuẩn hoá dữ liệu
+    const amountNum = Number(amount);
+    const uniqueOrderId = `${orderId}_${new Date().getTime()}`;
+    const requestId = partnerCode + new Date().getTime();
+    const orderInfo = `Thanh toan don hang ${uniqueOrderId}`;
+    const requestType = "captureWallet";
+    const extraData = "";
+
+    // 3. Xếp chuỗi chữ ký đúng chuẩn
+    const rawSignature = `accessKey=${accessKey}&amount=${amountNum}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${uniqueOrderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
+
+    // 4. Băm chữ ký
+    const signature = crypto
+      .createHmac("sha256", secretKey)
+      .update(rawSignature)
+      .digest("hex");
+
+    // 5. Gói hàng gửi lên MoMo
+    const requestBody = {
+      partnerCode,
+      partnerName: "HealthyGO",
+      storeId: "MomoTestStore",
+      requestId,
+      amount: amountNum,
+      orderId: uniqueOrderId,
+      orderInfo,
+      redirectUrl,
+      ipnUrl,
+      lang: "vi",
+      requestType,
+      autoCapture: true,
+      extraData,
+      signature,
+    };
+
+    // 6. Gọi API MoMo
+    const result = await axios.post(
+      "https://test-payment.momo.vn/v2/gateway/api/create",
+      requestBody,
+    );
+
+    // 7. 🚀 XỬ LÝ ẢNH QR CHUẨN NATIVE
+    if (result.data && result.data.resultCode === 0) {
+      // Ưu tiên 1: Lấy ảnh QR xịn do chính MoMo cấp (nếu có)
+      let finalQrCodeUrl = result.data.qrCodeUrl;
+
+      // Ưu tiên 2: Tạo QR từ 'deeplink' (momo://...) để ép MoMo bật popup thanh toán gốc
+      if (!finalQrCodeUrl && result.data.deeplink) {
+        finalQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(result.data.deeplink)}`;
+      }
+
+      res.status(200).json({
+        success: true,
+        qrCodeUrl: finalQrCodeUrl,
+        message: "Tạo mã QR MoMo thành công",
+      });
+    } else {
+      throw new Error(`MoMo từ chối: ${result.data.message}`);
+    }
+  } catch (error) {
+    console.error(
+      "LỖI KHI GỌI MOMO:",
+      error.response ? error.response.data : error.message,
+    );
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi kết nối cổng thanh toán MoMo!" });
+  }
+};
 module.exports = {
   createOrder,
   getOrdersHistory,
@@ -255,4 +339,5 @@ module.exports = {
   updateOrderStatusAdmin,
   getDashboardReview,
   getReportsAdmin,
+  createMomoPayment,
 };
