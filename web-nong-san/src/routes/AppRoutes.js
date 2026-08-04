@@ -18,6 +18,10 @@ import ProtectedRoute from "./ProtectedRoute";
 import AddressPage from "../pages/admin/Address";
 import SearchPage from "../pages/User/SearchPage";
 import SearchHistoryPage from "../pages/User/SearchHistoryPage";
+
+// BƯỚC 1: IMPORT TRANG PROFILE MỚI VÀO ĐÂY
+import Profile from "../pages/User/Profile";
+
 const publicRoutes = [
   {
     // path :"/", element UserLayout là dùng dùng để bọc nguyên lại
@@ -34,6 +38,9 @@ const publicRoutes = [
       { path: "order", element: Order },
       { path: "search", element: SearchPage },
       { path: "search-history", element: SearchHistoryPage },
+
+      // BƯỚC 2: KHAI BÁO ĐƯỜNG DẪN CHO TRANG PROFILE
+      { path: "profile", element: Profile },
     ],
   },
   {

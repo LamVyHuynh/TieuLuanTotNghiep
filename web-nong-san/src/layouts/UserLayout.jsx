@@ -8,13 +8,6 @@ import {
   UserRound,
   LogOut,
   X,
-  User,
-  Phone,
-  Mail,
-  Key,
-  Eye,
-  EyeOff,
-  Save,
   History,
   Bell,
   Trash2,
@@ -47,7 +40,7 @@ const removeVietnameseTones = (str) => {
 function UserLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, logout, loading, refetchUser } = useAuth();
+  const { currentUser, logout, loading } = useAuth();
   const { cartItems, fetchCart, setCartItems } = useContext(CartContext);
 
   // =================================================================
@@ -182,7 +175,6 @@ function UserLayout() {
   const notiMenuRef = useRef(null);
 
   useEffect(() => {
-    // 🚀 CHỈ CHẠY LOGIC KHI ĐÃ CÓ USER ĐĂNG NHẬP
     if (!currentUser) return;
 
     const fetchNotifications = async () => {
@@ -198,15 +190,10 @@ function UserLayout() {
       }
     };
 
-    // Gọi lần đầu
     fetchNotifications();
-
-    // Thiết lập vòng lặp 15s một lần
     const intervalId = setInterval(fetchNotifications, 15000);
-
-    // Dọn dẹp khi component bị hủy hoặc user đăng xuất
     return () => clearInterval(intervalId);
-  }, [currentUser]); // <-- Theo dõi biến currentUser
+  }, [currentUser]);
 
   const handleReadNotification = async (notiId) => {
     try {
@@ -261,122 +248,8 @@ function UserLayout() {
   };
 
   // =================================================================
-  // 4. QUẢN LÝ PROFILE & AUTH
+  // 4. XỬ LÝ ĐĂNG XUẤT
   // =================================================================
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editFormData, setEditFormData] = useState({
-    full_name: "",
-    phone: "",
-    email: "",
-  });
-
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setAvatarFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
-  const [isChangePwdOpen, setIsChangePwdOpen] = useState(false);
-  const [isChangingPwd, setIsChangingPwd] = useState(false);
-  const [showNewPwd, setShowNewPwd] = useState(false);
-  const [pwdData, setPwdData] = useState({ new_password: "" });
-
-  const openEditProfile = () => {
-    setEditFormData({
-      full_name: currentUser?.full_name || "",
-      phone: currentUser?.phone || "",
-      email: currentUser?.email || "",
-    });
-    setAvatarFile(null);
-
-    // Chú ý: Backend chạy ở cổng 5000, nếu khác mày sửa lại số này
-    // setPreviewUrl(
-    //   currentUser?.avatar_url
-    //     ? `http://localhost:5000${currentUser.avatar_url}`
-    //     : "",
-    // );
-
-    // sửa lại chạy trực tiếp từ Supabase
-    setPreviewUrl(currentUser?.avatar_url || "");
-
-    setShowUserMenu(false);
-    setIsEditProfileOpen(true);
-  };
-
-  const handleEditChange = (e) =>
-    setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
-
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    setIsEditing(true);
-    try {
-      await axiosClient.put(`/auth/users/${currentUser.id}/update-user`, {
-        full_name: editFormData.full_name,
-        phone: editFormData.phone,
-        email: currentUser.email,
-        role_id: currentUser.role_id,
-      });
-
-      if (avatarFile) {
-        const formData = new FormData();
-        // gói hàng với nhãn dán là "avatar_file" để backend nhận ra là file ảnh đại diện
-        formData.append("avatar_file", avatarFile);
-
-        await axiosClient.put(
-          `/auth/users/${currentUser.id}/avatar`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          },
-        );
-      }
-
-      setIsEditProfileOpen(false);
-      showToast("success", "Cập nhật thông tin thành công! 🥰");
-
-      if (refetchUser) await refetchUser();
-    } catch (error) {
-      showToast("error", error.response?.data?.message || "Lỗi cập nhật 😥");
-    } finally {
-      setIsEditing(false);
-    }
-  };
-
-  const openChangePwd = () => {
-    setPwdData({ new_password: "" });
-    setShowNewPwd(false);
-    setShowUserMenu(false);
-    setIsChangePwdOpen(true);
-  };
-
-  const handleChangePwdSubmit = async (e) => {
-    e.preventDefault();
-    setIsChangingPwd(true);
-    try {
-      await axiosClient.put(`/auth/users/${currentUser.id}/change-password`, {
-        new_password: pwdData.new_password,
-      });
-      setIsChangePwdOpen(false);
-      showToast("success", "Đổi mật khẩu thành công! 🥰");
-      if (refetchUser) await refetchUser();
-    } catch (error) {
-      showToast(
-        "error",
-        error.response?.data?.message || "Lỗi đổi mật khẩu 😥",
-      );
-    } finally {
-      setIsChangingPwd(false);
-    }
-  };
-
   const handleLogout = async () => {
     await logout();
     if (setCartItems) setCartItems([]);
@@ -492,7 +365,7 @@ function UserLayout() {
               </button>
             )}
 
-            {/* DROPDOWN */}
+            {/* DROPDOWN TÌM KIẾM */}
             {isSearchFocused && (
               <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-zinc-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 pb-2">
                 {currentUser &&
@@ -726,7 +599,7 @@ function UserLayout() {
               )}
             </button>
 
-            {/* 🚀 USER MENU (ĐÃ THÊM LOGIC ẢNH ĐẠI DIỆN VÀO ĐÂY) */}
+            {/* 🚀 USER MENU */}
             {currentUser ? (
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -737,9 +610,7 @@ function UserLayout() {
                   }}
                   className="flex items-center gap-2 p-1.5 pl-2 pr-3 bg-zinc-100 hover:bg-zinc-200 transition-colors rounded-full cursor-pointer text-zinc-700 font-semibold text-sm"
                 >
-                  {/* Logic hiện ảnh hoặc logo chữ cái */}
                   {currentUser.avatar_url ? (
-                    // sửa lại chạy trực tiếp từ Supabase
                     <img
                       src={currentUser.avatar_url}
                       alt="User"
@@ -759,22 +630,19 @@ function UserLayout() {
                 <div
                   className={`absolute right-0 top-[calc(100%+10px)] w-52 origin-top-right overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${showUserMenu ? "pointer-events-auto translate-y-0 scale-100 opacity-100" : "pointer-events-none -translate-y-2 scale-95 opacity-0"}`}
                 >
+                  {/* 🚀 BẤM NÚT NÀY ĐỂ CHUYỂN SANG TRANG CÁ NHÂN */}
                   <button
                     type="button"
-                    onClick={openEditProfile}
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      handleNavigate("/profile");
+                    }}
                     className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 hover:text-emerald-600"
                   >
-                    <UserRound size={16} className="text-zinc-400" /> Cập nhật
-                    thông tin
+                    <UserRound size={16} className="text-zinc-400" /> Trang cá
+                    nhân
                   </button>
-                  <button
-                    type="button"
-                    onClick={openChangePwd}
-                    className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 hover:text-emerald-600"
-                  >
-                    <KeyRound size={16} className="text-zinc-400" /> Đổi mật
-                    khẩu
-                  </button>
+
                   <button
                     type="button"
                     onClick={handleLogout}
@@ -823,209 +691,6 @@ function UserLayout() {
           </span>
         )}
       </button>
-
-      {/* MODAL CẬP NHẬT THÔNG TIN */}
-      {isEditProfileOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm transition-all duration-300">
-          <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50/50 px-6 py-4">
-              <h3 className="text-lg font-bold text-zinc-800">
-                Thông tin cá nhân
-              </h3>
-              <button
-                onClick={() => setIsEditProfileOpen(false)}
-                className="cursor-pointer rounded-full p-2 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 transition"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6">
-              <form onSubmit={handleEditSubmit} className="space-y-4">
-                {/* 🚀 KHU VỰC CHỌN ẢNH ĐẠI DIỆN */}
-                <div className="flex flex-col items-center justify-center mb-6">
-                  <div className="relative w-24 h-24 rounded-full border-2 border-dashed border-emerald-500 p-1 mb-2 overflow-hidden">
-                    {previewUrl ? (
-                      <img
-                        src={previewUrl}
-                        alt="Avatar Preview"
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-4xl font-black">
-                        {currentUser?.full_name?.charAt(0).toUpperCase() || (
-                          <User size={32} />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <label className="cursor-pointer bg-zinc-100 hover:bg-zinc-200 px-4 py-1.5 rounded-full text-xs font-semibold text-zinc-600 transition">
-                    Chọn ảnh mới
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleFileChange}
-                    />
-                  </label>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                    Địa chỉ Email
-                  </label>
-                  <div className="relative">
-                    <Mail
-                      size={18}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
-                    />
-                    <input
-                      type="email"
-                      disabled
-                      value={editFormData.email}
-                      className="w-full rounded-xl border border-zinc-200 bg-zinc-100 py-3 pl-11 pr-4 text-sm text-zinc-500 outline-none cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                    Họ và tên
-                  </label>
-                  <div className="relative">
-                    <User
-                      size={18}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
-                    />
-                    <input
-                      name="full_name"
-                      type="text"
-                      required
-                      value={editFormData.full_name}
-                      onChange={handleEditChange}
-                      className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-sm outline-none transition hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                    Số điện thoại
-                  </label>
-                  <div className="relative">
-                    <Phone
-                      size={18}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
-                    />
-                    <input
-                      name="phone"
-                      type="text"
-                      required
-                      value={editFormData.phone}
-                      onChange={handleEditChange}
-                      className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-sm outline-none transition hover:bg-white focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
-                    />
-                  </div>
-                </div>
-                <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-zinc-100">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditProfileOpen(false)}
-                    className="cursor-pointer rounded-xl px-5 py-2.5 text-sm font-semibold text-zinc-600 transition hover:bg-zinc-200"
-                  >
-                    Hủy bỏ
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isEditing}
-                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${isEditing ? "bg-zinc-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700"}`}
-                  >
-                    {isEditing ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    ) : (
-                      <>
-                        <Save size={16} /> Lưu thay đổi
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL ĐỔI MẬT KHẨU */}
-      {isChangePwdOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm transition-all duration-300">
-          <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50/50 px-6 py-4">
-              <h3 className="text-lg font-bold text-zinc-800">Đổi mật khẩu</h3>
-              <button
-                onClick={() => setIsChangePwdOpen(false)}
-                className="cursor-pointer rounded-full p-2 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 transition"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6">
-              <form onSubmit={handleChangePwdSubmit} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                    Mật khẩu mới
-                  </label>
-                  <div className="relative">
-                    <Key
-                      size={18}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
-                    />
-                    <input
-                      name="new_password"
-                      required
-                      type={showNewPwd ? "text" : "password"}
-                      value={pwdData.new_password}
-                      onChange={(e) =>
-                        setPwdData({ new_password: e.target.value })
-                      }
-                      placeholder="Nhập mật khẩu mới..."
-                      className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-10 text-sm outline-none transition hover:bg-white focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPwd(!showNewPwd)}
-                      className="absolute cursor-pointer right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
-                    >
-                      {showNewPwd ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                  <p className="mt-2 text-[11px] text-zinc-500">
-                    * Mật khẩu mới nên có ít nhất 8 ký tự.
-                  </p>
-                </div>
-                <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-zinc-100">
-                  <button
-                    type="button"
-                    onClick={() => setIsChangePwdOpen(false)}
-                    className="cursor-pointer rounded-xl px-5 py-2.5 text-sm font-semibold text-zinc-600 transition hover:bg-zinc-200"
-                  >
-                    Hủy bỏ
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isChangingPwd}
-                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition ${isChangingPwd ? "bg-zinc-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"}`}
-                  >
-                    {isChangingPwd ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    ) : (
-                      <>
-                        <Save size={16} /> Lưu mật khẩu
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* KHUNG THÔNG BÁO Ở GIỮA */}
       {toast.show && (
