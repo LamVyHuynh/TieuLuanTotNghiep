@@ -1,3 +1,4 @@
+const { Trophy } = require("lucide-react");
 const {
   createOrderTransaction,
   getOrdersByUserId,
@@ -7,7 +8,8 @@ const {
   getDetailReport,
 } = require("../services/order.service");
 const { encodeId, decodeId } = require("../utils/hashid.util");
-
+const axios = require("axios");
+const crypto = require("crypto");
 // Tạo đơn hàng mới (dùng cho trang Checkout)
 const createOrder = async (req, res) => {
   try {
@@ -36,7 +38,7 @@ const createOrder = async (req, res) => {
     }
 
     // =====================================================================
-    // 🚀 THUỐC GIẢI: ÉP KIỂU LẠI THỜI GIAN NGAY TẠI ĐÂY TRƯỚC KHI ĐƯA VÀO DB
+    // ÉP KIỂU LẠI THỜI GIAN NGAY TẠI ĐÂY TRƯỚC KHI ĐƯA VÀO DB
     // =====================================================================
     let formattedScheduledTime = null;
     if (scheduled_time) {
@@ -248,6 +250,154 @@ const getReportsAdmin = async (req, res) => {
   }
 };
 
+// =================================================================
+// TẠO MÃ QR THANH TOÁN MOMO UAT (BẢN CHUẨN DEEPLINK NATIVE APP)
+// =================================================================
+const createMomoPayment = async (req, res) => {
+  try {
+    const { orderId, amount } = req.body;
+
+    // 1. GẮN CỨNG BỘ KEY
+    const partnerCode = "MOMO5RGX20191128";
+    const accessKey = "M8brj9K6E22vXoDB";
+    const secretKey = "nqQiVSgDMy809JoPF6OzP5OdBUB550Y4";
+    const redirectUrl = "https://momo.vn";
+    const ipnUrl = "http://localhost:3000/order";
+
+    // 2. Chuẩn hoá dữ liệu
+    const amountNum = Number(amount);
+    const uniqueOrderId = `${orderId}_${new Date().getTime()}`;
+    const requestId = partnerCode + new Date().getTime();
+    const orderInfo = `Thanh toan don hang ${uniqueOrderId}`;
+    const requestType = "captureWallet";
+    const extraData = "";
+
+    // 3. Xếp chuỗi chữ ký đúng chuẩn
+    const rawSignature = `accessKey=${accessKey}&amount=${amountNum}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${uniqueOrderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
+
+    // 4. Băm chữ ký
+    const signature = crypto
+      .createHmac("sha256", secretKey)
+      .update(rawSignature)
+      .digest("hex");
+
+    // 5. Gói hàng gửi lên MoMo
+    const requestBody = {
+      partnerCode,
+      partnerName: "HealthyGO",
+      storeId: "MomoTestStore",
+      requestId,
+      amount: amountNum,
+      orderId: uniqueOrderId,
+      orderInfo,
+      redirectUrl,
+      ipnUrl,
+      lang: "vi",
+      requestType,
+      autoCapture: true,
+      extraData,
+      signature,
+    };
+
+    // 6. Gọi API MoMo
+    const result = await axios.post(
+      "https://test-payment.momo.vn/v2/gateway/api/create",
+      requestBody,
+    );
+
+    // 7. 🚀 XỬ LÝ ẢNH QR CHUẨN NATIVE
+    if (result.data && result.data.resultCode === 0) {
+      // Ưu tiên 1: Lấy ảnh QR xịn do chính MoMo cấp (nếu có)
+      let finalQrCodeUrl = result.data.qrCodeUrl;
+
+      // Ưu tiên 2: Tạo QR từ 'deeplink' (momo://...) để ép MoMo bật popup thanh toán gốc
+      if (!finalQrCodeUrl && result.data.deeplink) {
+        finalQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(result.data.deeplink)}`;
+      }
+
+      res.status(200).json({
+        success: true,
+        qrCodeUrl: finalQrCodeUrl,
+        momoOrderId: uniqueOrderId,
+        message: "Tạo mã QR MoMo thành công",
+      });
+    } else {
+      throw new Error(`MoMo từ chối: ${result.data.message}`);
+    }
+  } catch (error) {
+    console.error(
+      "LỖI KHI GỌI MOMO:",
+      error.response ? error.response.data : error.message,
+    );
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi kết nối cổng thanh toán MoMo!" });
+  }
+};
+
+// =================================================================
+// HÀM KIỂM TRA TRẠNG THÁI THANH TOÁN TỪ MOMO
+// =================================================================
+const checkMomoPaymentStatus = async (req, res) => {
+  try {
+    const { momoOrderId } = req.body;
+
+    const partnerCode = "MOMO5RGX20191128";
+    const accessKey = "M8brj9K6E22vXoDB";
+    const secretKey = "nqQiVSgDMy809JoPF6OzP5OdBUB550Y4";
+    const requestId = partnerCode + new Date().getTime();
+
+    // Chữ ký để Query trạng thái
+    const rawSignature = `accessKey=${accessKey}&orderId=${momoOrderId}&partnerCode=${partnerCode}&requestId=${requestId}`;
+    const signature = crypto
+      .createHmac("sha256", secretKey)
+      .update(rawSignature)
+      .digest("hex");
+
+    const requestBody = {
+      partnerCode,
+      requestId,
+      orderId: momoOrderId,
+      signature,
+      lang: "vi",
+    };
+
+    const result = await axios.post(
+      "https://test-payment.momo.vn/v2/gateway/api/query",
+      requestBody,
+    );
+
+    // 🚀 NẾU MOMO BÁO THÀNH CÔNG (resultCode === 0)
+    if (result.data && result.data.resultCode === 0) {
+      // 1. Tách lấy mã đơn hàng mã hoá (Vd: "W9zkxp4V_178..." -> "W9zkxp4V")
+      const encodedOrderId = momoOrderId.split("_")[0];
+
+      // 2. Giải mã để lấy ID thật trong Database
+      const realOrderId = decodeId(encodedOrderId);
+
+      if (realOrderId) {
+        // 3. 🚀 LƯU VÀO DB: Đổi trạng thái từ 'pending' sang 'processing'
+        // Việc này cũng sẽ tự động kích hoạt tính năng Bắn Thông Báo cho người dùng!
+        await updateOrderStatus(realOrderId, "processing");
+      }
+
+      // 4. Báo về cho React biết để tắt QR và chuyển trang
+      return res
+        .status(200)
+        .json({ success: true, message: "Thanh toán thành công" });
+    } else {
+      return res
+        .status(200)
+        .json({ success: false, message: "Đang chờ thanh toán" });
+    }
+  } catch (error) {
+    console.error("LỖI KIỂM TRA MOMO:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi kiểm tra trạng thái MoMo" });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrdersHistory,
@@ -255,4 +405,6 @@ module.exports = {
   updateOrderStatusAdmin,
   getDashboardReview,
   getReportsAdmin,
+  createMomoPayment,
+  checkMomoPaymentStatus,
 };

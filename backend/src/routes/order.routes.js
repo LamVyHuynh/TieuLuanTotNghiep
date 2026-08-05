@@ -8,6 +8,8 @@ const {
   updateOrderStatusAdmin,
   getDashboardReview,
   getReportsAdmin,
+  createMomoPayment,
+  checkMomoPaymentStatus,
 } = require("../controllers/order.controller");
 
 // Route để tạo đơn hàng mới
@@ -27,5 +29,11 @@ router.get("/admin/dashboard", authenticateToken, getDashboardReview);
 
 // Route để lấy báo cáo chi tiết cho admin
 router.get("/admin/reports", authenticateToken, getReportsAdmin);
+
+// Route để tạo thanh toán Momo
+router.post("/momo-payment", authenticateToken, createMomoPayment);
+
+// Route để kiểm tra trạng thái thanh toán Momo
+router.post("/momo-check-status", authenticateToken, checkMomoPaymentStatus);
 
 module.exports = router;
