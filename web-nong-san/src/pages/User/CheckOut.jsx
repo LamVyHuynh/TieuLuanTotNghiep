@@ -113,26 +113,30 @@ function CheckOut() {
   const [isExiting, setIsExiting] = useState(true);
   const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
+  // Fix ESLint dependency warning bằng useCallback
+  const handleNavigate = useCallback(
+    (path) => {
+      if (location.pathname === path) return;
+      if (path === -1 || path === "/cart" || path === "/") {
+        setSlideDirection("translate-x-12");
+      } else {
+        setSlideDirection("-translate-x-12");
+      }
+      setIsExiting(true);
+      setTimeout(() => {
+        if (path === -1) navigate(-1);
+        else navigate(path);
+      }, 400);
+    },
+    [location.pathname, navigate],
+  );
+
   useEffect(() => {
     const resetAnimation = setTimeout(() => {
       setIsExiting(false);
     }, 10);
     return () => clearTimeout(resetAnimation);
   }, [location.pathname]);
-
-  const handleNavigate = (path) => {
-    if (location.pathname === path) return;
-    if (path === -1 || path === "/cart" || path === "/") {
-      setSlideDirection("translate-x-12");
-    } else {
-      setSlideDirection("-translate-x-12");
-    }
-    setIsExiting(true);
-    setTimeout(() => {
-      if (path === -1) navigate(-1);
-      else navigate(path);
-    }, 400);
-  };
 
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [note, setNote] = useState("");
@@ -147,8 +151,10 @@ function CheckOut() {
   const [isLoadingAddress, setIsLoadingAddress] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 🚀 STATE CHỨA LINK ẢNH QR MOMO
+  // 🚀 STATE CHỨA LINK ẢNH QR MOMO VÀ THEO DÕI ĐƠN HÀNG
   const [momoQRUrl, setMomoQRUrl] = useState(null);
+  const [momoOrderIdTracker, setMomoOrderIdTracker] = useState(null);
+  const pollInterval = useRef(null);
 
   const [showQRModal, setShowQRModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -197,7 +203,7 @@ function CheckOut() {
     setIsUpdatingProfile(true);
     try {
       await axiosClient.put(`/auth/users/${currentUser.id}/update-user`, {
-        full_name: currentUser.full_name,
+        full_name: profileForm.full_name,
         phone: profileForm.phone,
         email: currentUser.email,
         role_id: currentUser.role_id,
@@ -371,7 +377,8 @@ function CheckOut() {
 
     // Nếu là Bank thì bật QR VietQR ngay
     if (paymentMethod === "bank" && !showQRModal) {
-      setMomoQRUrl(null); // Clear MoMo QR nếu có
+      setMomoQRUrl(null);
+      setMomoOrderIdTracker(null);
       setShowQRModal(true);
       return;
     }
@@ -405,22 +412,22 @@ function CheckOut() {
 
       // 2. Nếu thanh toán MoMo thì lấy link ẢNH QR từ Backend
       if (paymentMethod === "momo") {
-        showToast("Đang tạo mã QR MoMo...", "success");
+        showToast("Đang kết nối cổng thanh toán MoMo...", "success");
         const momoRes = await axiosClient.post("/orders/momo-payment", {
           orderId: newOrderId,
           amount: total,
         });
 
         if (momoRes.data && momoRes.data.qrCodeUrl) {
-          // 🚀 Lấy được ảnh QR MoMo -> Bật Modal lên cho khách quét!
           setMomoQRUrl(momoRes.data.qrCodeUrl);
+          setMomoOrderIdTracker(momoRes.data.momoOrderId); // 🚀 Lưu lại để đi hỏi thăm
           setShowQRModal(true);
           setIsSubmitting(false);
           return; // Dừng lại ở đây chờ khách quét
         }
       }
 
-      // 3. Nếu là COD hoặc Xác nhận đã quét xong Bank/MoMo thì chuyển trang
+      // 3. Nếu là COD thì chuyển trang
       setShowQRModal(false);
       showToast("Đặt hàng thành công! Sang trang đơn hàng...", "success");
 
@@ -436,6 +443,42 @@ function CheckOut() {
       setIsSubmitting(false);
     }
   };
+
+  // =====================================================================
+  // 🚀 TỰ ĐỘNG HỎI THĂM TRẠNG THÁI MOMO (POLLING) MỖI 3 GIÂY
+  // =====================================================================
+  useEffect(() => {
+    if (showQRModal && paymentMethod === "momo" && momoOrderIdTracker) {
+      pollInterval.current = setInterval(async () => {
+        try {
+          const checkRes = await axiosClient.post("/orders/momo-check-status", {
+            momoOrderId: momoOrderIdTracker,
+          });
+
+          // Nếu MoMo báo thành công -> tự đóng Modal và chuyển trang!
+          if (checkRes.data && checkRes.data.success) {
+            clearInterval(pollInterval.current);
+            setShowQRModal(false);
+            showToast(
+              "Thanh toán MoMo thành công! Đã lưu đơn hàng. 🥰",
+              "success",
+            );
+
+            setTimeout(() => {
+              handleNavigate("/order");
+            }, 1500);
+          }
+        } catch (err) {
+          // Bỏ qua lỗi mạng, để nó tự hỏi lại
+          console.log("Đang chờ thanh toán...", err.message);
+        }
+      }, 3000);
+    }
+
+    return () => {
+      if (pollInterval.current) clearInterval(pollInterval.current);
+    };
+  }, [showQRModal, paymentMethod, momoOrderIdTracker, handleNavigate]);
 
   if (!product) {
     return (
@@ -861,12 +904,11 @@ function CheckOut() {
 
       {/* ================= CÁC MODAL HIỂN THỊ ================= */}
 
-      {/* MODAL MÃ QR THANH TOÁN (Thông minh: Biết chiếu MoMo hoặc Bank) */}
+      {/* MODAL MÃ QR THANH TOÁN */}
       {showQRModal &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
             <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-sm overflow-hidden rounded-[2rem] bg-white shadow-2xl relative">
-              {/* Header Modal Tự Đổi Màu Theo Phương Thức */}
               <div
                 className={`p-6 text-center text-white relative ${paymentMethod === "momo" ? "bg-[#a50064]" : "bg-emerald-600"}`}
               >
@@ -886,7 +928,6 @@ function CheckOut() {
                 <div
                   className={`mx-auto aspect-square max-w-[220px] rounded-2xl border-4 p-2 shadow-sm bg-white overflow-hidden mb-5 ${paymentMethod === "momo" ? "border-pink-100" : "border-emerald-100"}`}
                 >
-                  {/* Nếu có momoQRUrl thì xài nó, không thì dùng VietQR */}
                   <img
                     src={
                       momoQRUrl
@@ -897,34 +938,38 @@ function CheckOut() {
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <button
-                  onClick={() => {
-                    // Nếu khách bấm nút này, ta đóng QR và đẩy qua trang order
-                    setShowQRModal(false);
-                    showToast(
-                      "Đặt hàng thành công! Sang trang đơn hàng...",
-                      "success",
-                    );
-                    setTimeout(() => handleNavigate("/order"), 1500);
-                  }}
-                  disabled={isSubmitting}
-                  className={`w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-md transition cursor-pointer ${
-                    isSubmitting
-                      ? "bg-slate-400"
-                      : paymentMethod === "momo"
-                        ? "bg-[#a50064] hover:bg-[#80004d]"
-                        : "bg-emerald-600 hover:bg-emerald-700"
-                  }`}
-                >
-                  Tôi đã chuyển khoản xong
-                </button>
+
+                {/* 🚀 NÚT THÔNG MINH HOẶC CHỜ TỰ ĐỘNG */}
+                {paymentMethod === "momo" ? (
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <div className="h-6 w-6 animate-spin rounded-full border-4 border-[#a50064] border-t-transparent" />
+                    <p className="text-sm font-bold text-[#a50064] animate-pulse">
+                      Hệ thống đang tự chờ bạn quét mã...
+                    </p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowQRModal(false);
+                      showToast(
+                        "Đặt hàng thành công! Sang trang đơn hàng...",
+                        "success",
+                      );
+                      setTimeout(() => handleNavigate("/order"), 1500);
+                    }}
+                    disabled={isSubmitting}
+                    className={`w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-md transition cursor-pointer bg-emerald-600 hover:bg-emerald-700`}
+                  >
+                    Tôi đã chuyển khoản xong
+                  </button>
+                )}
               </div>
             </div>
           </div>,
           document.body,
         )}
 
-      {/* ================= 🚀 MODAL BỔ SUNG THÔNG TIN ================= */}
+      {/* ================= MODAL BỔ SUNG THÔNG TIN ================= */}
       {showProfileModal &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
@@ -1022,7 +1067,7 @@ function CheckOut() {
           document.body,
         )}
 
-      {/* MODAL SỔ ĐỊA CHỈ */}
+      {/* ================= MODAL SỔ ĐỊA CHỈ ================= */}
       {showAddressModal &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
@@ -1145,7 +1190,7 @@ function CheckOut() {
           document.body,
         )}
 
-      {/* MODAL XÁC NHẬN XOÁ ĐỊA CHỈ */}
+      {/* ================= MODAL XÁC NHẬN XOÁ ĐỊA CHỈ ================= */}
       {showDeleteModal &&
         createPortal(
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
@@ -1184,13 +1229,11 @@ function CheckOut() {
           document.body,
         )}
 
-      {/* TOAST */}
+      {/* ================= TOAST THÔNG BÁO CHUNG ================= */}
       {toast.show &&
         createPortal(
           <div
-            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3 rounded-full px-5 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-5 ${
-              toast.type === "success" ? "bg-emerald-600" : "bg-rose-500"
-            }`}
+            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3 rounded-full px-5 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-5 ${toast.type === "success" ? "bg-emerald-600" : "bg-rose-500"}`}
           >
             {toast.type === "success" ? (
               <CheckCircle2 size={20} />
