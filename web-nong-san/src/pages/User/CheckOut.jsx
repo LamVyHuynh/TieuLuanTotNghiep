@@ -413,14 +413,17 @@ function CheckOut() {
       // 2. Nếu thanh toán MoMo thì lấy link ẢNH QR từ Backend
       if (paymentMethod === "momo") {
         showToast("Đang kết nối cổng thanh toán MoMo...", "success");
+
+        // Gọi API Backend để lấy link QR MoMo
         const momoRes = await axiosClient.post("/orders/momo-payment", {
           orderId: newOrderId,
           amount: total,
         });
 
+        // Nếu MoMo trả về link QR thì hiển thị Modal chờ khách quét
         if (momoRes.data && momoRes.data.qrCodeUrl) {
           setMomoQRUrl(momoRes.data.qrCodeUrl);
-          setMomoOrderIdTracker(momoRes.data.momoOrderId); // 🚀 Lưu lại để đi hỏi thăm
+          setMomoOrderIdTracker(momoRes.data.momoOrderId); //  Lưu lại để đi hỏi thăm
           setShowQRModal(true);
           setIsSubmitting(false);
           return; // Dừng lại ở đây chờ khách quét
@@ -445,18 +448,21 @@ function CheckOut() {
   };
 
   // =====================================================================
-  // 🚀 TỰ ĐỘNG HỎI THĂM TRẠNG THÁI MOMO (POLLING) MỖI 3 GIÂY
+  //  TỰ ĐỘNG HỎI THĂM TRẠNG THÁI MOMO (POLLING) MỖI 3 GIÂY
   // =====================================================================
   useEffect(() => {
+    // Nếu đang hiển thị Modal QR MoMo và có momoOrderIdTracker thì bắt đầu hỏi thăm
     if (showQRModal && paymentMethod === "momo" && momoOrderIdTracker) {
       pollInterval.current = setInterval(async () => {
         try {
+          // Gọi API Backend để hỏi thăm trạng thái thanh toán MoMo
           const checkRes = await axiosClient.post("/orders/momo-check-status", {
             momoOrderId: momoOrderIdTracker,
           });
 
           // Nếu MoMo báo thành công -> tự đóng Modal và chuyển trang!
           if (checkRes.data && checkRes.data.success) {
+            // Dừng polling và đóng Modal
             clearInterval(pollInterval.current);
             setShowQRModal(false);
             showToast(
@@ -476,6 +482,7 @@ function CheckOut() {
     }
 
     return () => {
+      // Dọn dẹp interval khi Modal QR MoMo đóng hoặc component unmount
       if (pollInterval.current) clearInterval(pollInterval.current);
     };
   }, [showQRModal, paymentMethod, momoOrderIdTracker, handleNavigate]);
@@ -939,7 +946,7 @@ function CheckOut() {
                   />
                 </div>
 
-                {/* 🚀 NÚT THÔNG MINH HOẶC CHỜ TỰ ĐỘNG */}
+                {/* NÚT THÔNG MINH HOẶC CHỜ TỰ ĐỘNG */}
                 {paymentMethod === "momo" ? (
                   <div className="flex flex-col items-center justify-center gap-3">
                     <div className="h-6 w-6 animate-spin rounded-full border-4 border-[#a50064] border-t-transparent" />
