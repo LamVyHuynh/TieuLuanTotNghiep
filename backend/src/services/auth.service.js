@@ -93,13 +93,6 @@ async function registerUser(userData) {
   }
   const role_id = roleRows[0].id;
 
-  // console.log("Role ID của role 'customer': ", role_id);
-  // console.log("Password đã hash: ", hashedPassword);
-  // console.log("userData:", userData);
-  // console.log("Full Name:", full_name);
-  // console.log("Email:", email);
-  // console.log("Phone:", phone);
-
   // Inser user vào database
   const [insertResult] = await pool.query(
     "INSERT INTO users(full_name, email, phone, password_hash, role_id) VALUES (?,?,?,?,?)",
@@ -429,18 +422,31 @@ async function updateUserById(userId, updateData) {
   return true; // Trả về true nếu cập nhật thành công
 }
 
-// Cập nhật mật khẩu người dùng
-async function updateUserPassword(userId, newPassword) {
-  // Kiểm tra xem người dùng có tồn tại chưa
-  const [rows] = await pool.query("SELECT id FROM users WHERE id=?", [userId]);
+// =====================================================================
+// 🚀 CẬP NHẬT MẬT KHẨU NGƯỜI DÙNG (CÓ KIỂM TRA MẬT KHẨU CŨ BẢO MẬT)
+// =====================================================================
+async function updateUserPassword(userId, oldPassword, newPassword) {
+  // 1. Kiểm tra xem người dùng có tồn tại không và lấy password_hash ra
+  const [rows] = await pool.query(
+    "SELECT id, password_hash FROM users WHERE id=?",
+    [userId],
+  );
   if (rows.length === 0) {
     throw new Error("Người dùng không tồn tại");
   }
 
-  // Hash mật khẩu mới trước khi lưu vào database
+  const user = rows[0];
+
+  // 2. Dùng bcrypt.compare để so sánh mật khẩu cũ khách gõ với mật khẩu băm trong DB
+  const isPasswordValid = await bcrypt.compare(oldPassword, user.password_hash);
+  if (!isPasswordValid) {
+    throw new Error("Mật khẩu hiện tại không đúng");
+  }
+
+  // 3. Nếu đúng mật khẩu cũ thì mới cho băm mật khẩu mới
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-  // Cập nhật mật khẩu mới vào database
+  // 4. Lưu đè mật khẩu mới đã băm vào database
   await pool.query("UPDATE users SET password_hash=? WHERE id=?", [
     hashedPassword,
     userId,
