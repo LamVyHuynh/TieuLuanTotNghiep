@@ -558,7 +558,7 @@ const updateUser = async (req, res) => {
   }
 };
 
-// Cập nhật mật khẩu người dùng
+// Cập nhật mật khẩu người dùng, yêu cầu nhập mật khẩu cũ và mật khẩu mới, chỉ cho phép người dùng tự đổi mật khẩu của mình
 const changePassword = async (req, res) => {
   try {
     // 11. GIẢI MÃ ID TỪ URL
@@ -567,7 +567,13 @@ const changePassword = async (req, res) => {
       return res.status(400).json({ message: "ID người dùng không hợp lệ" });
     }
 
-    const { new_password } = req.body;
+    const { old_password, new_password } = req.body;
+
+    if (!old_password) {
+      return res
+        .status(400)
+        .json({ message: "Vui lòng nhập mật khẩu hiện tại" });
+    }
 
     if (!new_password || new_password.length < 8) {
       return res
@@ -575,18 +581,21 @@ const changePassword = async (req, res) => {
         .json({ message: "Mật khẩu mới phải có ít nhất 8 ký tự" });
     }
 
-    await updateUserPassword(userId, new_password);
+    await updateUserPassword(userId, old_password, new_password);
     res.status(200).json({
       message: "Mật khẩu đã được cập nhật thành công",
     });
   } catch (error) {
-    if (error.message === "Không tìm thấy người dùng")
+    // Xử lý các câu chửi từ Service ném lên
+    if (
+      error.message === "Người dùng không tồn tại" ||
+      error.message === "Không tìm thấy người dùng"
+    )
       return res.status(404).json({ message: error.message });
     if (error.message === "Mật khẩu hiện tại không đúng")
-      return res.status(400).json({ message: error.message });
+      return res.status(400).json({ message: error.message }); //  Chặn đúng lỗi mật khẩu sai
     if (error.message === "Mật khẩu mới phải có ít nhất 8 ký tự")
       return res.status(400).json({ message: error.message });
-
     res
       .status(500)
       .json({ message: "Lỗi server khi cập nhật mật khẩu người dùng" });
