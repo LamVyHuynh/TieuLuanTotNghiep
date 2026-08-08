@@ -502,7 +502,7 @@ async function requestPasswordReset(email) {
 
   // 4 Lưu OTP và hạn sử dụng và DB
   await pool.query(
-    "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE id = ?",
+    "UPDATE users SET reset_otp = ?, reset_otp_expires = ? WHERE id = ?",
     [otp, expireTime, user.id],
   );
 
@@ -533,6 +533,56 @@ async function requestPasswordReset(email) {
   return true; // Trả về true nếu gửi email thành công
 }
 
+// =====================================================================
+//  QUÊN MẬT KHẨU: XÁC THỰC OTP VÀ ĐẶT LẠI MẬT KHẨU
+// =====================================================================
+async function resetPasswordWithOTP(email, otp, newPassword) {
+  const cleanEmail = email.trim().toLowerCase();
+
+  // 1. Tìm user bằng email
+  const [rows] = await pool.query(
+    "SELECT id, reset_otp, reset_otp_expires FROM users WHERE email = ?",
+    [cleanEmail],
+  );
+
+  //  Đưa việc kiểm tra rỗng lên TRƯỚC khi lấy biến user ra
+  if (rows.length === 0) {
+    throw new Error("Email này chưa được đăng ký trong hệ thống!");
+  }
+  const user = rows[0];
+
+  // 2. Kiểm tra xem user này có đang xin OTP không
+  if (!user.reset_otp || !user.reset_otp_expires) {
+    throw new Error("Mã xác nhận không hợp lệ hoặc bạn chưa yêu cầu cấp mã.");
+  }
+
+  // 3. So sánh mã OTP
+  if (user.reset_otp !== otp.toString()) {
+    throw new Error("Mã xác nhận (OTP) không chính xác.");
+  }
+
+  // 4. Kiểm tra thời hạn (5 phút)
+  const currentTime = new Date();
+  if (currentTime > user.reset_otp_expires) {
+    // Nếu quá hạn thì dọn dẹp mã luôn cho rảnh nợ
+    await pool.query(
+      "UPDATE users SET reset_otp = NULL, reset_otp_expires = NULL WHERE id = ?",
+      [user.id],
+    );
+    throw new Error("Mã xác nhận đã hết hạn. Vui lòng yêu cầu mã mới.");
+  }
+
+  // 5. Mọi thứ hợp lệ -> Tiến hành đổi mật khẩu
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // 6. Cập nhật mật khẩu mới VÀ dọn sạch luôn mã OTP cũ (để không dùng lại được nữa)
+  await pool.query(
+    "UPDATE users SET password_hash = ?, reset_otp = NULL, reset_otp_expires = NULL WHERE id = ?",
+    [hashedPassword, user.id],
+  );
+
+  return true;
+}
 module.exports = {
   registerUser,
   loginUser,
@@ -546,5 +596,6 @@ module.exports = {
   updateUserPassword,
   updateUserAvatar,
   requestPasswordReset,
+  resetPasswordWithOTP,
   handleSocialUser, // Xuất ra hàm xử lý chung cho MXH
 };

@@ -13,6 +13,7 @@ const {
   updateUserAvatar,
   handleSocialUser,
   requestPasswordReset,
+  resetPasswordWithOTP,
 } = require("../services/auth.service");
 const { uploadToSupabase } = require("../utils/uploadHelper");
 const { OAuth2Client } = require("google-auth-library");
@@ -663,6 +664,45 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, new_password } = req.body;
+
+    if (!email || !otp || !new_password) {
+      return res.status(400).json({
+        message: "Vui lòng nhập đầy đủ email, mã OTP và mật khẩu mới.",
+      });
+    }
+
+    if (new_password.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Mật khẩu mới phải có ít nhất 8 ký tự." });
+    }
+
+    // Gọi Service xử lý
+    await resetPasswordWithOTP(email, otp, new_password);
+
+    res.status(200).json({
+      message:
+        "Khôi phục mật khẩu thành công! Bạn có thể đăng nhập ngay bây giờ.",
+    });
+  } catch (error) {
+    if (
+      error.message === "Email này chưa được đăng ký trong hệ thống!" ||
+      error.message ===
+        "Mã xác nhận không hợp lệ hoặc bạn chưa yêu cầu cấp mã." ||
+      error.message === "Mã xác nhận (OTP) không chính xác." ||
+      error.message === "Mã xác nhận đã hết hạn. Vui lòng yêu cầu mã mới."
+    ) {
+      return res.status(400).json({ message: error.message });
+    }
+
+    console.error("Lỗi Controller Reset Password:", error);
+    res.status(500).json({ message: "Lỗi hệ thống khi khôi phục mật khẩu." });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -679,4 +719,5 @@ module.exports = {
   googleLogin,
   facebookLogin,
   forgotPassword,
+  resetPassword,
 };

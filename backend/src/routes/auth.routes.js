@@ -19,6 +19,8 @@ const {
   updateAvatar,
   googleLogin,
   facebookLogin,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/auth.controller");
 
 const { loginRateLimiter } = require("../middlewares/rateLimit.middleware");
@@ -41,7 +43,7 @@ router.post("/logout", logout);
 
 // THÊM ROUTE MỚI CHO QUÊN MẬT KHẨU
 router.post("/forgot-password", forgotPassword);
-
+router.post("/reset-password", resetPassword);
 // --- KHU VỰC YÊU CẦU ĐĂNG NHẬP (Authenticate Token) ---
 router.use(authenticateToken);
 
