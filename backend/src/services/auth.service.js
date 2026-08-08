@@ -8,6 +8,9 @@ const { z } = require("zod");
 const bcrypt = require("bcrypt");
 const { ca } = require("zod/v4/locales");
 
+// import sendMail
+const { sendMail } = require("../utils/sendMail");
+
 async function registerUser(userData) {
   if (!userData) {
     throw new Error("userData is undefined");
@@ -423,7 +426,7 @@ async function updateUserById(userId, updateData) {
 }
 
 // =====================================================================
-// 🚀 CẬP NHẬT MẬT KHẨU NGƯỜI DÙNG (CÓ KIỂM TRA MẬT KHẨU CŨ BẢO MẬT)
+//  CẬP NHẬT MẬT KHẨU NGƯỜI DÙNG (CÓ KIỂM TRA MẬT KHẨU CŨ BẢO MẬT)
 // =====================================================================
 async function updateUserPassword(userId, oldPassword, newPassword) {
   // 1. Kiểm tra xem người dùng có tồn tại không và lấy password_hash ra
@@ -471,6 +474,65 @@ async function updateUserAvatar(userId, avatarUrl) {
 
   return true; // Trả về true nếu cập nhật thành công
 }
+
+// =====================================================================
+//  QUÊN MẬT KHẨU: TẠO OTP VÀ GỬI EMAIL
+// =====================================================================
+async function requestPasswordReset(email) {
+  const cleanEmail = email.trim().toLowerCase();
+
+  // Kiểm tra xem email có tồn tại trong DB không
+  const [rows] = await pool.query(
+    "SELECT id, full_name FROM users WHERE email = ?",
+    [cleanEmail],
+  );
+
+  if (rows.length === 0) {
+    throw new Error("Email này chưa được đăng ký trong hệ thống!");
+  }
+
+  const user = rows[0];
+
+  // 2. Tạo mã opt ngẫu nhiên 6 chữ số
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // 3. Tính thời gian hết hạn (Hiện tại + 5 phút)
+  // Tính theo múi giờ chuẩn, lấy mili-giây
+  const expireTime = new Date(Date.now() + 5 * 60 * 1000); // 5 phút
+
+  // 4 Lưu OTP và hạn sử dụng và DB
+  await pool.query(
+    "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE id = ?",
+    [otp, expireTime, user.id],
+  );
+
+  // 5. Chuẩn bị nội dung Email cực xịn sò
+  const subject = "Mã xác nhận khôi phục mật khẩu - HealthyGO";
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+      <h2 style="color: #059669; text-align: center;">Khôi Phục Mật Khẩu</h2>
+      <p>Chào <b>${user.full_name}</b>,</p>
+      <p>Chúng tôi nhận được yêu cầu khôi phục mật khẩu cho tài khoản HealthyGO của bạn.</p>
+      <p>Mã xác nhận (OTP) của bạn là:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #0f172a; background-color: #f1f5f9; padding: 15px 30px; border-radius: 8px;">${otp}</span>
+      </div>
+      <p style="color: #ef4444; font-size: 14px; text-align: center;"><i>Mã này sẽ hết hạn trong vòng 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.</i></p>
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+      <p style="font-size: 12px; color: #64748b; text-align: center;">Nếu bạn không yêu cầu thay đổi mật khẩu, vui lòng bỏ qua email này.</p>
+    </div>
+  `;
+
+  // 6. Ra lệnh gửi Email
+  await sendEmail(
+    cleanEmail,
+    subject,
+    "Mã OTP của bạn là: " + otp,
+    htmlContent,
+  );
+  return true; // Trả về true nếu gửi email thành công
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -483,5 +545,6 @@ module.exports = {
   updateUserById,
   updateUserPassword,
   updateUserAvatar,
+  requestPasswordReset,
   handleSocialUser, // Xuất ra hàm xử lý chung cho MXH
 };

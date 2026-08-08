@@ -39,6 +39,9 @@ router.post("/facebook", facebookLogin);
 router.post("/refresh-token", refreshToken);
 router.post("/logout", logout);
 
+// THÊM ROUTE MỚI CHO QUÊN MẬT KHẨU
+router.post("/forgot-password", forgotPassword);
+
 // --- KHU VỰC YÊU CẦU ĐĂNG NHẬP (Authenticate Token) ---
 router.use(authenticateToken);
 

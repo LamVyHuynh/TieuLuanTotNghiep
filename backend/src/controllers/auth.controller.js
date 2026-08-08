@@ -12,6 +12,7 @@ const {
   updateUserPassword,
   updateUserAvatar,
   handleSocialUser,
+  requestPasswordReset,
 } = require("../services/auth.service");
 const { uploadToSupabase } = require("../utils/uploadHelper");
 const { OAuth2Client } = require("google-auth-library");
@@ -20,6 +21,8 @@ const jwt = require("jsonwebtoken");
 // 1. IMPORT MÁY DỊCH MÃ VÀO
 const { encodeId, decodeId } = require("../utils/hashid.util");
 const { PawPrint } = require("lucide-react");
+const { ca } = require("zod/v4/locales");
+const { sendMail } = require("../utils/sendMail");
 
 const register = async (req, res) => {
   const userData = req.body;
@@ -639,6 +642,27 @@ const updateAvatar = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res
+        .status(400)
+        .json({ message: "Vui lòng cung cấp địa chỉ email" });
+    }
+    await requestPasswordReset(email);
+    res.status(200).json({
+      message: "Mã xác nhận đã được gửi đến email của bạn!",
+    });
+  } catch (error) {
+    if (error.message === "Email này chưa được đăng ký trong hệ thống!") {
+      return res.status(404).json({ message: error.message });
+    }
+    console.error("Lỗi Controller Forgot Password:", error);
+    res.status(500).json({ message: "Lỗi hệ thống khi gửi email" });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -654,4 +678,5 @@ module.exports = {
   updateAvatar,
   googleLogin,
   facebookLogin,
+  forgotPassword,
 };
