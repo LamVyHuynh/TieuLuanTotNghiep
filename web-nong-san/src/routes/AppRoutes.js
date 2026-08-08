@@ -22,6 +22,7 @@ import SearchHistoryPage from "../pages/User/SearchHistoryPage";
 // BƯỚC 1: IMPORT TRANG PROFILE MỚI VÀO ĐÂY
 import Profile from "../pages/User/Profile";
 
+import ForgotPassword from "../pages/User/ForgotPassword";
 const publicRoutes = [
   {
     // path :"/", element UserLayout là dùng dùng để bọc nguyên lại
@@ -41,6 +42,8 @@ const publicRoutes = [
 
       // BƯỚC 2: KHAI BÁO ĐƯỜNG DẪN CHO TRANG PROFILE
       { path: "profile", element: Profile },
+
+      { path: "forgot-password", element: ForgotPassword },
     ],
   },
   {

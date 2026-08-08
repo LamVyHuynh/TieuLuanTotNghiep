@@ -524,12 +524,7 @@ async function requestPasswordReset(email) {
   `;
 
   // 6. Ra lệnh gửi Email
-  await sendEmail(
-    cleanEmail,
-    subject,
-    "Mã OTP của bạn là: " + otp,
-    htmlContent,
-  );
+  await sendMail(cleanEmail, subject, "Mã OTP của bạn là: " + otp, htmlContent);
   return true; // Trả về true nếu gửi email thành công
 }
 

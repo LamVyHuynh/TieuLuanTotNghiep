@@ -18,7 +18,6 @@ function ForgotPassword() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 🚀 ĐIỀU KHIỂN HIỆU ỨNG CHUYỂN TRANG
   const [isExiting, setIsExiting] = useState(true);
   const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
@@ -39,17 +38,17 @@ function ForgotPassword() {
     }, 400);
   };
 
-  // 🚀 STATE QUẢN LÝ QUY TRÌNH (BƯỚC 1 & BƯỚC 2)
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Form Data
+  // 🚀 STATE MỚI: Đồng hồ đếm ngược 60 giây cho nút Gửi lại
+  const [countdown, setCountdown] = useState(0);
+
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
-  // Toast Thông báo
   const [toast, setToast] = useState({
     show: false,
     type: "success",
@@ -65,11 +64,20 @@ function ForgotPassword() {
     }, 3000);
   };
 
+  // 🚀 EFFECT MỚI: Xử lý đếm ngược thời gian
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
   // =====================================================================
-  // BƯỚC 1: XỬ LÝ GỬI EMAIL XIN MÃ OTP
+  // BƯỚC 1: XỬ LÝ GỬI EMAIL XIN MÃ OTP (Dùng cho cả lần đầu & Gửi lại)
   // =====================================================================
   const handleRequestOtp = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault(); // Bảo vệ khi gọi hàm không từ form submit
     if (!email.trim()) {
       showToast("error", "Vui lòng nhập địa chỉ email của bạn!");
       return;
@@ -77,7 +85,6 @@ function ForgotPassword() {
 
     setIsLoading(true);
     try {
-      // Gọi API yêu cầu gửi mail (Mày đã code hàm này ở Backend rồi)
       const res = await axiosClient.post("/auth/forgot-password", { email });
       showToast(
         "success",
@@ -85,8 +92,8 @@ function ForgotPassword() {
           "Đã gửi mã OTP thành công! Vui lòng kiểm tra email.",
       );
 
-      // Chuyển sang Bước 2
       setStep(2);
+      setCountdown(60); // 🚀 Bắt đầu đếm ngược 60s
     } catch (error) {
       showToast(
         "error",
@@ -119,14 +126,12 @@ function ForgotPassword() {
         new_password: newPassword,
       });
 
-      // 🚀 LƯU Ý ĐÃ SỬA: Lấy chữ res ra xài ở đây nè
       showToast(
         "success",
         res.data.message ||
           "Khôi phục mật khẩu thành công! Bạn có thể đăng nhập ngay.",
       );
 
-      // Thành công thì đá về trang Login sau 2 giây
       setTimeout(() => {
         handleNavigate("/login");
       }, 2000);
@@ -148,7 +153,6 @@ function ForgotPassword() {
       }`}
     >
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-8 shadow-[0_24px_48px_-12px_rgba(26,28,28,0.08)]">
-        {/* Header */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
             <ShieldCheck size={28} />
@@ -163,7 +167,6 @@ function ForgotPassword() {
           </p>
         </div>
 
-        {/* ================= BƯỚC 1: FORM NHẬP EMAIL ================= */}
         {step === 1 && (
           <form
             className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500"
@@ -205,7 +208,6 @@ function ForgotPassword() {
           </form>
         )}
 
-        {/* ================= BƯỚC 2: FORM NHẬP OTP & MẬT KHẨU MỚI ================= */}
         {step === 2 && (
           <form
             className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-500"
@@ -220,7 +222,7 @@ function ForgotPassword() {
                 required
                 maxLength={6}
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} // Chỉ cho nhập số
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                 placeholder="123456"
                 className="w-full rounded-xl border-none bg-[#e2e2e2] py-4 px-4 text-center text-2xl tracking-[0.5em] font-black text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
               />
@@ -266,6 +268,27 @@ function ForgotPassword() {
                 </>
               )}
             </button>
+
+            {/* 🚀 NÚT GỬI LẠI MÃ MỚI THÊM */}
+            <div className="pt-2 text-center">
+              <p className="text-sm font-medium text-slate-500">
+                Chưa nhận được mã?{" "}
+                {countdown > 0 ? (
+                  <span className="font-bold text-slate-400">
+                    Gửi lại sau {countdown}s
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleRequestOtp()}
+                    disabled={isLoading}
+                    className="font-bold text-emerald-600 hover:underline cursor-pointer bg-transparent border-none p-0"
+                  >
+                    Gửi lại mã
+                  </button>
+                )}
+              </p>
+            </div>
           </form>
         )}
 
@@ -280,11 +303,12 @@ function ForgotPassword() {
         </div>
       </div>
 
-      {/* TOAST THÔNG BÁO */}
       {toast.show &&
         createPortal(
           <div
-            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3 rounded-full px-5 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-5 ${toast.type === "success" ? "bg-emerald-600" : "bg-rose-500"}`}
+            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3 rounded-full px-5 py-3 text-sm font-bold text-white shadow-xl animate-in slide-in-from-bottom-5 ${
+              toast.type === "success" ? "bg-emerald-600" : "bg-rose-500"
+            }`}
           >
             {toast.type === "success" ? (
               <CheckCircle2 size={20} />
