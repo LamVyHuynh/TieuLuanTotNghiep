@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import axiosClient from "../../api/axiosClient";
+import axiosClient from "../api/axiosClient";
 import { MessageCircle, X, Send, Bot } from "lucide-react";
 
 function ChatBox() {

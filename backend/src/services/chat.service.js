@@ -1,14 +1,57 @@
 // Import thư viện Google Generative AI
-const { GoogleGenerativeAI } = require("@google-generative-ai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Khởi tạo client Google Generative AI với API key
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Lấy API Key từ biến môi trường và cắt bỏ khoảng trắng
+const apiKey = (process.env.GEMINI_API_KEY || "").trim();
+const genAI = new GoogleGenerativeAI(apiKey);
 
 async function getChatbotResponse(userMessage) {
   try {
-    // Tạo một mô hình Generative AI với tên "gemini-1.5-flash"
-    // Sử dụng model gemini-1.5-flash (Tốc độ phản hồi cực nhanh, phù hợp làm chatbot)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    console.log(
+      "Đang quét danh sách các model Google cho phép với API Key này...",
+    );
+
+    // 1. Gọi trực tiếp API để hỏi Google
+    const listResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+    );
+    const listData = await listResponse.json();
+
+    let modelName = "gemini-flash-latest"; // Đặt mặc định an toàn
+
+    if (listData.models) {
+      // Lọc ra các model hỗ trợ tính năng chat
+      const availableModels = listData.models
+        .filter(
+          (m) =>
+            m.supportedGenerationMethods &&
+            m.supportedGenerationMethods.includes("generateContent"),
+        )
+        .map((m) => m.name.replace("models/", ""));
+
+      // CẬP NHẬT LOGIC CHỌN MÔ HÌNH (Dựa trên danh sách năm 2026)
+      if (availableModels.includes("gemini-3.5-flash")) {
+        modelName = "gemini-3.5-flash"; // Ưu tiên số 1
+      } else if (availableModels.includes("gemini-flash-latest")) {
+        modelName = "gemini-flash-latest"; // Ưu tiên số 2
+      } else if (availableModels.includes("gemini-2.0-flash")) {
+        modelName = "gemini-2.0-flash"; // Ưu tiên số 3
+      } else if (availableModels.length > 0) {
+        // Lọc bỏ bẫy "2.5" không hỗ trợ người dùng mới
+        const safeModels = availableModels.filter((m) => !m.includes("2.5"));
+        modelName = safeModels.length > 0 ? safeModels[0] : availableModels[0];
+      }
+    } else {
+      console.log(
+        "❌ Không lấy được danh sách model, Google trả về:",
+        listData,
+      );
+    }
+
+    console.log(` Chốt sử dụng model an toàn: ${modelName}`);
+
+    // 2. Khởi tạo AI với model đã được chốt
+    const model = genAI.getGenerativeModel({ model: modelName });
 
     // LỜI THOẠI HUẤN LUYỆN NGẦM (System Prompt)
     const systemInstruction = `
@@ -21,20 +64,17 @@ async function getChatbotResponse(userMessage) {
       4. Nếu khách hỏi những thứ không liên quan đến ăn uống, sức khỏe hay cửa hàng, hãy lịch sự từ chối và lái câu chuyện về thực phẩm sạch.
     `;
 
-    // Nối kịch bản ngầm với câu hỏi thực tế của khách hàng
     const prompt = `${systemInstruction}\n\nKhách hàng hỏi: "${userMessage}"\nHealthyBot trả lời:`;
 
-    // Bấm gửi cho Google và đợi phản hồi
+    // Gửi yêu cầu và đợi kết quả
     const result = await model.generateContent(prompt);
-
-    // Lấy phản hồi từ kết quả trả về
     const response = await result.response;
 
-    return response.text(); // Trả về văn bản phản hồi từ AI
+    return response.text();
   } catch (error) {
     console.error("Lỗi khi kết nối Google Gemini AI:", error);
     throw new Error(
-      "Xin lỗi, HealthyBot đang đi tưới rau. Bạn vui lòng thử lại sau vài phút nhé! 🌱",
+      "Xin lỗi, HealthyBot đang đi thu hoạch rau. Bạn vui lòng thử lại sau vài phút nhé! 🌱",
     );
   }
 }
