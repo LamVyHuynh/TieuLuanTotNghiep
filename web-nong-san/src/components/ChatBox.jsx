@@ -8,9 +8,11 @@ function ChatBox() {
   const [isOpen, setIsOpen] = useState(true);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
-  // 🚀 BƯỚC 1: Thêm ref để chọc vào cái textarea
+  // 🚀 BƯỚC 1: Thêm state quản lý hiệu ứng đang đóng
+  const [isClosing, setIsClosing] = useState(false);
+
+  const navigate = useNavigate();
   const textareaRef = useRef(null);
 
   const [messages, setMessages] = useState([
@@ -31,21 +33,17 @@ function ChatBox() {
     scrollToBottom();
   }, [messages]);
 
-  // 🚀 BƯỚC 2: Hàm tự động co giãn chiều cao của Textarea
   const handleInputChange = (e) => {
     setInput(e.target.value);
     if (textareaRef.current) {
-      // Trả về auto trước để tính toán lại nếu người dùng xóa bớt chữ
       textareaRef.current.style.height = "auto";
-      // Giới hạn chiều cao tối đa khoảng 100px (cuộn nếu vượt quá)
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 100)}px`;
     }
   };
 
-  // 🚀 BƯỚC 3: Xử lý phím Enter (Gửi tin) và Shift + Enter (Xuống dòng)
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault(); // Ngăn không cho xuống dòng
+      e.preventDefault();
       handleSend(e);
     }
   };
@@ -59,7 +57,6 @@ function ChatBox() {
     setInput("");
     setIsLoading(true);
 
-    // Reset lại chiều cao textarea sau khi gửi
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
@@ -92,10 +89,29 @@ function ChatBox() {
     }
   };
 
+  // 🚀 BƯỚC 2: Hàm xử lý đóng mượt mà và chuyển trang sau 400ms
+  const handleCloseAndNavigate = (path) => {
+    setIsClosing(true); // Bật hiệu ứng mờ dần và trượt xuống
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false); // Reset lại trạng thái
+      if (path) {
+        navigate(path); // Chỉ chuyển trang nếu có truyền đường dẫn (ví dụ: bấm vào sản phẩm)
+      }
+    }, 400); // Khớp với 400ms của giao diện web
+  };
+
   return createPortal(
     <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
       {isOpen && (
-        <div className="mb-4 flex h-[520px] w-[360px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_5px_40px_rgba(0,0,0,0.16)] border border-slate-100 animate-in slide-in-from-bottom-5 fade-in duration-300">
+        // 🚀 BƯỚC 3: Thêm hiệu ứng transition-all và logic isClosing vào khung chat
+        <div
+          className={`mb-4 flex h-[520px] w-[360px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_5px_40px_rgba(0,0,0,0.16)] border border-slate-100 transform transition-all duration-500 ease-in-out ${
+            isClosing
+              ? "translate-y-12 opacity-0" // Khi đang đóng: Trượt xuống và mờ đi
+              : "animate-in slide-in-from-bottom-5 fade-in" // Khi mới mở: Trượt lên và rõ dần
+          }`}
+        >
           <div className="flex items-center justify-between bg-emerald-600 px-5 py-4 text-white">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
@@ -110,7 +126,7 @@ function ChatBox() {
               </div>
             </div>
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={() => handleCloseAndNavigate(null)} // Bấm X chỉ đóng, không chuyển trang
               className="text-emerald-100 hover:text-white transition cursor-pointer"
             >
               <X size={20} />
@@ -138,10 +154,12 @@ function ChatBox() {
                     {msg.products.map((p) => (
                       <div
                         key={p.id_product}
-                        onClick={() => {
-                          setIsOpen(false);
-                          navigate(`/detail-product/${p.id_product}`);
-                        }}
+                        onClick={() =>
+                          // Bấm vào thẻ: Kích hoạt hiệu ứng đóng mượt mà rồi mới chuyển trang
+                          handleCloseAndNavigate(
+                            `/detail-product/${p.id_product}`,
+                          )
+                        }
                         className="group flex items-center gap-3 p-2 bg-white rounded-xl border border-emerald-100 hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer"
                       >
                         <img
@@ -186,12 +204,10 @@ function ChatBox() {
           </div>
 
           <div className="bg-white p-3 border-t border-slate-100">
-            {/* Đổi items-center thành items-end để nút gửi nằm gọn ở dưới đáy khi input bự ra */}
             <form
               onSubmit={handleSend}
               className="flex items-end gap-2 rounded-3xl bg-slate-100 px-2 py-1.5"
             >
-              {/* 🚀 BƯỚC 4: Thay <input> bằng <textarea> xịn sò */}
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -215,7 +231,13 @@ function ChatBox() {
       )}
 
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (isOpen) {
+            handleCloseAndNavigate(null); // Kích hoạt animation đóng nếu đang mở
+          } else {
+            setIsOpen(true);
+          }
+        }}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg transition hover:scale-105 hover:bg-emerald-700 active:scale-95 cursor-pointer"
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={28} />}
