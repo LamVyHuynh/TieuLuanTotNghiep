@@ -9,16 +9,15 @@ const handleChatRequest = async (req, res) => {
         .json({ message: "Vui lòng nhập câu hỏi của bạn." });
     }
 
-    // Gọi Service đi hỏi AI
-    const reply = await getChatbotResponse(message);
+    // result bây giờ là một Object: { reply: "...", products: [...] }
+    const result = await getChatbotResponse(message);
 
-    // Trả câu trả lời về cho Frontend hiển thị
-    res.status(200).json({ reply: reply });
+    // Trả thẳng nguyên object về cho Frontend
+    res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Xử lý lỗi trả về UI gọn gàng
+    res.status(500).json({ reply: error.message });
   }
 };
 
-module.exports = {
-  handleChatRequest,
-};
+module.exports = { handleChatRequest };

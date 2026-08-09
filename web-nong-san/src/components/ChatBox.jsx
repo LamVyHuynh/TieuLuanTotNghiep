@@ -1,23 +1,24 @@
 import React, { useState, useRef, useEffect } from "react";
 import axiosClient from "../api/axiosClient";
-import { MessageCircle, X, Send, Bot } from "lucide-react";
+import { MessageCircle, X, Send, Bot, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // 🚀 Import thêm cái này để chuyển trang
 
 function ChatBox() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate(); // 🚀 Khởi tạo hook chuyển trang
 
-  // Khởi tạo tin nhắn chào mừng mặc định
   const [messages, setMessages] = useState([
     {
       sender: "bot",
       text: "Chào bạn! Mình là HealthyBot 🌱. Bạn cần tư vấn thực đơn giảm cân, ăn uống Eat-clean hay tìm sản phẩm nào hôm nay?",
+      products: [], // Thêm mảng rỗng mặc định
     },
   ]);
 
   const messagesEndRef = useRef(null);
 
-  // Hàm tự động cuộn xuống cuối khi có tin nhắn mới
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -26,34 +27,38 @@ function ChatBox() {
     scrollToBottom();
   }, [messages]);
 
-  // Xử lý gửi tin nhắn
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
     const userMessage = input.trim();
-
-    // 1. In tin nhắn của khách lên màn hình liền cho mượt
     setMessages((prev) => [...prev, { sender: "user", text: userMessage }]);
     setInput("");
     setIsLoading(true);
 
     try {
-      // 2. Gọi API xuống Backend (đường dẫn /chatbox/chat như đã cấu hình)
       const res = await axiosClient.post("/chatbox/chat", {
         message: userMessage,
       });
 
-      // 3. Lấy câu trả lời của AI in lên màn hình
-      setMessages((prev) => [...prev, { sender: "bot", text: res.data.reply }]);
+      // 🚀 Nhận cả câu trả lời lẫn danh sách sản phẩm từ Backend
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: res.data.reply,
+          products: res.data.products, // Bắt lấy danh sách thẻ sản phẩm
+        },
+      ]);
     } catch (error) {
       setMessages((prev) => [
         ...prev,
         {
           sender: "bot",
           text: "Xin lỗi, kết nối đang bị gián đoạn. Bạn thử lại sau vài phút nhé! 😥",
-          error,
+          products: [],
         },
+        error,
       ]);
     } finally {
       setIsLoading(false);
@@ -62,10 +67,8 @@ function ChatBox() {
 
   return (
     <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
-      {/* KHUNG CHAT */}
       {isOpen && (
-        <div className="mb-4 flex h-[500px] w-[350px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_5px_40px_rgba(0,0,0,0.16)] border border-slate-100 animate-in slide-in-from-bottom-5 fade-in duration-300">
-          {/* Header */}
+        <div className="mb-4 flex h-[520px] w-[360px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_5px_40px_rgba(0,0,0,0.16)] border border-slate-100 animate-in slide-in-from-bottom-5 fade-in duration-300">
           <div className="flex items-center justify-between bg-emerald-600 px-5 py-4 text-white">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
@@ -87,17 +90,15 @@ function ChatBox() {
             </button>
           </div>
 
-          {/* Body: Danh sách tin nhắn */}
           <div className="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-4 scrollbar-thin scrollbar-thumb-slate-200">
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`flex ${
-                  msg.sender === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
               >
+                {/* BONG BÓNG TIN NHẮN */}
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
+                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                     msg.sender === "user"
                       ? "bg-emerald-600 text-white rounded-tr-sm"
                       : "bg-white text-slate-700 shadow-sm border border-slate-100 rounded-tl-sm whitespace-pre-line"
@@ -105,10 +106,48 @@ function ChatBox() {
                 >
                   {msg.text}
                 </div>
+
+                {/* 🚀 VẼ THẺ SẢN PHẨM GỢI Ý (Nếu có) */}
+                {msg.products && msg.products.length > 0 && (
+                  <div className="mt-2 w-[85%] flex flex-col gap-2">
+                    {msg.products.map((p) => (
+                      <div
+                        key={p.id_product}
+                        onClick={() => {
+                          setIsOpen(false); // Ẩn chatbox để xem sản phẩm
+                          navigate(`/detail-product/${p.id_product}`);
+                        }}
+                        className="group flex items-center gap-3 p-2 bg-white rounded-xl border border-emerald-100 hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer"
+                      >
+                        <img
+                          src={
+                            p.image_url ||
+                            "[https://via.placeholder.com/60](https://via.placeholder.com/60)"
+                          }
+                          alt={p.name}
+                          className="w-12 h-12 rounded-lg object-cover border border-slate-50"
+                        />
+                        <div className="flex-1">
+                          <h4 className="text-[13px] font-bold text-slate-700 line-clamp-1 group-hover:text-emerald-700 transition-colors">
+                            {p.name}
+                          </h4>
+                          <span className="text-[12px] font-black text-emerald-600">
+                            {Number(
+                              p.discount_price > 0 ? p.discount_price : p.price,
+                            ).toLocaleString("vi-VN")}
+                            đ
+                          </span>
+                        </div>
+                        <div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                          <ChevronRight size={14} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
 
-            {/* Hiệu ứng AI đang gõ chữ */}
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm border border-slate-100 flex items-center gap-1.5">
@@ -121,7 +160,6 @@ function ChatBox() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Footer: Ô nhập tin nhắn */}
           <div className="bg-white p-3 border-t border-slate-100">
             <form
               onSubmit={handleSend}
@@ -147,7 +185,6 @@ function ChatBox() {
         </div>
       )}
 
-      {/* NÚT BONG BÓNG BẬT TẮT CHAT */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg transition hover:scale-105 hover:bg-emerald-700 active:scale-95 cursor-pointer"
