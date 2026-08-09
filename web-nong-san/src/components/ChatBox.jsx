@@ -1,14 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom"; // 🚀 BƯỚC 1: Import thêm cái này để bọc ChatBox
+import { createPortal } from "react-dom";
 import axiosClient from "../api/axiosClient";
 import { MessageCircle, X, Send, Bot, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function ChatBox() {
-  const [isOpen, setIsOpen] = useState(true); // Mặc định mở chatbox khi load trang
+  const [isOpen, setIsOpen] = useState(true);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // 🚀 BƯỚC 1: Thêm ref để chọc vào cái textarea
+  const textareaRef = useRef(null);
 
   const [messages, setMessages] = useState([
     {
@@ -28,14 +31,38 @@ function ChatBox() {
     scrollToBottom();
   }, [messages]);
 
+  // 🚀 BƯỚC 2: Hàm tự động co giãn chiều cao của Textarea
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    if (textareaRef.current) {
+      // Trả về auto trước để tính toán lại nếu người dùng xóa bớt chữ
+      textareaRef.current.style.height = "auto";
+      // Giới hạn chiều cao tối đa khoảng 100px (cuộn nếu vượt quá)
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 100)}px`;
+    }
+  };
+
+  // 🚀 BƯỚC 3: Xử lý phím Enter (Gửi tin) và Shift + Enter (Xuống dòng)
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // Ngăn không cho xuống dòng
+      handleSend(e);
+    }
+  };
+
   const handleSend = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!input.trim()) return;
 
     const userMessage = input.trim();
     setMessages((prev) => [...prev, { sender: "user", text: userMessage }]);
     setInput("");
     setIsLoading(true);
+
+    // Reset lại chiều cao textarea sau khi gửi
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
 
     try {
       const res = await axiosClient.post("/chatbox/chat", {
@@ -65,7 +92,6 @@ function ChatBox() {
     }
   };
 
-  // 🚀 BƯỚC 2: Bọc toàn bộ giao diện trong createPortal( ..., document.body )
   return createPortal(
     <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
       {isOpen && (
@@ -160,22 +186,26 @@ function ChatBox() {
           </div>
 
           <div className="bg-white p-3 border-t border-slate-100">
+            {/* Đổi items-center thành items-end để nút gửi nằm gọn ở dưới đáy khi input bự ra */}
             <form
               onSubmit={handleSend}
-              className="flex items-center gap-2 rounded-full bg-slate-100 px-2 py-1.5"
+              className="flex items-end gap-2 rounded-3xl bg-slate-100 px-2 py-1.5"
             >
-              <input
-                type="text"
+              {/* 🚀 BƯỚC 4: Thay <input> bằng <textarea> xịn sò */}
+              <textarea
+                ref={textareaRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
                 placeholder="Hỏi món healthy, thực đơn..."
-                className="flex-1 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-slate-400 text-slate-700"
+                rows={1}
                 disabled={isLoading}
+                className="flex-1 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-slate-400 text-slate-700 resize-none overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 min-h-[36px]"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex h-9 w-9 mb-0.5 items-center justify-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
               >
                 <Send size={16} className="-ml-0.5" />
               </button>
@@ -191,7 +221,7 @@ function ChatBox() {
         {isOpen ? <X size={24} /> : <MessageCircle size={28} />}
       </button>
     </div>,
-    document.body, // Bắn code HTML ra thẳng body
+    document.body,
   );
 }
 
