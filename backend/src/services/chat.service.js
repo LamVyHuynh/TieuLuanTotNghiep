@@ -1,9 +1,11 @@
 // Import thư viện Google Generative AI
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Import Database Pool (Đảm bảo đường dẫn này khớp với file db của mày nha)
+// Import Database Pool
 const pool = require("../config/db");
 
+//  IMPORT HÀM MÃ HÓA ID (Đảm bảo đường dẫn require đúng với cấu trúc dự án của bạn)
+const { encodeId } = require("../utils/hashid.util");
 const apiKey = (process.env.GEMINI_API_KEY || "").trim();
 const genAI = new GoogleGenerativeAI(apiKey);
 
@@ -11,15 +13,18 @@ async function getChatbotResponse(userMessage) {
   try {
     console.log("Đang lấy danh sách sản phẩm từ Database...");
 
-    // 1. LẤY SẢN PHẨM TỪ DB ĐỂ "DẠY" AI (Lấy ID và Tên để đưa vào Prompt)
+    // 1. LẤY SẢN PHẨM TỪ DB ĐỂ "DẠY" AI
     const [dbProducts] = await pool.query(
       "SELECT id_product, name, price, discount_price, image_url FROM product",
     );
-    const productListString = dbProducts
-      .map((p) => `[ID: ${p.id_product}] - Tên món: ${p.name}`)
-      .join("\n");
+    const productListString = dbProducts.map(
+      (p) => `[ID: ${p.id_product}] - Tên món: ${p.name}`,
+    ).js
+      ? ""
+      : dbProducts
+          .map((p) => `[ID: ${p.id_product}] - Tên món: ${p.name}`)
+          .join("\n");
 
-    console.log("Đang quét danh sách các model Google cho phép...");
     const listResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
     );
@@ -49,54 +54,56 @@ async function getChatbotResponse(userMessage) {
 
     console.log(`🚀 Chốt sử dụng model an toàn: ${modelName}`);
 
-    // 2. KHỞI TẠO AI VÀ ÉP XUẤT JSON
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-      generationConfig: { responseMimeType: "application/json" }, // Ép AI trả về JSON chuẩn
-    });
+    // 2. KHỞI TẠO AI (Không ép responseMimeType để tránh lỗi cú pháp JSON)
+    const model = genAI.getGenerativeModel({ model: modelName });
 
-    // 3. LỜI THOẠI HUẤN LUYỆN KẾT HỢP BÁN HÀNG
+    // 3. LỜI THOẠI HƯỚNG DẪN AI GỢI Ý KÈM ID
     const systemInstruction = `
-      Bạn là "HealthyBot", một trợ lý ảo tư vấn dinh dưỡng thân thiện, tự nhiên như một người bạn của cửa hàng "HealthyGO".
-      
-      DANH SÁCH SẢN PHẨM CỬA HÀNG ĐANG BÁN:
+      Bạn là "HealthyBot", trợ lý ảo tư vấn dinh dưỡng của cửa hàng "HealthyGO".
+      DANH SÁCH SẢN PHẨM CỦA CỬA HÀNG:
       ${productListString}
 
-      Quy tắc tư vấn:
-      1. Trả lời ngắn gọn, tự nhiên, đi thẳng vào vấn đề (dùng emoji 🌱, 🥗...).
-      2. Dựa vào nhu cầu của khách, hãy tư vấn các món ăn phù hợp.
-      3. QUAN TRỌNG: Nếu món bạn khuyên khách ăn CÓ TRONG DANH SÁCH SẢN PHẨM ở trên, hãy đưa ID của món đó vào mảng "suggested_ids".
-      4. LINH HOẠT: Nếu cửa hàng KHÔNG CÓ món phù hợp, bạn VẪN PHẢI TƯ VẤN các món bên ngoài bình thường để giúp đỡ khách hàng (lúc này mảng "suggested_ids" để trống []). Không bao giờ nói "cửa hàng không có thì tôi không tư vấn".
-      
-      BẮT BUỘC trả về ĐÚNG cấu trúc JSON sau:
-      {
-        "reply": "Câu trả lời tư vấn của bạn...",
-        "suggested_ids": [1, 2] 
-      }
+      Quy tắc trả lời:
+      - Tư vấn ngắn gọn, thân thiện, dùng emoji (🌱, 🥗...).
+      - Nếu sản phẩm bạn gợi ý có trong danh sách trên, ở cuối câu trả lời hãy ghi kèm mã ID theo định dạng: [SUGGESTED_IDS: 1, 2] (Ví dụ: [SUGGESTED_IDS: 5]). Nếu không có sản phẩm nào trong cửa hàng, không cần ghi dòng này hoặc ghi [SUGGESTED_IDS: ].
     `;
 
     const prompt = `${systemInstruction}\n\nKhách hàng hỏi: "${userMessage}"\nHealthyBot trả lời:`;
 
-    // 4. GỬI YÊU CẦU VÀ XỬ LÝ KẾT QUẢ JSON
     const result = await model.generateContent(prompt);
-    let responseText = await result.response.text();
+    const responseText = await result.response.text();
 
-    // Dọn dẹp phòng trường hợp AI bọc JSON trong Markdown (```json)
-    responseText = responseText.replace(/```json|```/g, "").trim();
+    // 4. BÓC TÁCH ID THÔNG MINH TỪ VĂN BẢN
+    let suggestedIds = [];
+    let cleanReply = responseText;
 
-    const aiData = JSON.parse(responseText);
-
-    // Dò tìm thông tin chi tiết của các sản phẩm được AI gợi ý
-    let suggestedProducts = [];
-    if (aiData.suggested_ids && aiData.suggested_ids.length > 0) {
-      suggestedProducts = dbProducts.filter((p) =>
-        aiData.suggested_ids.includes(p.id_product),
-      );
+    const match = responseText.match(/\[SUGGESTED_IDS:\s*([\d,\s]*)\]/);
+    if (match) {
+      // Lấy danh sách ID nếu tìm thấy
+      const idsString = match[1].trim();
+      if (idsString) {
+        suggestedIds = idsString
+          .split(",")
+          .map((id) => Number(id.trim()))
+          .filter((id) => !isNaN(id));
+      }
+      // Xóa thẻ [SUGGESTED_IDS: ...] đi để khách hàng không nhìn thấy mã kỹ thuật này
+      cleanReply = responseText.replace(/\[SUGGESTED_IDS:.*?\]/, "").trim();
     }
 
-    // Trả về cho Controller cả câu thoại lẫn thông tin sản phẩm
+    // Dò tìm thông tin chi tiết sản phẩm từ Database dựa trên ID bóc tách được
+    let suggestedProducts = [];
+    if (suggestedIds.length > 0) {
+      suggestedProducts = dbProducts
+        .filter((p) => suggestedIds.includes(p.id_product))
+        .map((p) => ({
+          ...p,
+          id_product: encodeId(p.id_product), // Mã hóa ID thật thành ID chuỗi bảo mật trước khi gửi ra ngoài
+        }));
+    }
+
     return {
-      reply: aiData.reply,
+      reply: cleanReply,
       products: suggestedProducts,
     };
   } catch (error) {

@@ -78,19 +78,13 @@ function DetailProduct() {
     const fetchProductDetail = async () => {
       setIsLoading(true);
       try {
-        // 🚀 ĐÃ SỬA: Ép kiểu 'id' sang Number để đảm bảo Backend hiểu
-        const numericId = Number(id);
-
-        // Nếu ID không phải là số hợp lệ thì dừng luôn
-        if (isNaN(numericId)) throw new Error("ID sản phẩm không hợp lệ");
-
-        const res = await axiosClient.get(`/products/${numericId}`);
+        const res = await axiosClient.get(`/products/${id}`);
         const currentItem = res.data.product;
         setProduct(currentItem);
 
         const allRes = await axiosClient.get("/products");
         let others = allRes.data.products.filter(
-          (p) => Number(p.id_product) !== numericId, // 🚀 Đổi ở đây luôn cho đồng bộ
+          (p) => p.id_product !== Number(id),
         );
 
         others = others.sort(() => 0.5 - Math.random()).slice(0, 4);
@@ -105,7 +99,8 @@ function DetailProduct() {
     fetchProductDetail();
     window.scrollTo(0, 0);
     setQuantity(1);
-  }, [id]); // Vẫn giữ nguyên [id] ở đây
+  }, [id]);
+
   if (isLoading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center text-emerald-600 bg-[#f6f8f4]">
