@@ -37,6 +37,9 @@ const notificationRoutes = require("./routes/notification.routes");
 // Import router đánh giá
 const reviewRoutes = require("./routes/review.routes");
 
+// import router chabox
+const chatBoxRoutes = require("./routes/chat.routes");
+
 // Import cookie-parser để đọc cookie từ request header
 const cookieParser = require("cookie-parser");
 
@@ -93,6 +96,9 @@ app.use("/reviews", reviewRoutes);
 
 // MỞ CỬA CHO FRONTEND LẤY ẢNH:
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
+
+// gắn router chatbox
+app.use("/chatbox", chatBoxRoutes);
 
 // Kiểm tra route
 app.get("/", (req, res) => {

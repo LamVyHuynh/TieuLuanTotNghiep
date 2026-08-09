@@ -1,3 +1,5 @@
+// express.Router() là một phương thức của Express.js để tạo ra một router mới.
+// Router này sẽ được sử dụng để định nghĩa các route (đường dẫn) cho ứng dụng web. Mỗi route sẽ ánh xạ đến một hàm xử lý (controller) cụ thể, giúp tổ chức mã nguồn và quản lý các endpoint của API một cách rõ ràng và dễ bảo trì.
 const express = require("express");
 const router = express.Router();
 
