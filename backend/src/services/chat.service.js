@@ -4,7 +4,7 @@ const { GoogleGenerativeAI } = require("@google-generative-ai");
 // Khởi tạo client Google Generative AI với API key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-async function generateResponse(userMessage) {
+async function getChatbotResponse(userMessage) {
   try {
     // Tạo một mô hình Generative AI với tên "gemini-1.5-flash"
     // Sử dụng model gemini-1.5-flash (Tốc độ phản hồi cực nhanh, phù hợp làm chatbot)
@@ -40,5 +40,5 @@ async function generateResponse(userMessage) {
 }
 
 module.exports = {
-  generateResponse,
+  getChatbotResponse,
 };
