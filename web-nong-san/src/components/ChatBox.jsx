@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Plus,
   AlertTriangle,
+  Square, // 🚀 BƯỚC 1: Import thêm icon Square làm nút Dừng
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -34,6 +35,9 @@ function ChatBox() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // 🚀 BƯỚC 2: Thêm Ref để giữ cái AbortController
+  const abortControllerRef = useRef(null);
 
   const [sessions, setSessions] = useState(() => {
     const savedData = localStorage.getItem("healthygo_chat_sessions");
@@ -62,7 +66,6 @@ function ChatBox() {
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // Dùng useMemo để bọc activeSession và currentMessages lại cho chuẩn hiệu năng
   const activeSession = useMemo(() => {
     return sessions.find((s) => s.id === activeSessionId) || sessions[0];
   }, [sessions, activeSessionId]);
@@ -114,9 +117,22 @@ function ChatBox() {
     );
   };
 
+  // 🚀 BƯỚC 3: Hàm Hủy kết nối (Dừng tạo)
+  const handleStopGeneration = (e) => {
+    if (e) e.preventDefault();
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort(); // Bắn tín hiệu hủy
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+
+    // Ép cuộn xuống dưới cùng để thấy rõ giao diện ngưng
+    setTimeout(() => scrollToBottom(), 100);
+  };
+
   const handleSend = async (e) => {
     if (e) e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return; // Đang load thì không cho gửi thêm
 
     const userMessage = input.trim();
     const isFirstUserMessage = currentMessages.length === 1;
@@ -140,10 +156,15 @@ function ChatBox() {
       textareaRef.current.style.height = "auto";
     }
 
+    // 🚀 BƯỚC 4: Tạo AbortController mới trước khi gọi API
+    abortControllerRef.current = new AbortController();
+
     try {
-      const res = await axiosClient.post("/chatbox/chat", {
-        message: userMessage,
-      });
+      const res = await axiosClient.post(
+        "/chatbox/chat",
+        { message: userMessage },
+        { signal: abortControllerRef.current.signal }, // Gắn signal vào để axios biết đường hủy
+      );
 
       updateActiveSession([
         ...newMessages,
@@ -154,18 +175,30 @@ function ChatBox() {
         },
       ]);
     } catch (error) {
-      console.error("Lỗi khi chat với Bot:", error);
-
-      updateActiveSession([
-        ...newMessages,
-        {
-          sender: "bot",
-          text: "Xin lỗi, kết nối đang bị gián đoạn. Bạn thử lại sau vài phút nhé! 😥",
-          products: [],
-        },
-      ]);
+      // Nếu lỗi là do người dùng chủ động bấm Hủy thì không in thông báo lỗi rác
+      if (axiosClient.isCancel(error) || error.message === "canceled") {
+        updateActiveSession([
+          ...newMessages,
+          {
+            sender: "bot",
+            text: "Đã dừng phản hồi. 🛑",
+            products: [],
+          },
+        ]);
+      } else {
+        console.error("Lỗi khi chat với Bot:", error);
+        updateActiveSession([
+          ...newMessages,
+          {
+            sender: "bot",
+            text: "Xin lỗi, kết nối đang bị gián đoạn. Bạn thử lại sau vài phút nhé! 😥",
+            products: [],
+          },
+        ]);
+      }
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -337,7 +370,9 @@ function ChatBox() {
                       className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                         msg.sender === "user"
                           ? "bg-emerald-600 text-white rounded-tr-sm"
-                          : "bg-white text-slate-700 shadow-sm border border-slate-100 rounded-tl-sm whitespace-pre-line"
+                          : msg.text === "Đã dừng phản hồi. 🛑"
+                            ? "bg-rose-50 text-rose-600 border border-rose-100 rounded-tl-sm font-semibold"
+                            : "bg-white text-slate-700 shadow-sm border border-slate-100 rounded-tl-sm whitespace-pre-line"
                       }`}
                     >
                       {msg.text}
@@ -399,10 +434,7 @@ function ChatBox() {
               </div>
 
               <div className="bg-white p-3 border-t border-slate-100 shrink-0">
-                <form
-                  onSubmit={handleSend}
-                  className="flex items-end gap-2 rounded-3xl bg-slate-100 px-2 py-1.5"
-                >
+                <form className="flex items-end gap-2 rounded-3xl bg-slate-100 px-2 py-1.5">
                   <textarea
                     ref={textareaRef}
                     value={input}
@@ -413,13 +445,27 @@ function ChatBox() {
                     disabled={isLoading}
                     className="flex-1 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-slate-400 text-slate-700 resize-none overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 min-h-[36px]"
                   />
-                  <button
-                    type="submit"
-                    disabled={!input.trim() || isLoading}
-                    className="flex h-9 w-9 mb-0.5 items-center justify-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                  >
-                    <Send size={16} className="-ml-0.5" />
-                  </button>
+
+                  {/* 🚀 BƯỚC 5: Đổi nút hiển thị tùy theo trạng thái isLoading */}
+                  {isLoading ? (
+                    <button
+                      type="button"
+                      onClick={handleStopGeneration}
+                      title="Dừng tạo phản hồi"
+                      className="flex h-9 w-9 mb-0.5 items-center justify-center rounded-full bg-slate-800 text-white transition hover:bg-rose-500 shadow-md shrink-0 cursor-pointer animate-pulse"
+                    >
+                      <Square size={14} fill="currentColor" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSend}
+                      disabled={!input.trim()}
+                      className="flex h-9 w-9 mb-0.5 items-center justify-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+                    >
+                      <Send size={16} className="-ml-0.5" />
+                    </button>
+                  )}
                 </form>
               </div>
             </>
