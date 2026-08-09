@@ -17,9 +17,6 @@ import axiosClient from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
 
-//  BƯỚC 1: IMPORT CON CHATBOT
-import ChatBox from "../components/ChatBox";
-
 // HÀM PHỤ: Bỏ dấu tiếng Việt giúp tìm kiếm chuẩn xác
 const removeVietnameseTones = (str) => {
   if (!str) return "";
@@ -728,9 +725,6 @@ function UserLayout() {
           </div>
         </div>
       )}
-
-      {/* GẮN CON CHATBOT VÀO CỦA WEB */}
-      <ChatBox />
     </div>
   );
 }

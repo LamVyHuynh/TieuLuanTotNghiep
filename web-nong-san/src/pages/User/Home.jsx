@@ -12,6 +12,9 @@ import axiosClient from "../../api/axiosClient";
 import { useNavigate, useLocation } from "react-router-dom";
 import { CartContext } from "../../context/CartContext";
 
+//   IMPORT CON CHATBOT VÀO TRANG HOME
+import ChatBox from "../../components/ChatBox";
+
 function Home() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -375,6 +378,9 @@ function Home() {
           </div>,
           document.body,
         )}
+
+      {/* NHÚNG BONG BÓNG CHAT VÀO ĐÂY */}
+      <ChatBox />
     </>
   );
 }
