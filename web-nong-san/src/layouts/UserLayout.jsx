@@ -17,7 +17,10 @@ import axiosClient from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
 
-// 🚀 HÀM PHỤ: Bỏ dấu tiếng Việt giúp tìm kiếm chuẩn xác
+//  BƯỚC 1: IMPORT CON CHATBOT
+import ChatBox from "../components/ChatBox";
+
+// HÀM PHỤ: Bỏ dấu tiếng Việt giúp tìm kiếm chuẩn xác
 const removeVietnameseTones = (str) => {
   if (!str) return "";
   str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
@@ -336,7 +339,7 @@ function UserLayout() {
             HealthyGO
           </button>
 
-          {/* 🚀 KHUNG SEARCH */}
+          {/* KHUNG SEARCH */}
           <div
             className="hidden md:flex flex-1 max-w-xl mx-4 relative"
             ref={searchContainerRef}
@@ -599,7 +602,7 @@ function UserLayout() {
               )}
             </button>
 
-            {/* 🚀 USER MENU */}
+            {/* USER MENU */}
             {currentUser ? (
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -630,7 +633,6 @@ function UserLayout() {
                 <div
                   className={`absolute right-0 top-[calc(100%+10px)] w-52 origin-top-right overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${showUserMenu ? "pointer-events-auto translate-y-0 scale-100 opacity-100" : "pointer-events-none -translate-y-2 scale-95 opacity-0"}`}
                 >
-                  {/* 🚀 BẤM NÚT NÀY ĐỂ CHUYỂN SANG TRANG CÁ NHÂN */}
                   <button
                     type="button"
                     onClick={() => {
@@ -682,7 +684,7 @@ function UserLayout() {
       {/* FLOATING CART (MOBILE) */}
       <button
         onClick={() => handleNavigate("/cart")}
-        className="md:hidden fixed bottom-6 right-6 bg-emerald-600 text-white w-14 h-14 rounded-full shadow-[0_10px_25px_rgba(5,150,105,0.3)] flex items-center justify-center z-50 hover:bg-emerald-700 transition-colors cursor-pointer"
+        className="md:hidden fixed bottom-24 right-6 bg-emerald-600 text-white w-14 h-14 rounded-full shadow-[0_10px_25px_rgba(5,150,105,0.3)] flex items-center justify-center z-50 hover:bg-emerald-700 transition-colors cursor-pointer"
       >
         <ShoppingBag size={22} />
         {totalItemsCart > 0 && (
@@ -726,6 +728,9 @@ function UserLayout() {
           </div>
         </div>
       )}
+
+      {/* GẮN CON CHATBOT VÀO CỦA WEB */}
+      <ChatBox />
     </div>
   );
 }
