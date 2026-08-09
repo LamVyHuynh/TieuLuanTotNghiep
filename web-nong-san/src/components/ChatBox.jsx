@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import axiosClient from "../api/axiosClient";
 import { MessageCircle, X, Send, Bot, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router-dom"; // 🚀 Import thêm cái này để chuyển trang
+import { useNavigate } from "react-router-dom";
 
 function ChatBox() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate(); // 🚀 Khởi tạo hook chuyển trang
+  const navigate = useNavigate();
 
   const [messages, setMessages] = useState([
     {
@@ -41,7 +41,7 @@ function ChatBox() {
         message: userMessage,
       });
 
-      // 🚀 Nhận cả câu trả lời lẫn danh sách sản phẩm từ Backend
+      // Nhận cả câu trả lời lẫn danh sách sản phẩm từ Backend
       setMessages((prev) => [
         ...prev,
         {
@@ -107,7 +107,7 @@ function ChatBox() {
                   {msg.text}
                 </div>
 
-                {/* 🚀 VẼ THẺ SẢN PHẨM GỢI Ý (Nếu có) */}
+                {/* VẼ THẺ SẢN PHẨM GỢI Ý (Nếu có) */}
                 {msg.products && msg.products.length > 0 && (
                   <div className="mt-2 w-[85%] flex flex-col gap-2">
                     {msg.products.map((p) => (

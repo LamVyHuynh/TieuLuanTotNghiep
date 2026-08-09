@@ -13,7 +13,7 @@ async function getChatbotResponse(userMessage) {
 
     // 1. LẤY SẢN PHẨM TỪ DB ĐỂ "DẠY" AI (Lấy ID và Tên để đưa vào Prompt)
     const [dbProducts] = await pool.query(
-      "SELECT id_product, name, price, discount_price, image_url FROM products",
+      "SELECT id_product, name, price, discount_price, image_url FROM product",
     );
     const productListString = dbProducts
       .map((p) => `[ID: ${p.id_product}] - Tên món: ${p.name}`)

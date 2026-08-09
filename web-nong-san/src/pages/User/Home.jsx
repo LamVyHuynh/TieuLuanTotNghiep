@@ -224,7 +224,7 @@ function Home() {
                         index,
                       )}`}
                     >
-                      {/* 🚀 ĐÃ THAY ĐỔI LINK ẢNH VỀ BẢN NO IMAGE CHUẨN */}
+                      {/* ĐÃ THAY ĐỔI LINK ẢNH VỀ BẢN NO IMAGE CHUẨN */}
                       <img
                         src={
                           item.image_url ||
