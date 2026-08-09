@@ -40,13 +40,13 @@ async function getChatbotResponse(userMessage) {
         )
         .map((m) => m.name.replace("models/", ""));
 
-      if (availableModels.includes("gemini-3.5-flash"))
-        modelName = "gemini-3.5-flash";
-      else if (availableModels.includes("gemini-flash-latest"))
-        modelName = "gemini-flash-latest";
-      else if (availableModels.includes("gemini-2.0-flash"))
-        modelName = "gemini-2.0-flash";
-      else {
+      if (availableModels.includes("gemini-flash-latest")) {
+        modelName = "gemini-flash-latest"; // Ưu tiên số 1: Xài bản cân bằng nhất
+      } else if (availableModels.includes("gemini-2.0-flash")) {
+        modelName = "gemini-2.0-flash"; // Ưu tiên số 2
+      } else if (availableModels.includes("gemini-3.5-flash")) {
+        modelName = "gemini-3.5-flash"; // Ưu tiên số 3: Tạm thời cho xuống dưới vì đang kẹt mạng
+      } else {
         const safeModels = availableModels.filter((m) => !m.includes("2.5"));
         modelName = safeModels.length > 0 ? safeModels[0] : availableModels[0];
       }

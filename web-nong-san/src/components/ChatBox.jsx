@@ -1,27 +1,38 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import axiosClient from "../api/axiosClient";
-import { MessageCircle, X, Send, Bot, ChevronRight } from "lucide-react";
+import {
+  MessageCircle,
+  X,
+  Send,
+  Bot,
+  ChevronRight,
+  Trash2,
+} from "lucide-react"; // 🚀 BƯỚC 1: Import thêm icon Trash2
 import { useNavigate } from "react-router-dom";
 
 function ChatBox() {
   const [isOpen, setIsOpen] = useState(true);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  // 🚀 BƯỚC 1: Thêm state quản lý hiệu ứng đang đóng
-  const [isClosing, setIsClosing] = useState(false);
-
   const navigate = useNavigate();
+
   const textareaRef = useRef(null);
 
-  const [messages, setMessages] = useState([
-    {
-      sender: "bot",
-      text: "Chào bạn! Mình là HealthyBot 🌱. Bạn cần tư vấn thực đơn giảm cân, ăn uống Eat-clean hay tìm sản phẩm nào hôm nay?",
-      products: [],
-    },
-  ]);
+  // 🚀 BƯỚC 2: Khởi tạo state messages từ localStorage
+  const [messages, setMessages] = useState(() => {
+    const savedChat = localStorage.getItem("healthygo_chat_history");
+    if (savedChat) {
+      return JSON.parse(savedChat);
+    }
+    return [
+      {
+        sender: "bot",
+        text: "Chào bạn! Mình là HealthyBot 🌱. Bạn cần tư vấn thực đơn giảm cân, ăn uống Eat-clean hay tìm sản phẩm nào hôm nay?",
+        products: [],
+      },
+    ];
+  });
 
   const messagesEndRef = useRef(null);
 
@@ -29,7 +40,9 @@ function ChatBox() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // 🚀 BƯỚC 3: Lưu vào localStorage mỗi khi mảng messages thay đổi
   useEffect(() => {
+    localStorage.setItem("healthygo_chat_history", JSON.stringify(messages));
     scrollToBottom();
   }, [messages]);
 
@@ -89,27 +102,48 @@ function ChatBox() {
     }
   };
 
-  // 🚀 BƯỚC 2: Hàm xử lý đóng mượt mà và chuyển trang sau 400ms
+  // 🚀 BƯỚC 4: Hàm xóa lịch sử chat để bắt đầu lại
+  const handleClearChat = () => {
+    const confirmClear = window.confirm(
+      "Bạn có muốn xóa cuộc trò chuyện này không?",
+    );
+    if (confirmClear) {
+      const initialMsg = [
+        {
+          sender: "bot",
+          text: "Chào bạn! Mình là HealthyBot 🌱. Bạn cần tư vấn thực đơn giảm cân, ăn uống Eat-clean hay tìm sản phẩm nào hôm nay?",
+          products: [],
+        },
+      ];
+      setMessages(initialMsg);
+      localStorage.setItem(
+        "healthygo_chat_history",
+        JSON.stringify(initialMsg),
+      );
+    }
+  };
+
+  const [isClosing, setIsClosing] = useState(false);
+
   const handleCloseAndNavigate = (path) => {
-    setIsClosing(true); // Bật hiệu ứng mờ dần và trượt xuống
+    setIsClosing(true);
     setTimeout(() => {
       setIsOpen(false);
-      setIsClosing(false); // Reset lại trạng thái
+      setIsClosing(false);
       if (path) {
-        navigate(path); // Chỉ chuyển trang nếu có truyền đường dẫn (ví dụ: bấm vào sản phẩm)
+        navigate(path);
       }
-    }, 400); // Khớp với 400ms của giao diện web
+    }, 400);
   };
 
   return createPortal(
     <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
       {isOpen && (
-        // 🚀 BƯỚC 3: Thêm hiệu ứng transition-all và logic isClosing vào khung chat
         <div
           className={`mb-4 flex h-[520px] w-[360px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_5px_40px_rgba(0,0,0,0.16)] border border-slate-100 transform transition-all duration-500 ease-in-out ${
             isClosing
-              ? "translate-y-12 opacity-0" // Khi đang đóng: Trượt xuống và mờ đi
-              : "animate-in slide-in-from-bottom-5 fade-in" // Khi mới mở: Trượt lên và rõ dần
+              ? "translate-y-12 opacity-0"
+              : "animate-in slide-in-from-bottom-5 fade-in"
           }`}
         >
           <div className="flex items-center justify-between bg-emerald-600 px-5 py-4 text-white">
@@ -125,12 +159,23 @@ function ChatBox() {
                 </span>
               </div>
             </div>
-            <button
-              onClick={() => handleCloseAndNavigate(null)} // Bấm X chỉ đóng, không chuyển trang
-              className="text-emerald-100 hover:text-white transition cursor-pointer"
-            >
-              <X size={20} />
-            </button>
+
+            {/* 🚀 BƯỚC 5: Thêm nút Xóa (Thùng rác) bên cạnh nút Đóng */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleClearChat}
+                title="Xóa lịch sử"
+                className="text-emerald-100 hover:text-white transition cursor-pointer"
+              >
+                <Trash2 size={18} />
+              </button>
+              <button
+                onClick={() => handleCloseAndNavigate(null)}
+                className="text-emerald-100 hover:text-white transition cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-4 scrollbar-thin scrollbar-thumb-slate-200">
@@ -155,7 +200,6 @@ function ChatBox() {
                       <div
                         key={p.id_product}
                         onClick={() =>
-                          // Bấm vào thẻ: Kích hoạt hiệu ứng đóng mượt mà rồi mới chuyển trang
                           handleCloseAndNavigate(
                             `/detail-product/${p.id_product}`,
                           )
@@ -233,7 +277,7 @@ function ChatBox() {
       <button
         onClick={() => {
           if (isOpen) {
-            handleCloseAndNavigate(null); // Kích hoạt animation đóng nếu đang mở
+            handleCloseAndNavigate(null);
           } else {
             setIsOpen(true);
           }
