@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom"; // 🚀 BƯỚC 1: Import thêm cái này để bọc ChatBox
 import axiosClient from "../api/axiosClient";
 import { MessageCircle, X, Send, Bot, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function ChatBox() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true); // Mặc định mở chatbox khi load trang
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ function ChatBox() {
     {
       sender: "bot",
       text: "Chào bạn! Mình là HealthyBot 🌱. Bạn cần tư vấn thực đơn giảm cân, ăn uống Eat-clean hay tìm sản phẩm nào hôm nay?",
-      products: [], // Thêm mảng rỗng mặc định
+      products: [],
     },
   ]);
 
@@ -41,13 +42,12 @@ function ChatBox() {
         message: userMessage,
       });
 
-      // Nhận cả câu trả lời lẫn danh sách sản phẩm từ Backend
       setMessages((prev) => [
         ...prev,
         {
           sender: "bot",
           text: res.data.reply,
-          products: res.data.products, // Bắt lấy danh sách thẻ sản phẩm
+          products: res.data.products,
         },
       ]);
     } catch (error) {
@@ -65,8 +65,9 @@ function ChatBox() {
     }
   };
 
-  return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+  // 🚀 BƯỚC 2: Bọc toàn bộ giao diện trong createPortal( ..., document.body )
+  return createPortal(
+    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
       {isOpen && (
         <div className="mb-4 flex h-[520px] w-[360px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_5px_40px_rgba(0,0,0,0.16)] border border-slate-100 animate-in slide-in-from-bottom-5 fade-in duration-300">
           <div className="flex items-center justify-between bg-emerald-600 px-5 py-4 text-white">
@@ -96,7 +97,6 @@ function ChatBox() {
                 key={index}
                 className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
               >
-                {/* BONG BÓNG TIN NHẮN */}
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                     msg.sender === "user"
@@ -107,14 +107,13 @@ function ChatBox() {
                   {msg.text}
                 </div>
 
-                {/* VẼ THẺ SẢN PHẨM GỢI Ý (Nếu có) */}
                 {msg.products && msg.products.length > 0 && (
                   <div className="mt-2 w-[85%] flex flex-col gap-2">
                     {msg.products.map((p) => (
                       <div
                         key={p.id_product}
                         onClick={() => {
-                          setIsOpen(false); // Ẩn chatbox để xem sản phẩm
+                          setIsOpen(false);
                           navigate(`/detail-product/${p.id_product}`);
                         }}
                         className="group flex items-center gap-3 p-2 bg-white rounded-xl border border-emerald-100 hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer"
@@ -122,7 +121,7 @@ function ChatBox() {
                         <img
                           src={
                             p.image_url ||
-                            "[https://via.placeholder.com/60](https://via.placeholder.com/60)"
+                            "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
                           }
                           alt={p.name}
                           className="w-12 h-12 rounded-lg object-cover border border-slate-50"
@@ -191,7 +190,8 @@ function ChatBox() {
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={28} />}
       </button>
-    </div>
+    </div>,
+    document.body, // Bắn code HTML ra thẳng body
   );
 }
 
