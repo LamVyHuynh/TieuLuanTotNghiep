@@ -444,7 +444,12 @@ function UserLayout() {
                               "https://via.placeholder.com/40"
                             }
                             alt={product.name}
-                            className="w-10 h-10 rounded-xl object-cover border border-zinc-100 group-hover:scale-105 transition-transform"
+                            onError={(e) => {
+                              e.target.onerror = null; // Ngăn chặn lặp vô hạn nếu ảnh placeholder cũng bị lỗi
+                              e.target.src =
+                                "https://via.placeholder.com/40?text=No+Image";
+                            }}
+                            className="w-10 h-10 min-w-[40px] shrink-0 rounded-xl object-cover border border-zinc-100 group-hover:scale-105 transition-transform text-[8px] text-transparent"
                           />
                           <div className="flex-1">
                             <h4 className="text-sm font-semibold text-zinc-700 group-hover:text-emerald-700 line-clamp-1 transition-colors">
