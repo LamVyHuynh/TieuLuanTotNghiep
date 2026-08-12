@@ -10,6 +10,15 @@ const {
 const { encodeId, decodeId } = require("../utils/hashid.util");
 const axios = require("axios");
 const crypto = require("crypto");
+const { PayOS } = require("@payos/node"); // Import PayOS SDK
+// Khởi tạo payOS với Client ID và API Key từ biến môi trường
+const payOSClient = new PayOS(
+  process.env.PAYOS_CLIENT_ID,
+  process.env.PAYOS_API_KEY,
+  process.env.PAYOS_CHECKSUM_KEY,
+);
+
+console.log(" PayOS Client Initialized:", payOSClient);
 // Tạo đơn hàng mới (dùng cho trang Checkout)
 const createOrder = async (req, res) => {
   try {
@@ -92,7 +101,7 @@ const createOrder = async (req, res) => {
       note,
       payment_method,
       total_amount,
-      scheduled_time: formattedScheduledTime, // 🚀 Ném cái giờ đã làm sạch xuống Service
+      scheduled_time: formattedScheduledTime, // Ném cái giờ đã làm sạch xuống Service
     };
 
     // Gọi Service chạy Transaction
@@ -305,7 +314,7 @@ const createMomoPayment = async (req, res) => {
       requestBody,
     );
 
-    // 7. 🚀 XỬ LÝ ẢNH QR CHUẨN NATIVE
+    // 7.  XỬ LÝ ẢNH QR CHUẨN NATIVE
     if (result.data && result.data.resultCode === 0) {
       // Ưu tiên 1: Lấy ảnh QR xịn do chính MoMo cấp (nếu có)
       let finalQrCodeUrl = result.data.qrCodeUrl;
@@ -367,7 +376,7 @@ const checkMomoPaymentStatus = async (req, res) => {
       requestBody,
     );
 
-    // 🚀 NẾU MOMO BÁO THÀNH CÔNG (resultCode === 0)
+    //  NẾU MOMO BÁO THÀNH CÔNG (resultCode === 0)
     if (result.data && result.data.resultCode === 0) {
       // 1. Tách lấy mã đơn hàng mã hoá (Vd: "W9zkxp4V_178..." -> "W9zkxp4V")
       const encodedOrderId = momoOrderId.split("_")[0];
@@ -376,7 +385,7 @@ const checkMomoPaymentStatus = async (req, res) => {
       const realOrderId = decodeId(encodedOrderId);
 
       if (realOrderId) {
-        // 3. 🚀 LƯU VÀO DB: Đổi trạng thái từ 'pending' sang 'processing'
+        // 3. LƯU VÀO DB: Đổi trạng thái từ 'pending' sang 'processing'
         // Việc này cũng sẽ tự động kích hoạt tính năng Bắn Thông Báo cho người dùng!
         await updateOrderStatus(realOrderId, "processing");
       }
@@ -398,6 +407,104 @@ const checkMomoPaymentStatus = async (req, res) => {
   }
 };
 
+// =================================================================
+// TẠO LINK THANH TOÁN PAYOS (CHUYỂN KHOẢN NGÂN HÀNG)
+// =================================================================
+const createPayOSPayment = async (req, res) => {
+  try {
+    const { orderId, amount, description } = req.body;
+    const realOrderId = decodeId(orderId);
+
+    if (!realOrderId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Mã đơn hàng không hợp lệ!" });
+    }
+
+    const requestData = {
+      orderCode: Number(realOrderId),
+      amount: Number(amount),
+      description: description || `Thanh toan don ${realOrderId}`,
+      cancelUrl: "http://localhost:5173/cart",
+      returnUrl: "http://localhost:5173/order",
+    };
+
+    // [ĐÃ SỬA] Dùng API mới của PayOS version 2
+    const paymentLink = await payOSClient.paymentRequests.create(requestData);
+
+    return res.status(200).json({
+      success: true,
+      checkoutUrl: paymentLink.checkoutUrl,
+      qrCode: paymentLink.qrCode,
+    });
+  } catch (error) {
+    console.error("LỖI KHI GỌI PAYOS:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi kết nối cổng thanh toán PayOS!",
+    });
+  }
+};
+
+// =================================================================
+// API NHẬN WEBHOOK TỪ PAYOS ĐỂ TỰ ĐỘNG CHỐT ĐƠN
+// =================================================================
+const receivePayOSWebhook = async (req, res) => {
+  try {
+    // [ĐÃ SỬA] Dùng API mới của PayOS version 2
+    const webhookData = payOSClient.webhooks.verify(req.body);
+
+    if (webhookData.code === "00") {
+      const realOrderId = webhookData.orderCode;
+      await updateOrderStatus(realOrderId, "processing");
+
+      console.log(
+        `[PayOS Webhook] Tiền đã về bản! Tự động chốt đơn #${realOrderId}`,
+      );
+
+      return res
+        .status(200)
+        .json({ success: true, message: "Đã xử lý Webhook thành công" });
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Đã ghi nhận tín hiệu" });
+  } catch (error) {
+    console.error("Lỗi khi xử lý Webhook PayOS:", error.message);
+    return res
+      .status(400)
+      .json({ success: false, message: "Dữ liệu Webhook không hợp lệ" });
+  }
+};
+
+// =================================================================
+// HÀM KIỂM TRA TRẠNG THÁI THANH TOÁN TỪ PAYOS (DÙNG ĐỂ TỰ ĐỘNG CHUYỂN TRANG)
+// =================================================================
+const checkPayOSPaymentStatus = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    //  Dùng API lấy thông tin trực tiếp của PayOS version 2
+    const response = await payOSClient.get(`/v2/payment-requests/${orderId}`);
+    const paymentInfo = response.data; // Dữ liệu PayOS trả về được bọc trong .data
+
+    if (paymentInfo && paymentInfo.status === "PAID") {
+      return res
+        .status(200)
+        .json({ success: true, message: "Thanh toán thành công" });
+    } else {
+      return res
+        .status(200)
+        .json({ success: false, message: "Đang chờ thanh toán" });
+    }
+  } catch (error) {
+    console.error("LỖI KIỂM TRA PAYOS:", error.message);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi kiểm tra trạng thái PayOS" });
+  }
+};
 module.exports = {
   createOrder,
   getOrdersHistory,
@@ -407,4 +514,7 @@ module.exports = {
   getReportsAdmin,
   createMomoPayment,
   checkMomoPaymentStatus,
+  createPayOSPayment,
+  receivePayOSWebhook,
+  checkPayOSPaymentStatus,
 };

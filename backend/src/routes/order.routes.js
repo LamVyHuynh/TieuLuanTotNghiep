@@ -10,6 +10,9 @@ const {
   getReportsAdmin,
   createMomoPayment,
   checkMomoPaymentStatus,
+  createPayOSPayment,
+  receivePayOSWebhook,
+  checkPayOSPaymentStatus,
 } = require("../controllers/order.controller");
 
 // Route để tạo đơn hàng mới
@@ -35,5 +38,14 @@ router.post("/momo-payment", authenticateToken, createMomoPayment);
 
 // Route để kiểm tra trạng thái thanh toán Momo
 router.post("/momo-check-status", authenticateToken, checkMomoPaymentStatus);
+
+// Route để tạo thanh toán PayOS
+router.post("/payos-payment", authenticateToken, createPayOSPayment);
+
+// Route để nhận webhook từ PayOS
+router.post("/payos-webhook", receivePayOSWebhook);
+
+// Route để kiểm tra trạng thái thanh toán PayOS
+router.post("/payos-check-status", authenticateToken, checkPayOSPaymentStatus);
 
 module.exports = router;

@@ -113,7 +113,6 @@ function CheckOut() {
   const [isExiting, setIsExiting] = useState(true);
   const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
-  // Fix ESLint dependency warning bằng useCallback
   const handleNavigate = useCallback(
     (path) => {
       if (location.pathname === path) return;
@@ -348,15 +347,22 @@ function CheckOut() {
     }
   };
 
+  // danh sách sản phẩm nếu > 0 thì lấy sản phẩm đầu tiên để hiển thị thông tin chung, còn nếu không có sản phẩm thì hiển thị thông báo chưa chọn sản phẩm
   const product = checkoutList.length > 0 ? checkoutList[0] : null;
+
   const subtotal = useMemo(
     () =>
       checkoutList.reduce((acc, item) => acc + item.price * item.quantity, 0),
     [checkoutList],
   );
-  const shippingFee = checkoutList.length > 0 ? 20000 : 0;
-  const discount = checkoutList.length > 0 ? 15000 : 0;
-  const total = Math.max(subtotal + shippingFee - discount, 0);
+
+  // ==========================================
+  //GIẢM GIÁ: Đơn > 60k mới giảm 15k
+  // ==========================================
+  const discount = subtotal > 60000 ? 15000 : 0;
+
+  // Tính tổng tiền thanh toán cuối cùng (Không bao giờ để số âm)
+  const total = Math.max(subtotal - discount, 0);
 
   const handlePlaceOrder = () => {
     if (isPhoneMissing) {
@@ -375,15 +381,7 @@ function CheckOut() {
       return;
     }
 
-    // Nếu là Bank thì bật QR VietQR ngay
-    if (paymentMethod === "bank" && !showQRModal) {
-      setMomoQRUrl(null);
-      setMomoOrderIdTracker(null);
-      setShowQRModal(true);
-      return;
-    }
-
-    // Nếu là COD hoặc MoMo thì chạy thẳng vào executeOrder
+    // Chạy thẳng vào hàm tạo đơn
     executeOrder();
   };
 
@@ -409,6 +407,30 @@ function CheckOut() {
       // 1. Tạo đơn hàng vào Database trước
       const res = await axiosClient.post("/orders/checkout", orderPayload);
       const newOrderId = res.data.order_id;
+
+      // ==========================================
+      // XỬ LÝ THANH TOÁN BANK (PAYOS)
+      // ==========================================
+      if (paymentMethod === "bank") {
+        showToast("Đang tạo mã VietQR MB Bank...", "success");
+        const payosRes = await axiosClient.post("/orders/payos-payment", {
+          orderId: newOrderId,
+          amount: total,
+          description: `Thanh toan don ${newOrderId}`, // Nội dung CK không nên có dấu #
+        });
+
+        // Backend PayOS trả về 'qrCode' (chuỗi ký tự mã hóa của VietQR)
+        if (payosRes.data && payosRes.data.qrCode) {
+          // Bọc chuỗi mã hóa vào API của qrserver để biến nó thành hình ảnh QR
+          const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(payosRes.data.qrCode)}`;
+
+          setMomoQRUrl(qrImageUrl); // Nạp hình QR MB Bank xịn vào
+          setMomoOrderIdTracker(newOrderId); // Lưu lại để tý Webhook gọi
+          setShowQRModal(true); // Nạp ảnh xong xuôi mới bật Modal lên
+          setIsSubmitting(false);
+          return;
+        }
+      }
 
       // 2. Nếu thanh toán MoMo thì lấy link ẢNH QR từ Backend
       if (paymentMethod === "momo") {
@@ -448,41 +470,58 @@ function CheckOut() {
   };
 
   // =====================================================================
-  //  TỰ ĐỘNG HỎI THĂM TRẠNG THÁI MOMO (POLLING) MỖI 3 GIÂY
+  //  TỰ ĐỘNG HỎI THĂM TRẠNG THÁI (POLLING) MỖI 3 GIÂY (MOMO & PAYOS)
   // =====================================================================
   useEffect(() => {
-    // Nếu đang hiển thị Modal QR MoMo và có momoOrderIdTracker thì bắt đầu hỏi thăm
-    if (showQRModal && paymentMethod === "momo" && momoOrderIdTracker) {
+    // Nếu đang hiển thị Modal QR và có theo dõi mã đơn hàng
+    if (showQRModal && momoOrderIdTracker) {
       pollInterval.current = setInterval(async () => {
         try {
-          // Gọi API Backend để hỏi thăm trạng thái thanh toán MoMo
-          const checkRes = await axiosClient.post("/orders/momo-check-status", {
-            momoOrderId: momoOrderIdTracker,
-          });
+          let isSuccess = false;
 
-          // Nếu MoMo báo thành công -> tự đóng Modal và chuyển trang!
-          if (checkRes.data && checkRes.data.success) {
-            // Dừng polling và đóng Modal
-            clearInterval(pollInterval.current);
-            setShowQRModal(false);
+          // 1. NẾU LÀ MOMO
+          if (paymentMethod === "momo") {
+            const checkRes = await axiosClient.post(
+              "/orders/momo-check-status",
+              {
+                momoOrderId: momoOrderIdTracker,
+              },
+            );
+            if (checkRes.data && checkRes.data.success) isSuccess = true;
+          }
+
+          // 2. NẾU LÀ NGÂN HÀNG (PAYOS)
+          else if (paymentMethod === "bank") {
+            const checkRes = await axiosClient.post(
+              "/orders/payos-check-status",
+              {
+                orderId: momoOrderIdTracker, // Truyền ID gốc của đơn hàng
+              },
+            );
+            if (checkRes.data && checkRes.data.success) isSuccess = true;
+          }
+
+          // XỬ LÝ KHI THANH TOÁN THÀNH CÔNG (TIỀN ĐÃ VÀO TÀI KHOẢN)
+          if (isSuccess) {
+            clearInterval(pollInterval.current); // Dừng hỏi thăm
+            setShowQRModal(false); // Đóng Modal QR
             showToast(
-              "Thanh toán MoMo thành công! Đã lưu đơn hàng. 🥰",
+              "Thanh toán thành công! Tiền đã vào tài khoản. 🥰",
               "success",
             );
 
+            // Chuyển trang sang lịch sử mua hàng sau 1.5 giây
             setTimeout(() => {
               handleNavigate("/order");
             }, 1500);
           }
         } catch (err) {
-          // Bỏ qua lỗi mạng, để nó tự hỏi lại
-          console.log("Đang chờ thanh toán...", err.message);
+          console.log("Đang chờ khách thanh toán...", err.message);
         }
-      }, 3000);
+      }, 3000); // Cứ 3 giây hỏi thăm Backend 1 lần
     }
 
     return () => {
-      // Dọn dẹp interval khi Modal QR MoMo đóng hoặc component unmount
       if (pollInterval.current) clearInterval(pollInterval.current);
     };
   }, [showQRModal, paymentMethod, momoOrderIdTracker, handleNavigate]);
@@ -868,12 +907,6 @@ function CheckOut() {
                       {subtotal.toLocaleString("vi-VN")}đ
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Phí vận chuyển</span>
-                    <span className="font-medium text-slate-900">
-                      {shippingFee.toLocaleString("vi-VN")}đ
-                    </span>
-                  </div>
                   <div className="flex justify-between text-amber-700">
                     <span>Giảm giá</span>
                     <span className="font-medium">
@@ -939,7 +972,7 @@ function CheckOut() {
                     src={
                       momoQRUrl
                         ? momoQRUrl
-                        : `https://img.vietqr.io/image/vcb-123456789-compact.png?amount=${total}&addInfo=Thanh toan don hang`
+                        : "https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif"
                     }
                     alt="QR Code"
                     className="w-full h-full object-contain"
