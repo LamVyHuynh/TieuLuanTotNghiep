@@ -3,6 +3,7 @@ const {
   getAllCategories,
   updateCategory,
   deleteCategory,
+  deleteMultipleCategories,
 } = require("../services/category.service");
 
 const { encodeId, decodeId } = require("../utils/hashid.util");
@@ -140,9 +141,50 @@ const deleteCategoryController = async (req, res) => {
   }
 };
 
+// Xoá nhiều danh mục cùng lúc
+const bulkDeleteCategories = async (req, res) => {
+  try {
+    const { categoryIds } = req.body;
+
+    if (
+      !categoryIds ||
+      !Array.isArray(categoryIds) ||
+      categoryIds.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Vui lòng chọn ít nhất 1 danh mục để xoá!" });
+    }
+
+    // Giải mã tất cả ID danh mục từ chữ sang số
+    const realCategoryIds = categoryIds.map((id) => decodeId(id));
+    if (realCategoryIds.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Dữ liệu ID danh mục không hợp lệ!" });
+    }
+
+    // Gọi service để xoá nhiều danh mục cùng lúc
+    const deletedCount = await deleteMultipleCategories(realCategoryIds);
+
+    res.status(200).json({
+      message: `Xoá thành công ${deletedCount} danh mục!`,
+      deletedCategoryIds: categoryIds, // Trả về ID chữ để FE biết đường xóa UI
+    });
+  } catch (error) {
+    console.error("Lỗi xoá hàng loạt:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi xoá hàng loạt!",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createCategoryController,
   getAllCategoriesController,
   updateCategoryController,
   deleteCategoryController,
+  bulkDeleteCategories,
 };
