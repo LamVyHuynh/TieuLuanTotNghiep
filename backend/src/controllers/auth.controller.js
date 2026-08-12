@@ -725,12 +725,27 @@ const bulkDeleteUsers = async (req, res) => {
         .json({ message: "Danh sách ID người dùng không hợp lệ." });
     }
 
-    // Gọi Service để xóa nhiều người dùng
-    const deletedCount = await deleteMultipleUsers(decodedUserIds);
+    // BƯỚC 1: Gọi Service và nhận về cả số lượng lẫn danh sách TÊN
+    const { deletedCount, deletedNames } =
+      await deleteMultipleUsers(decodedUserIds);
 
+    // BƯỚC 2: Xử lý chuỗi thông báo thông minh (Tránh thông báo quá dài làm vỡ UI)
+    let namesString = "";
+    if (deletedNames.length <= 3) {
+      // Nếu xoá <= 3 người thì nối tên lại bằng dấu phẩy
+      namesString = deletedNames.join(", ");
+    } else {
+      // Nếu xoá > 3 người thì lấy 3 người đầu tiên, cộng thêm số người còn lại
+      namesString =
+        deletedNames.slice(0, 3).join(", ") +
+        `... và ${deletedNames.length - 3} người khác`;
+    }
+
+    // BƯỚC 3: Trả về câu thông báo hoàn chỉnh chứa tên user
     res.status(200).json({
-      message: `Đã xóa thành công ${deletedCount} người dùng.`,
+      message: `Đã xóa thành công tài khoản của: ${namesString}`,
       deletedCount: deletedCount,
+      deletedNames: deletedNames, // (Tuỳ chọn) Trả về luôn mảng mộc cho React lỡ cần dùng
     });
   } catch (error) {
     console.error("Lỗi khi xóa nhiều người dùng:", error);

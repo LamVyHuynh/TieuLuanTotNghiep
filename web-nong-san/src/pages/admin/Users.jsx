@@ -66,11 +66,15 @@ function UsersPage() {
 
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
+  // --- STATE CHO CHỨC NĂNG CHỌN NHIỀU (BULK ACTIONS) ---
+  const [selectedIds, setSelectedIds] = useState([]);
+
   // --- STATE CHO MODAL XÁC NHẬN XOÁ ---
   const [deleteConfirm, setDeleteConfirm] = useState({
     show: false,
     userId: null,
     isDeleting: false,
+    isBulk: false, // Thêm cờ phân biệt xoá hàng loạt
   });
 
   // --- STATE CHO THÔNG BÁO Ở GIỮA ---
@@ -133,6 +137,32 @@ function UsersPage() {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  const filteredUsers = userList.filter((user) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (user.full_name && user.full_name.toLowerCase().includes(term)) ||
+      (user.email && user.email.toLowerCase().includes(term))
+    );
+  });
+
+  // =========================================================
+  // XỬ LÝ CHỌN NHIỀU USER (CHECKBOX)
+  // =========================================================
+  const handleSelectOne = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const allIds = filteredUsers.map((u) => u.id);
+      setSelectedIds(allIds);
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
   // --- LOGIC KHOÁ/MỞ KHOÁ ---
   const handleToggleLockStatus = async (user) => {
     setOpenDropdownId(null);
@@ -155,32 +185,60 @@ function UsersPage() {
   // --- LOGIC XOÁ USER (Dùng modal xác nhận) ---
   const openDeleteConfirm = (id) => {
     setOpenDropdownId(null);
-    setDeleteConfirm({ show: true, userId: id, isDeleting: false });
+    setDeleteConfirm({
+      show: true,
+      userId: id,
+      isDeleting: false,
+      isBulk: false,
+    });
+  };
+
+  const openBulkDeleteConfirm = () => {
+    setDeleteConfirm({
+      show: true,
+      userId: null,
+      isDeleting: false,
+      isBulk: true,
+    });
   };
 
   const executeDelete = async () => {
     setDeleteConfirm((prev) => ({ ...prev, isDeleting: true }));
     try {
-      await axiosClient.delete(
-        `/auth/users/${deleteConfirm.userId}/delete-user`,
-      );
-      showToast("success", "Người dùng đã bị xoá vĩnh viễn! 🥰");
+      if (deleteConfirm.isBulk) {
+        // 1. Hứng kết quả trả về từ Backend (Thêm chữ const response = ...)
+        const response = await axiosClient.delete("/auth/users/bulk-delete", {
+          data: { userIds: selectedIds },
+        });
+
+        // 2. Lấy thẳng cái câu thông báo thông minh từ Backend để hiển thị
+        showToast("success", `${response.data.message} `);
+        setSelectedIds([]);
+      } else {
+        await axiosClient.delete(
+          `/auth/users/${deleteConfirm.userId}/delete-user`,
+        );
+        showToast("success", "Người dùng đã bị xoá vĩnh viễn! 🥰");
+        setSelectedIds((prev) =>
+          prev.filter((id) => id !== deleteConfirm.userId),
+        );
+      }
       fetchUsers();
     } catch (error) {
-      showToast("error", "Lỗi khi xoá người dùng! 😥");
+      showToast(
+        "error",
+        error.response?.data?.message || "Lỗi khi xoá người dùng! 😥",
+      );
       console.error("Lỗi khi xoá người dùng:", error);
     } finally {
-      setDeleteConfirm({ show: false, userId: null, isDeleting: false });
+      setDeleteConfirm({
+        show: false,
+        userId: null,
+        isDeleting: false,
+        isBulk: false,
+      });
     }
   };
-
-  const filteredUsers = userList.filter((user) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      (user.full_name && user.full_name.toLowerCase().includes(term)) ||
-      (user.email && user.email.toLowerCase().includes(term))
-    );
-  });
 
   const totalPages = Math.ceil(totalUsers / usersPerPage);
   const maxVisiblePages = 3;
@@ -382,7 +440,6 @@ function UsersPage() {
       return;
     }
 
-    // 1. Tạo dòng tiêu đề
     const headers = [
       "ID",
       "Họ và tên",
@@ -393,7 +450,6 @@ function UsersPage() {
       "Ngày tham gia",
     ];
 
-    // 2. Tạo dữ liệu cho từng dòng
     const csvRows = filteredUsers.map((user) => {
       const roleName = getRoleInfo(user.role_id).name;
       const statusName = getStatusInfo(user.is_active).name;
@@ -403,17 +459,15 @@ function UsersPage() {
         user.id,
         `"${user.full_name || ""}"`,
         `"${user.email || ""}"`,
-        `"${user.phone || ""}"`, // Chừa sẵn nếu tương lai API trả về phone
+        `"${user.phone || ""}"`,
         `"${roleName}"`,
         `"${statusName}"`,
         `"${joinDate}"`,
       ].join(";");
     });
 
-    // 3. Gộp tiêu đề và dữ liệu
     const csvString = [headers.join(";"), ...csvRows].join("\n");
 
-    // 4. Tạo Blob và url để tải xuống
     const blob = new Blob(["\uFEFF" + csvString], {
       type: "text/csv;charset=utf-8;",
     });
@@ -855,7 +909,6 @@ function UsersPage() {
             <Filter size={16} /> Bộ lọc
           </button>
 
-          {/* 🚀 Thêm sự kiện onClick vô nút này nè */}
           <button
             onClick={exportToCSV}
             className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-300"
@@ -865,12 +918,43 @@ function UsersPage() {
         </div>
       </section>
 
+      {/* 🚀 THANH CÔNG CỤ XÓA HÀNG LOẠT SẼ HIỆN RA KHI CÓ USER ĐƯỢC CHỌN */}
+      {selectedIds.length > 0 && (
+        <div className="mb-4 flex items-center justify-between bg-rose-50 border border-rose-200 px-6 py-4 rounded-2xl shadow-sm animate-in fade-in duration-200">
+          <span className="text-sm font-bold text-rose-800">
+            Đã chọn{" "}
+            <span className="text-rose-600 font-black text-lg mx-1">
+              {selectedIds.length}
+            </span>{" "}
+            người dùng
+          </span>
+          <button
+            onClick={openBulkDeleteConfirm}
+            className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all cursor-pointer hover:-translate-y-0.5 active:scale-95"
+          >
+            <Trash2 size={18} /> Xoá các user đã chọn
+          </button>
+        </div>
+      )}
+
       {/* --- BẢNG NGƯỜI DÙNG --- */}
       <section className="overflow-hidden rounded-2xl bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)]">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] border-collapse text-left">
             <thead>
               <tr className="bg-[#eef2eb] text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                {/* 🚀 CỘT CHECKBOX CHỌN TẤT CẢ */}
+                <th className="px-6 py-4 w-[60px] text-center border-r border-slate-100">
+                  <input
+                    type="checkbox"
+                    onChange={handleSelectAll}
+                    checked={
+                      filteredUsers.length > 0 &&
+                      selectedIds.length === filteredUsers.length
+                    }
+                    className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                  />
+                </th>
                 <th className="px-6 py-4">Tên</th>
                 <th className="px-6 py-4">Địa chỉ email</th>
                 <th className="px-6 py-4">Vai trò</th>
@@ -881,13 +965,13 @@ function UsersPage() {
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan="5" className="py-10 text-center text-slate-500">
+                  <td colSpan="6" className="py-10 text-center text-slate-500">
                     Đang tải dữ liệu...
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="py-10 text-center text-slate-500">
+                  <td colSpan="6" className="py-10 text-center text-slate-500">
                     Không tìm thấy người dùng nào.
                   </td>
                 </tr>
@@ -895,17 +979,31 @@ function UsersPage() {
                 filteredUsers.map((user, index) => {
                   const role = getRoleInfo(user.role_id);
                   const status = getStatusInfo(user.is_active);
+                  const isSelected = selectedIds.includes(user.id);
 
                   return (
                     <tr
                       key={user.id || user.email}
                       className={`group transition hover:bg-[#f7faf6] ${
-                        index % 2 === 1 ? "bg-[#fbfcfa]" : ""
+                        isSelected
+                          ? "bg-emerald-50/50"
+                          : index % 2 === 1
+                            ? "bg-[#fbfcfa]"
+                            : ""
                       }`}
                     >
+                      {/* 🚀 CỘT CHECKBOX CHỌN LẺ */}
+                      <td className="px-6 py-5 text-center border-r border-slate-50">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleSelectOne(user.id)}
+                          className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                        />
+                      </td>
+
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
-                          {/* 🚀 Logic kiểm tra: Có ảnh thì hiện ảnh Supabase, không thì hiện chữ cái đầu */}
                           {user.avatar_url ? (
                             <img
                               src={user.avatar_url}
@@ -941,7 +1039,6 @@ function UsersPage() {
                       </td>
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                          {/* Nếu đang hoạt động thì cho nháy nháy màu xanh, bị khoá thì chấm đỏ đứng im */}
                           {user.is_active === 1 || user.is_active === true ? (
                             <span className="flex h-2.5 w-2.5 relative">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -1133,10 +1230,12 @@ function UsersPage() {
                 <Trash2 size={40} />
               </div>
               <h3 className="text-2xl font-black text-slate-900 mb-2">
-                Xoá thiệt hả?
+                {deleteConfirm.isBulk ? "Xoá hàng loạt?" : "Xoá thiệt hả?"}
               </h3>
               <p className="text-slate-500 font-medium leading-relaxed mb-8">
-                Tài khoản này sẽ bị xoá vĩnh viễn khỏi hệ thống. Bạn chắc chưa?
+                {deleteConfirm.isBulk
+                  ? `Bạn đang chuẩn bị xoá ${selectedIds.length} tài khoản vĩnh viễn khỏi hệ thống. Bạn chắc chưa?`
+                  : "Tài khoản này sẽ bị xoá vĩnh viễn khỏi hệ thống. Bạn chắc chưa?"}
               </p>
               <div className="flex w-full gap-3">
                 <button

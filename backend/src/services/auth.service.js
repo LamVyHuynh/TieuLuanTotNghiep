@@ -581,15 +581,30 @@ async function resetPasswordWithOTP(email, otp, newPassword) {
 
 // Xoá người dùng hàng loạt (dành cho Admin)
 async function deleteMultipleUsers(userIds) {
-  // tạo ra list chọn userIds để tránh SQL Injection
+  // Tạo ra list chọn userIds để tránh SQL Injection
   const placeholders = userIds.map(() => "?").join(",");
+
+  // BƯỚC 1: Lấy danh sách tên người dùng TRƯỚC KHI xoá
+  const [usersToDelete] = await pool.query(
+    `SELECT full_name FROM users WHERE id IN (${placeholders})`,
+    userIds,
+  );
+
+  // BƯỚC 2: Thực hiện xoá người dùng
   const [result] = await pool.query(
     `DELETE FROM users WHERE id IN (${placeholders})`,
     userIds,
   );
 
-  return result.affectedRows; // Trả về số lượng bản ghi bị xoá
+  // BƯỚC 3: Rút trích mảng chỉ chứa tên (VD: ["Nguyễn Văn A", "Trần B"]) và trả về
+  const deletedNames = usersToDelete.map((user) => user.full_name);
+
+  return {
+    deletedCount: result.affectedRows, // Số lượng đã xoá
+    deletedNames: deletedNames, // Danh sách tên đã xoá
+  };
 }
+
 module.exports = {
   registerUser,
   loginUser,
