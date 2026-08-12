@@ -14,6 +14,7 @@ const {
   handleSocialUser,
   requestPasswordReset,
   resetPasswordWithOTP,
+  deleteMultipleUsers,
 } = require("../services/auth.service");
 const { uploadToSupabase } = require("../utils/uploadHelper");
 const { OAuth2Client } = require("google-auth-library");
@@ -323,7 +324,7 @@ const facebookLogin = async (req, res) => {
   } catch (error) {
     console.error("Lỗi xác minh token Facebook:", error.message);
 
-    // 🚀 SỬA: Bắt đúng câu chửi của Service ném ra để gửi về cho Frontend báo lỗi
+    // Bắt đúng câu chửi của Service ném ra để gửi về cho Frontend báo lỗi
     if (error.message.includes("đã được đăng ký bằng")) {
       return res.status(409).json({ message: error.message });
     }
@@ -700,6 +701,45 @@ const resetPassword = async (req, res) => {
 
     console.error("Lỗi Controller Reset Password:", error);
     res.status(500).json({ message: "Lỗi hệ thống khi khôi phục mật khẩu." });
+  }
+};
+
+// Xóa nhiều người dùng cùng lúc (Admin)
+const bulkDeleteUsers = async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return res
+        .status(400)
+        .json({
+          message: "Vui lòng cung cấp danh sách ID người dùng cần xóa.",
+        });
+    }
+
+    // Giải mã tất cả ID người dùng trước khi gửi xuống Service
+    const decodedUserIds = userIds
+      .map((id) => decodeId(id))
+      .filter((id) => id !== null);
+
+    if (decodedUserIds.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Danh sách ID người dùng không hợp lệ." });
+    }
+
+    // Gọi Service để xóa nhiều người dùng
+    const deletedCount = await deleteMultipleUsers(decodedUserIds);
+
+    res.status(200).json({
+      message: `Đã xóa thành công ${deletedCount} người dùng.`,
+      deletedCount: deletedCount,
+    });
+  } catch (error) {
+    console.error("Lỗi khi xóa nhiều người dùng:", error);
+    res.status(500).json({
+      message: "Lỗi server khi xóa nhiều người dùng",
+      error: error.message,
+    });
   }
 };
 
