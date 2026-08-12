@@ -7,6 +7,7 @@ const {
   getAllCategoriesController,
   updateCategoryController,
   deleteCategoryController,
+  bulkDeleteCategories,
 } = require("../controllers/category.controller");
 const { authenticateToken } = require("../middlewares/auth.middleware");
 
@@ -31,6 +32,9 @@ router.put(
   upload.single("image"),
   updateCategoryController,
 );
+
+// Route xoá nhiều danh mục cùng lúc
+router.delete("/bulk-delete", authenticateToken, bulkDeleteCategories);
 
 // Route xoá danh mục
 router.delete("/:id", authenticateToken, deleteCategoryController);
