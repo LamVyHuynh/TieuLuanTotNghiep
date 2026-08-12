@@ -578,6 +578,18 @@ async function resetPasswordWithOTP(email, otp, newPassword) {
 
   return true;
 }
+
+// Xoá người dùng hàng loạt (dành cho Admin)
+async function deleteMultipleUsers(userIds) {
+  // tạo ra list chọn userIds để tránh SQL Injection
+  const placeholders = userIds.map(() => "?").join(",");
+  const [result] = await pool.query(
+    `DELETE FROM users WHERE id IN (${placeholders})`,
+    userIds,
+  );
+
+  return result.affectedRows; // Trả về số lượng bản ghi bị xoá
+}
 module.exports = {
   registerUser,
   loginUser,
@@ -593,4 +605,5 @@ module.exports = {
   requestPasswordReset,
   resetPasswordWithOTP,
   handleSocialUser, // Xuất ra hàm xử lý chung cho MXH
+  deleteMultipleUsers,
 };
