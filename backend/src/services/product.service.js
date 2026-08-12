@@ -129,10 +129,24 @@ const getProductById = async (productId) => {
   return rows[0]; // Trả về sản phẩm đầu tiên (nếu có)
 };
 
+// Xoá nhiều sản phẩm cùng lúc
+async function deleteMultipleProducts(productIds) {
+  // Tạo chuỗi các dấu ? tương ứng với số lượng ID để chống SQL Injection
+  const placeholders = productIds.map(() => "?").join(", ");
+
+  const [result] = await pool.query(
+    `DELETE FROM product WHERE id_product IN (${placeholders})`,
+    productIds, // Mảng ID truyền vào sẽ tương ứng với các dấu ? ở trên
+  );
+
+  return result.affectedRows; // Trả về số lượng sản phẩm đã xoá
+}
+
 module.exports = {
   createProduct,
   getAllProducts,
   deleteProduct,
   updateProduct,
   getProductById,
+  deleteMultipleProducts,
 };

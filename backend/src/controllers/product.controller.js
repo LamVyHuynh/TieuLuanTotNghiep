@@ -4,6 +4,7 @@ const {
   deleteProduct,
   updateProduct,
   getProductById,
+  deleteMultipleProducts,
 } = require("../services/product.service");
 
 // Đổi lại tên hàm import cho đúng với file utils của mày nhé
@@ -283,6 +284,39 @@ const importProducts = async (req, res) => {
   }
 };
 
+// API xử lí xoá hàng loạt sản phẩm (dùng mảng ID chuỗi từ React gửi lên)
+const bulkDeleteProducts = async (req, res) => {
+  try {
+    const { ids } = req.body; // Nhận mảng ids từ frontend (Ví dụ: ['A1b2', 'C3d4'])
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Vui lòng chọn ít nhất 1 sản phẩm để xoá!" });
+    }
+
+    // Giải mã toàn bộ mảng ID chữ thành ID số
+    const realIds = ids.map((id) => decodeId(id)).filter((id) => id !== null);
+
+    if (realIds.length === 0) {
+      return res.status(400).json({ message: "Dữ liệu ID không hợp lệ!" });
+    }
+
+    // Gọi service thực hiện câu lệnh DELETE IN
+    const deleteCount = await deleteMultipleProducts(realIds);
+
+    res.status(200).json({
+      message: `Xoá hàng loạt thành công! Số sản phẩm đã xoá: ${deleteCount}`,
+    });
+  } catch (error) {
+    console.error("Lỗi xoá hàng loạt:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi xoá hàng loạt!",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addProduct,
   getProducts,
@@ -290,4 +324,5 @@ module.exports = {
   updateInfoProduct,
   getProductDetail,
   importProducts,
+  bulkDeleteProducts,
 };

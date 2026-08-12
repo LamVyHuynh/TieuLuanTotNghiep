@@ -11,6 +11,7 @@ const {
   updateInfoProduct,
   getProductDetail,
   importProducts,
+  bulkDeleteProducts,
 } = require("../controllers/product.controller");
 const { authenticateToken } = require("../middlewares/auth.middleware");
 
@@ -27,6 +28,9 @@ router.post(
   upload.single("image"),
   addProduct,
 );
+
+// Route để xoá nhiều sản phẩm cùng lúc
+router.delete("/bulk-delete", authenticateToken, bulkDeleteProducts);
 
 // Route để xoá sản phẩm (nếu cần thiết)
 router.delete("/:id", authenticateToken, deleteSanPham);

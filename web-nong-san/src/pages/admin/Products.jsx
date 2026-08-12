@@ -21,10 +21,14 @@ import axiosClient from "../../api/axiosClient";
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+
 function ProductsPage() {
   const [categoryList, setCategoryList] = useState([]);
   const [productList, setProductList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // --- STATE CHO CHỨC NĂNG CHỌN NHIỀU (BULK ACTIONS) ---
+  const [selectedIds, setSelectedIds] = useState([]);
 
   // --- STATE CHO MODAL THÊM / SỬA ---
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,11 +40,12 @@ function ProductsPage() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
 
-  // --- STATE CHO MODAL XÁC NHẬN XOÁ ---
+  // --- STATE CHO MODAL XÁC NHẬN XOÁ (Thêm cờ isBulk) ---
   const [deleteConfirm, setDeleteConfirm] = useState({
     show: false,
     productId: null,
     isDeleting: false,
+    isBulk: false, // Cờ phân biệt xoá 1 hay xoá nhiều
   });
 
   // --- STATE CHO THÔNG BÁO Ở GIỮA ---
@@ -129,6 +134,24 @@ function ProductsPage() {
     }, 0),
   };
 
+  // =========================================================
+  // XỬ LÝ CHỌN NHIỀU SẢN PHẨM (CHECKBOX)
+  // =========================================================
+  const handleSelectOne = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const allIds = productList.map((p) => p.id_product);
+      setSelectedIds(allIds);
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -137,7 +160,6 @@ function ProductsPage() {
     }));
   };
 
-  // Lắng nghe khi người dùng chọn ảnh
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -161,7 +183,7 @@ function ProductsPage() {
       fat: product.fat,
     });
     setImageFile(null);
-    setImagePreview(product.image_url || ""); // Hiện ảnh cũ
+    setImagePreview(product.image_url || "");
     setCurrentProductId(product.id_product);
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -169,7 +191,7 @@ function ProductsPage() {
 
   const openAddModal = () => {
     setFormData({
-      id_category: categoryList.length > 0 ? categoryList[0].id_category : "", // Chọn sẵn danh mục đầu tiên
+      id_category: categoryList.length > 0 ? categoryList[0].id_category : "",
       name: "",
       description: "",
       price: "",
@@ -223,41 +245,76 @@ function ProductsPage() {
     }
   };
 
+  // Mở Modal xác nhận xoá 1 mục
   const openDeleteConfirm = (id) => {
-    setDeleteConfirm({ show: true, productId: id, isDeleting: false });
+    setDeleteConfirm({
+      show: true,
+      productId: id,
+      isDeleting: false,
+      isBulk: false,
+    });
   };
 
+  // Mở Modal xác nhận xoá hàng loạt
+  const openBulkDeleteConfirm = () => {
+    setDeleteConfirm({
+      show: true,
+      productId: null,
+      isDeleting: false,
+      isBulk: true,
+    });
+  };
+
+  // =========================================================
+  // XỬ LÝ XOÁ (GỘP CHUNG 1 HÀM CHO CẢ XOÁ LẺ VÀ XOÁ NHIỀU)
+  // =========================================================
   const executeDelete = async () => {
     setDeleteConfirm((prev) => ({ ...prev, isDeleting: true }));
     try {
-      await axiosClient.delete(`products/${deleteConfirm.productId}`);
-      showToast("success", "Món ăn đã được xoá thành công 🥰");
+      if (deleteConfirm.isBulk) {
+        // Gửi mảng ID xuống Backend API (Yêu cầu Backend phải hỗ trợ route này)
+        await axiosClient.delete("products/bulk-delete", {
+          data: { ids: selectedIds },
+        });
+        showToast(
+          "success",
+          `Đã xoá thành công ${selectedIds.length} món ăn 🥰`,
+        );
+        setSelectedIds([]); // Dọn dẹp danh sách đã chọn
+      } else {
+        await axiosClient.delete(`products/${deleteConfirm.productId}`);
+        showToast("success", "Món ăn đã được xoá thành công 🥰");
+        // Xóa món đó khỏi selectedIds (nếu đang được tick)
+        setSelectedIds((prev) =>
+          prev.filter((id) => id !== deleteConfirm.productId),
+        );
+      }
       fetchData();
     } catch (error) {
       showToast("error", "Xoá món ăn không được rồi 😥", error);
     } finally {
-      setDeleteConfirm({ show: false, productId: null, isDeleting: false });
+      setDeleteConfirm({
+        show: false,
+        productId: null,
+        isDeleting: false,
+        isBulk: false,
+      });
     }
   };
 
-  // =========================================================
-  // 🚀 TÍNH NĂNG: TẢI TEMPLATE MẪU EXCEL (CÓ DROPDOWN CHỌN DANH MỤC)
-  // =========================================================
   const downloadTemplate = async () => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Template Nhập Sản Phẩm");
 
-    // 1. Gộp Tên và ID danh mục lại (VD: Salad - [ID: 1])
     const categoryOptions = categoryList.map(
       (cat) => `${cat.name} - [ID: ${cat.id_category}]`,
     );
     const suggestCategory =
       categoryOptions.length > 0 ? categoryOptions[0] : "";
 
-    // 2. Thiết lập các Cột (Đổi tên "ID Danh mục" thành "Danh mục")
     worksheet.columns = [
       { header: "Tên món ăn", key: "name", width: 25 },
-      { header: "Danh mục", key: "category", width: 35 }, // 👈 Cột B
+      { header: "Danh mục", key: "category", width: 35 },
       { header: "Giá gốc", key: "price", width: 15 },
       { header: "Giá giảm", key: "discount_price", width: 15 },
       { header: "Đơn vị", key: "unit", width: 10 },
@@ -269,12 +326,11 @@ function ProductsPage() {
       { header: "Mô tả", key: "description", width: 40 },
     ];
 
-    // 3. Style cho Dòng tiêu đề (Xanh ngọc, in đậm)
     worksheet.getRow(1).eachCell((cell) => {
       cell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "059669" }, // Xanh ngọc
+        fgColor: { argb: "059669" },
       };
       cell.font = { color: { argb: "FFFFFF" }, bold: true };
       cell.alignment = { vertical: "middle", horizontal: "center" };
@@ -286,7 +342,6 @@ function ProductsPage() {
       };
     });
 
-    // 4. Thêm dòng dữ liệu mẫu
     worksheet.addRow({
       name: "Salad Ức Gà Mẫu",
       category: suggestCategory,
@@ -301,9 +356,7 @@ function ProductsPage() {
       description: "Món salad rất ngon, phù hợp ăn kiêng.",
     });
 
-    // 5. 🚀 TẠO DROPDOWN CHO CỘT DANH MỤC
     if (categoryOptions.length > 0) {
-      // Tạo một Sheet ẩn để chứa danh sách danh mục (Tránh lỗi giới hạn ký tự của Excel)
       const hiddenSheet = workbook.addWorksheet("HiddenCategories", {
         state: "hidden",
       });
@@ -311,7 +364,6 @@ function ProductsPage() {
         hiddenSheet.getCell(`A${index + 1}`).value = cat;
       });
 
-      // Gắn rule Dropdown cho cột B (Cột Danh mục) từ dòng 2 đến dòng 1000
       for (let i = 2; i <= 1000; i++) {
         worksheet.getCell(`B${i}`).dataValidation = {
           type: "list",
@@ -325,7 +377,6 @@ function ProductsPage() {
       }
     }
 
-    // 6. Đóng gói và tải file
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -333,9 +384,6 @@ function ProductsPage() {
     saveAs(blob, "Template_Nhap_SanPham_HealthyGO.xlsx");
   };
 
-  // =========================================================
-  //  TÍNH NĂNG: XỬ LÝ IMPORT FILE EXCEL/CSV
-  // =========================================================
   const handleImportFile = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -349,7 +397,7 @@ function ProductsPage() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       showToast("success", res.data.message || "Import dữ liệu thành công!");
-      fetchData(); // Tải lại danh sách sản phẩm
+      fetchData();
     } catch (error) {
       showToast(
         "error",
@@ -358,13 +406,10 @@ function ProductsPage() {
       );
     } finally {
       setIsLoading(false);
-      e.target.value = null; // Reset input để có thể chọn lại cùng 1 file
+      e.target.value = null;
     }
   };
 
-  // =========================================================
-  // TÍNH NĂNG: XUẤT CSV
-  // =========================================================
   const exportToCSV = () => {
     if (productList.length === 0) {
       showToast("error", "Không có dữ liệu để xuất CSV!");
@@ -433,7 +478,6 @@ function ProductsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* NÚT TẢI TEMPLATE MẪU */}
           <button
             onClick={downloadTemplate}
             className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-indigo-50 px-4 py-3 font-bold text-indigo-700 hover:bg-indigo-100 transition shadow-sm"
@@ -442,7 +486,6 @@ function ProductsPage() {
             <span className="text-sm">Tải Template mẫu</span>
           </button>
 
-          {/* NÚT NHẬP FILE */}
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-amber-50 px-4 py-3 font-bold text-amber-700 hover:bg-amber-100 transition shadow-sm">
             <UploadCloud size={20} />
             <span className="text-sm">Nhập Excel</span>
@@ -454,7 +497,6 @@ function ProductsPage() {
             />
           </label>
 
-          {/* NÚT XUẤT CSV */}
           <button
             onClick={exportToCSV}
             className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-slate-200 px-4 py-3 font-bold text-slate-700 shadow-sm transition hover:scale-105 active:scale-95"
@@ -463,7 +505,6 @@ function ProductsPage() {
             <span className="text-sm">Xuất CSV</span>
           </button>
 
-          {/* NÚT THÊM MỚI */}
           <button
             onClick={openAddModal}
             className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-[#2e7d32] px-6 py-3 font-bold text-white shadow-lg transition hover:scale-105 hover:bg-[#1b5e20] active:scale-95"
@@ -530,6 +571,25 @@ function ProductsPage() {
         </div>
       </section>
 
+      {/* 🚀 THANH CÔNG CỤ XÓA HÀNG LOẠT SẼ HIỆN RA KHI CÓ SẢN PHẨM ĐƯỢC CHỌN */}
+      {selectedIds.length > 0 && (
+        <div className="mb-4 mx-2 flex items-center justify-between bg-rose-50 border border-rose-200 px-6 py-4 rounded-2xl shadow-sm animate-in fade-in duration-200">
+          <span className="text-sm font-bold text-rose-800">
+            Đã chọn{" "}
+            <span className="text-rose-600 font-black text-lg mx-1">
+              {selectedIds.length}
+            </span>{" "}
+            sản phẩm
+          </span>
+          <button
+            onClick={openBulkDeleteConfirm}
+            className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all cursor-pointer hover:-translate-y-0.5 active:scale-95"
+          >
+            <Trash2 size={18} /> Xoá các mục đã chọn
+          </button>
+        </div>
+      )}
+
       {/* TABLE BẢNG HIỂN THỊ */}
       {isLoading ? (
         <div className="flex justify-center p-20">
@@ -541,6 +601,18 @@ function ProductsPage() {
             <table className="w-full min-w-[1100px] text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-100">
+                  {/* 🚀 CỘT CHECKBOX CHỌN TẤT CẢ */}
+                  <th className="p-5 w-[60px] text-center border-r border-slate-100">
+                    <input
+                      type="checkbox"
+                      onChange={handleSelectAll}
+                      checked={
+                        productList.length > 0 &&
+                        selectedIds.length === productList.length
+                      }
+                      className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                    />
+                  </th>
                   <th className="p-5 text-[11px] font-black uppercase text-slate-400 w-[300px]">
                     Món ăn
                   </th>
@@ -568,12 +640,24 @@ function ProductsPage() {
                 {productList.map((product) => {
                   const originalPrice = Number(product.price) || 0;
                   const discountPrice = Number(product.discount_price) || 0;
+                  // Kiểm tra xem sản phẩm này có đang được chọn không
+                  const isSelected = selectedIds.includes(product.id_product);
 
                   return (
                     <tr
                       key={product.id_product}
-                      className="group hover:bg-emerald-50/30 transition-all align-middle"
+                      className={`group transition-all align-middle hover:bg-emerald-50/30 ${isSelected ? "bg-emerald-50/50" : ""}`}
                     >
+                      {/* 🚀 CỘT CHECKBOX CHỌN LẺ */}
+                      <td className="p-5 text-center border-r border-slate-50">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleSelectOne(product.id_product)}
+                          className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                        />
+                      </td>
+
                       <td className="p-5">
                         <div className="flex items-center gap-4">
                           <img
@@ -701,11 +785,12 @@ function ProductsPage() {
                 <Trash2 size={40} />
               </div>
               <h3 className="text-2xl font-black text-slate-900 mb-2">
-                Xoá thiệt hả?
+                {deleteConfirm.isBulk ? "Xoá hàng loạt?" : "Xoá thiệt hả?"}
               </h3>
               <p className="text-slate-500 font-medium mb-8">
-                Món ăn này sẽ biến mất vĩnh viễn khỏi kho. Suy nghĩ kỹ chưa bạn
-                ơi?
+                {deleteConfirm.isBulk
+                  ? `Bạn đang chuẩn bị xoá ${selectedIds.length} món ăn. Hành động này không thể hoàn tác!`
+                  : "Món ăn này sẽ biến mất vĩnh viễn khỏi kho. Suy nghĩ kỹ chưa bạn ơi?"}
               </p>
               <div className="flex w-full gap-3">
                 <button
