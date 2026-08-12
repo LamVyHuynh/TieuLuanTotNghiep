@@ -144,20 +144,17 @@ const deleteCategoryController = async (req, res) => {
 // Xoá nhiều danh mục cùng lúc
 const bulkDeleteCategories = async (req, res) => {
   try {
-    const { categoryIds } = req.body;
+    const { ids } = req.body;
+    console.log("Received categoryIds for bulk delete:", ids);
 
-    if (
-      !categoryIds ||
-      !Array.isArray(categoryIds) ||
-      categoryIds.length === 0
-    ) {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res
         .status(400)
         .json({ message: "Vui lòng chọn ít nhất 1 danh mục để xoá!" });
     }
 
     // Giải mã tất cả ID danh mục từ chữ sang số
-    const realCategoryIds = categoryIds.map((id) => decodeId(id));
+    const realCategoryIds = ids.map((id) => decodeId(id));
     if (realCategoryIds.length === 0) {
       return res
         .status(400)
@@ -169,7 +166,7 @@ const bulkDeleteCategories = async (req, res) => {
 
     res.status(200).json({
       message: `Xoá thành công ${deletedCount} danh mục!`,
-      deletedCategoryIds: categoryIds, // Trả về ID chữ để FE biết đường xóa UI
+      deletedCategoryIds: ids, // Trả về ID chữ để FE biết đường xóa UI
     });
   } catch (error) {
     console.error("Lỗi xoá hàng loạt:", error);

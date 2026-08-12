@@ -19,6 +19,9 @@ function CategoriesPage() {
   const [productList, setProductList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // --- STATE CHO CHỨC NĂNG CHỌN NHIỀU (BULK ACTIONS) ---
+  const [selectedIds, setSelectedIds] = useState([]);
+
   // --- STATE MODAL ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,11 +32,12 @@ function CategoriesPage() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
 
-  // --- STATE CONFIRM XOÁ & TOAST ---
+  // --- STATE CONFIRM XOÁ & TOAST (Thêm cờ isBulk) ---
   const [deleteConfirm, setDeleteConfirm] = useState({
     show: false,
     categoryId: null,
     isDeleting: false,
+    isBulk: false, // Cờ phân biệt xoá lẻ hay xoá hàng loạt
   });
   const [toast, setToast] = useState({
     show: false,
@@ -99,6 +103,24 @@ function CategoriesPage() {
     total: categoryList.length,
     active: categoryList.filter((cat) => cat.status === 1).length,
     inactive: categoryList.filter((cat) => cat.status === 0).length,
+  };
+
+  // =========================================================
+  // XỬ LÝ CHỌN NHIỀU DANH MỤC (CHECKBOX)
+  // =========================================================
+  const handleSelectOne = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const allIds = categoryList.map((c) => c.id_category);
+      setSelectedIds(allIds);
+    } else {
+      setSelectedIds([]);
+    }
   };
 
   const handleChange = (e) => {
@@ -174,15 +196,49 @@ function CategoriesPage() {
     }
   };
 
+  // Mở Modal xác nhận xoá 1 mục
   const openDeleteConfirm = (id) => {
-    setDeleteConfirm({ show: true, categoryId: id, isDeleting: false });
+    setDeleteConfirm({
+      show: true,
+      categoryId: id,
+      isDeleting: false,
+      isBulk: false,
+    });
   };
 
+  // Mở Modal xác nhận xoá hàng loạt
+  const openBulkDeleteConfirm = () => {
+    setDeleteConfirm({
+      show: true,
+      categoryId: null,
+      isDeleting: false,
+      isBulk: true,
+    });
+  };
+
+  // =========================================================
+  // XỬ LÝ XOÁ (GỘP CHUNG 1 HÀM CHO CẢ XOÁ LẺ VÀ XOÁ NHIỀU)
+  // =========================================================
   const executeDelete = async () => {
     setDeleteConfirm((prev) => ({ ...prev, isDeleting: true }));
     try {
-      await axiosClient.delete(`categories/${deleteConfirm.categoryId}`);
-      showToast("success", "Danh mục đã bay màu! 🥰");
+      if (deleteConfirm.isBulk) {
+        // Gửi mảng ID xuống Backend API (Yêu cầu Backend phải hỗ trợ route này)
+        await axiosClient.delete("categories/bulk-delete", {
+          data: { ids: selectedIds },
+        });
+        showToast(
+          "success",
+          `Đã xoá thành công ${selectedIds.length} danh mục! 🥰`,
+        );
+        setSelectedIds([]); // Dọn dẹp danh sách đã chọn
+      } else {
+        await axiosClient.delete(`categories/${deleteConfirm.categoryId}`);
+        showToast("success", "Danh mục đã bay màu! 🥰");
+        setSelectedIds((prev) =>
+          prev.filter((id) => id !== deleteConfirm.categoryId),
+        );
+      }
       fetchCategories();
     } catch (error) {
       showToast(
@@ -190,7 +246,12 @@ function CategoriesPage() {
         error.response?.data?.message || "Xoá không được rồi! 😥",
       );
     } finally {
-      setDeleteConfirm({ show: false, categoryId: null, isDeleting: false });
+      setDeleteConfirm({
+        show: false,
+        categoryId: null,
+        isDeleting: false,
+        isBulk: false,
+      });
     }
   };
 
@@ -322,6 +383,25 @@ function CategoriesPage() {
         </div>
       </section>
 
+      {/* 🚀 THANH CÔNG CỤ XÓA HÀNG LOẠT SẼ HIỆN RA KHI CÓ MỤC ĐƯỢC CHỌN */}
+      {selectedIds.length > 0 && (
+        <div className="mb-4 mx-2 flex items-center justify-between bg-rose-50 border border-rose-200 px-6 py-4 rounded-2xl shadow-sm animate-in fade-in duration-200">
+          <span className="text-sm font-bold text-rose-800">
+            Đã chọn{" "}
+            <span className="text-rose-600 font-black text-lg mx-1">
+              {selectedIds.length}
+            </span>{" "}
+            danh mục
+          </span>
+          <button
+            onClick={openBulkDeleteConfirm}
+            className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all cursor-pointer hover:-translate-y-0.5 active:scale-95"
+          >
+            <Trash2 size={18} /> Xoá các mục đã chọn
+          </button>
+        </div>
+      )}
+
       {/* TABLE */}
       {isLoading ? (
         <div className="flex justify-center p-20">
@@ -333,6 +413,18 @@ function CategoriesPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-100">
+                  {/* 🚀 CỘT CHECKBOX CHỌN TẤT CẢ */}
+                  <th className="p-5 w-[60px] text-center border-r border-slate-100">
+                    <input
+                      type="checkbox"
+                      onChange={handleSelectAll}
+                      checked={
+                        categoryList.length > 0 &&
+                        selectedIds.length === categoryList.length
+                      }
+                      className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                    />
+                  </th>
                   <th className="p-5 text-[11px] font-black uppercase text-slate-400">
                     Danh mục
                   </th>
@@ -348,59 +440,74 @@ function CategoriesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {categoryList.map((cat) => (
-                  <tr
-                    key={cat.id_category}
-                    className="group hover:bg-emerald-50/30 transition-all"
-                  >
-                    <td className="p-5">
-                      <div className="flex items-center gap-4">
-                        <img
-                          src={
-                            cat.image_url || "https://via.placeholder.com/150"
-                          }
-                          alt=""
-                          className="h-14 w-14 rounded-2xl object-cover shadow-sm border border-slate-100"
+                {categoryList.map((cat) => {
+                  // Kiểm tra xem danh mục này có đang được chọn không
+                  const isSelected = selectedIds.includes(cat.id_category);
+
+                  return (
+                    <tr
+                      key={cat.id_category}
+                      className={`group transition-all ${isSelected ? "bg-emerald-50/50" : "hover:bg-emerald-50/30"}`}
+                    >
+                      {/* 🚀 CỘT CHECKBOX CHỌN LẺ */}
+                      <td className="p-5 text-center border-r border-slate-50">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleSelectOne(cat.id_category)}
+                          className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
                         />
-                        <div className="flex flex-col">
-                          <p className="font-black text-slate-800 text-base">
-                            {cat.name}
-                          </p>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">
-                            {coutProductsInCategory[cat.id_category] || 0} sản
-                            phẩm
-                          </span>
+                      </td>
+
+                      <td className="p-5">
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={
+                              cat.image_url || "https://via.placeholder.com/150"
+                            }
+                            alt=""
+                            className="h-14 w-14 rounded-2xl object-cover shadow-sm border border-slate-100"
+                          />
+                          <div className="flex flex-col">
+                            <p className="font-black text-slate-800 text-base">
+                              {cat.name}
+                            </p>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">
+                              {coutProductsInCategory[cat.id_category] || 0} sản
+                              phẩm
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-5 text-sm font-medium text-slate-500 max-w-xs truncate">
-                      {cat.description || "Không có mô tả"}
-                    </td>
-                    <td className="p-5 text-center">
-                      <span
-                        className={`px-3 py-1 rounded-lg text-xs font-bold uppercase ${cat.status === 1 ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
-                      >
-                        {cat.status === 1 ? "Hiển thị" : "Đang ẩn"}
-                      </span>
-                    </td>
-                    <td className="p-5 text-right">
-                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => openEditModal(cat)}
-                          className="p-2.5 text-slate-400 hover:text-emerald-600 cursor-pointer"
+                      </td>
+                      <td className="p-5 text-sm font-medium text-slate-500 max-w-xs truncate">
+                        {cat.description || "Không có mô tả"}
+                      </td>
+                      <td className="p-5 text-center">
+                        <span
+                          className={`px-3 py-1 rounded-lg text-xs font-bold uppercase ${cat.status === 1 ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
                         >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => openDeleteConfirm(cat.id_category)}
-                          className="p-2.5 text-slate-400 hover:text-rose-600 cursor-pointer"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {cat.status === 1 ? "Hiển thị" : "Đang ẩn"}
+                        </span>
+                      </td>
+                      <td className="p-5 text-right">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => openEditModal(cat)}
+                            className="p-2.5 text-slate-400 hover:text-emerald-600 cursor-pointer"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => openDeleteConfirm(cat.id_category)}
+                            className="p-2.5 text-slate-400 hover:text-rose-600 cursor-pointer"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -562,11 +669,12 @@ function CategoriesPage() {
                 <Trash2 size={40} />
               </div>
               <h3 className="text-2xl font-black text-slate-900 mb-2">
-                Xoá thiệt hả?
+                {deleteConfirm.isBulk ? "Xoá hàng loạt?" : "Xoá thiệt hả?"}
               </h3>
               <p className="text-slate-500 font-medium leading-relaxed mb-8">
-                Danh mục này sẽ bị xoá. Nếu danh mục đang chứa món ăn thì không
-                xoá được đâu nhé!
+                {deleteConfirm.isBulk
+                  ? `Bạn sắp xoá ${selectedIds.length} danh mục. Những danh mục đang chứa món ăn sẽ không thể xoá được nhé!`
+                  : "Danh mục này sẽ bị xoá. Nếu danh mục đang chứa món ăn thì không xoá được đâu nhé!"}
               </p>
               <div className="flex w-full gap-3">
                 <button
