@@ -383,22 +383,30 @@ function CategoriesPage() {
         </div>
       </section>
 
-      {/* 🚀 THANH CÔNG CỤ XÓA HÀNG LOẠT SẼ HIỆN RA KHI CÓ MỤC ĐƯỢC CHỌN */}
+      {/*  THANH CÔNG CỤ XÓA HÀNG LOẠT */}
       {selectedIds.length > 0 && (
-        <div className="mb-4 mx-2 flex items-center justify-between bg-rose-50 border border-rose-200 px-6 py-4 rounded-2xl shadow-sm animate-in fade-in duration-200">
-          <span className="text-sm font-bold text-rose-800">
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[50] w-[calc(100%-2rem)] max-w-2xl flex items-center justify-between bg-white border-2 border-rose-200 px-6 py-4 rounded-2xl shadow-[0_20px_60px_-10px_rgba(225,29,72,0.3)] animate-in slide-in-from-bottom-10 fade-in duration-300">
+          <span className="text-sm font-bold text-slate-700">
             Đã chọn{" "}
-            <span className="text-rose-600 font-black text-lg mx-1">
+            <span className="text-rose-600 font-black text-xl mx-1.5">
               {selectedIds.length}
             </span>{" "}
             danh mục
           </span>
-          <button
-            onClick={openBulkDeleteConfirm}
-            className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all cursor-pointer hover:-translate-y-0.5 active:scale-95"
-          >
-            <Trash2 size={18} /> Xoá các mục đã chọn
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSelectedIds([])}
+              className="text-sm font-bold text-slate-500 hover:text-slate-800 transition cursor-pointer px-4 py-2.5 rounded-xl hover:bg-slate-100"
+            >
+              Huỷ chọn
+            </button>
+            <button
+              onClick={openBulkDeleteConfirm}
+              className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-rose-500/30 transition-all cursor-pointer hover:-translate-y-0.5 active:scale-95"
+            >
+              <Trash2 size={18} /> Xoá hàng loạt
+            </button>
+          </div>
         </div>
       )}
 
