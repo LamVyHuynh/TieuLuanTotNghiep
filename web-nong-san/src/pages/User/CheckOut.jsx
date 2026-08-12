@@ -15,7 +15,6 @@ import {
   Lock,
   MapPin,
   Wallet,
-  QrCode,
   XCircle,
   X,
   Plus,
@@ -37,7 +36,6 @@ import axiosClient from "../../api/axiosClient";
 const generateTimeSlots = () => {
   const groupedSlots = [];
   const now = new Date();
-
   now.setMinutes(now.getMinutes() + 45);
   const limitHour = now.getHours();
   const limitMinute = now.getMinutes();
@@ -56,7 +54,6 @@ const generateTimeSlots = () => {
       const mins = [0, 30];
       for (let m of mins) {
         const startTimeStr = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-
         let nextH = h;
         let nextM = m + 30;
         if (nextM >= 60) {
@@ -150,7 +147,6 @@ function CheckOut() {
   const [isLoadingAddress, setIsLoadingAddress] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 🚀 STATE CHỨA LINK ẢNH QR MOMO VÀ THEO DÕI ĐƠN HÀNG
   const [momoQRUrl, setMomoQRUrl] = useState(null);
   const [momoOrderIdTracker, setMomoOrderIdTracker] = useState(null);
   const pollInterval = useRef(null);
@@ -169,7 +165,6 @@ function CheckOut() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
-
   const [tempOrderName, setTempOrderName] = useState("");
 
   useEffect(() => {
@@ -209,7 +204,6 @@ function CheckOut() {
       });
 
       setTempOrderName(profileForm.full_name);
-
       showToast("Cập nhật thông tin giao hàng thành công! 🥰", "success");
       setShowProfileModal(false);
 
@@ -265,7 +259,10 @@ function CheckOut() {
         setSelectedAddress(null);
       }
     } catch (error) {
-      console.error("Lỗi lấy danh sách địa chỉ:", error);
+      showToast(
+        error.response?.data?.message || "Lỗi khi tải danh sách địa chỉ!",
+        "error",
+      );
       setSelectedAddress(null);
     } finally {
       setIsLoadingAddress(false);
@@ -300,11 +297,9 @@ function CheckOut() {
       const newAddressId = res.data?.data?.id;
 
       showToast("Đã lưu địa chỉ thành công! 🥰", "success");
-
       setNewAddressText("");
       setIsAddingNewAddr(false);
       setShowAddressModal(false);
-
       await fetchAddresses(newAddressId);
     } catch (error) {
       showToast(
@@ -324,7 +319,6 @@ function CheckOut() {
 
   const executeDeleteAddress = async () => {
     if (!addressToDelete) return;
-
     setIsDeleting(true);
     try {
       await axiosClient.delete(`/addresses/${addressToDelete}`);
@@ -347,21 +341,14 @@ function CheckOut() {
     }
   };
 
-  // danh sách sản phẩm nếu > 0 thì lấy sản phẩm đầu tiên để hiển thị thông tin chung, còn nếu không có sản phẩm thì hiển thị thông báo chưa chọn sản phẩm
   const product = checkoutList.length > 0 ? checkoutList[0] : null;
-
   const subtotal = useMemo(
     () =>
       checkoutList.reduce((acc, item) => acc + item.price * item.quantity, 0),
     [checkoutList],
   );
 
-  // ==========================================
-  //GIẢM GIÁ: Đơn > 60k mới giảm 15k
-  // ==========================================
   const discount = subtotal > 60000 ? 15000 : 0;
-
-  // Tính tổng tiền thanh toán cuối cùng (Không bao giờ để số âm)
   const total = Math.max(subtotal - discount, 0);
 
   const handlePlaceOrder = () => {
@@ -370,18 +357,15 @@ function CheckOut() {
       showToast("Vui lòng bổ sung SĐT trước khi đặt hàng!", "error");
       return;
     }
-
     if (!selectedAddress) {
       showToast("Vui lòng thêm địa chỉ giao hàng!", "error");
       return;
     }
-
     if (deliveryType === "scheduled" && !scheduledTime) {
       showToast("Vui lòng chọn khung giờ bạn muốn nhận hàng!", "error");
       return;
     }
 
-    // Chạy thẳng vào hàm tạo đơn
     executeOrder();
   };
 
@@ -404,58 +388,48 @@ function CheckOut() {
         })),
       };
 
-      // 1. Tạo đơn hàng vào Database trước
       const res = await axiosClient.post("/orders/checkout", orderPayload);
       const newOrderId = res.data.order_id;
 
-      // ==========================================
-      // XỬ LÝ THANH TOÁN BANK (PAYOS)
-      // ==========================================
       if (paymentMethod === "bank") {
         showToast("Đang tạo mã VietQR MB Bank...", "success");
         const payosRes = await axiosClient.post("/orders/payos-payment", {
           orderId: newOrderId,
           amount: total,
-          description: `Thanh toan don ${newOrderId}`, // Nội dung CK không nên có dấu #
+          description: `Thanh toan don ${newOrderId}`,
         });
 
-        // Backend PayOS trả về 'qrCode' (chuỗi ký tự mã hóa của VietQR)
-        if (payosRes.data && payosRes.data.qrCode) {
-          // Bọc chuỗi mã hóa vào API của qrserver để biến nó thành hình ảnh QR
-          const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(payosRes.data.qrCode)}`;
+        if (payosRes.data && payosRes.data.success) {
+          const { bin, accountNumber, amount, description } = payosRes.data;
+          // Vẽ mã VietQR xịn
+          const qrImageUrl = `https://img.vietqr.io/image/${bin}-${accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(description)}&accountName=${encodeURIComponent("HUYNH LAM VY")}`;
 
-          setMomoQRUrl(qrImageUrl); // Nạp hình QR MB Bank xịn vào
-          setMomoOrderIdTracker(newOrderId); // Lưu lại để tý Webhook gọi
-          setShowQRModal(true); // Nạp ảnh xong xuôi mới bật Modal lên
+          setMomoQRUrl(qrImageUrl);
+          setMomoOrderIdTracker(newOrderId);
+          setShowQRModal(true);
           setIsSubmitting(false);
           return;
         }
       }
 
-      // 2. Nếu thanh toán MoMo thì lấy link ẢNH QR từ Backend
       if (paymentMethod === "momo") {
         showToast("Đang kết nối cổng thanh toán MoMo...", "success");
-
-        // Gọi API Backend để lấy link QR MoMo
         const momoRes = await axiosClient.post("/orders/momo-payment", {
           orderId: newOrderId,
           amount: total,
         });
 
-        // Nếu MoMo trả về link QR thì hiển thị Modal chờ khách quét
         if (momoRes.data && momoRes.data.qrCodeUrl) {
           setMomoQRUrl(momoRes.data.qrCodeUrl);
-          setMomoOrderIdTracker(momoRes.data.momoOrderId); //  Lưu lại để đi hỏi thăm
+          setMomoOrderIdTracker(momoRes.data.momoOrderId);
           setShowQRModal(true);
           setIsSubmitting(false);
-          return; // Dừng lại ở đây chờ khách quét
+          return;
         }
       }
 
-      // 3. Nếu là COD thì chuyển trang
       setShowQRModal(false);
       showToast("Đặt hàng thành công! Sang trang đơn hàng...", "success");
-
       setTimeout(() => {
         handleNavigate("/order");
       }, 1500);
@@ -469,17 +443,12 @@ function CheckOut() {
     }
   };
 
-  // =====================================================================
-  //  TỰ ĐỘNG HỎI THĂM TRẠNG THÁI (POLLING) MỖI 3 GIÂY (MOMO & PAYOS)
-  // =====================================================================
   useEffect(() => {
-    // Nếu đang hiển thị Modal QR và có theo dõi mã đơn hàng
     if (showQRModal && momoOrderIdTracker) {
       pollInterval.current = setInterval(async () => {
         try {
           let isSuccess = false;
 
-          // 1. NẾU LÀ MOMO
           if (paymentMethod === "momo") {
             const checkRes = await axiosClient.post(
               "/orders/momo-check-status",
@@ -488,37 +457,33 @@ function CheckOut() {
               },
             );
             if (checkRes.data && checkRes.data.success) isSuccess = true;
-          }
-
-          // 2. NẾU LÀ NGÂN HÀNG (PAYOS)
-          else if (paymentMethod === "bank") {
+          } else if (paymentMethod === "bank") {
             const checkRes = await axiosClient.post(
               "/orders/payos-check-status",
               {
-                orderId: momoOrderIdTracker, // Truyền ID gốc của đơn hàng
+                orderId: momoOrderIdTracker,
               },
             );
             if (checkRes.data && checkRes.data.success) isSuccess = true;
           }
 
-          // XỬ LÝ KHI THANH TOÁN THÀNH CÔNG (TIỀN ĐÃ VÀO TÀI KHOẢN)
           if (isSuccess) {
-            clearInterval(pollInterval.current); // Dừng hỏi thăm
-            setShowQRModal(false); // Đóng Modal QR
+            clearInterval(pollInterval.current);
+            setShowQRModal(false);
             showToast(
               "Thanh toán thành công! Tiền đã vào tài khoản. 🥰",
               "success",
             );
 
-            // Chuyển trang sang lịch sử mua hàng sau 1.5 giây
             setTimeout(() => {
               handleNavigate("/order");
             }, 1500);
           }
         } catch (err) {
-          console.log("Đang chờ khách thanh toán...", err.message);
+          console.log("Đang chờ khách thanh toán...");
+          console.error("Lỗi khi kiểm tra trạng thái thanh toán:", err);
         }
-      }, 3000); // Cứ 3 giây hỏi thăm Backend 1 lần
+      }, 3000);
     }
 
     return () => {
@@ -958,7 +923,6 @@ function CheckOut() {
                 >
                   <X size={20} />
                 </button>
-                <QrCode size={40} className="mx-auto mb-3 opacity-90" />
                 <h3 className="text-xl font-black tracking-wide">
                   Quét mã {paymentMethod === "momo" ? "MoMo" : "ngân hàng"}
                 </h3>
@@ -966,7 +930,7 @@ function CheckOut() {
 
               <div className="p-8 text-center">
                 <div
-                  className={`mx-auto aspect-square max-w-[220px] rounded-2xl border-4 p-2 shadow-sm bg-white overflow-hidden mb-5 ${paymentMethod === "momo" ? "border-pink-100" : "border-emerald-100"}`}
+                  className={`mx-auto aspect-square max-w-[280px] rounded-2xl border-4 p-2 shadow-sm bg-white overflow-hidden mb-5 ${paymentMethod === "momo" ? "border-pink-100" : "border-emerald-100"}`}
                 >
                   <img
                     src={
@@ -979,30 +943,16 @@ function CheckOut() {
                   />
                 </div>
 
-                {/* NÚT THÔNG MINH HOẶC CHỜ TỰ ĐỘNG */}
-                {paymentMethod === "momo" ? (
-                  <div className="flex flex-col items-center justify-center gap-3">
-                    <div className="h-6 w-6 animate-spin rounded-full border-4 border-[#a50064] border-t-transparent" />
-                    <p className="text-sm font-bold text-[#a50064] animate-pulse">
-                      Hệ thống đang tự chờ bạn quét mã...
-                    </p>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setShowQRModal(false);
-                      showToast(
-                        "Đặt hàng thành công! Sang trang đơn hàng...",
-                        "success",
-                      );
-                      setTimeout(() => handleNavigate("/order"), 1500);
-                    }}
-                    disabled={isSubmitting}
-                    className={`w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-md transition cursor-pointer bg-emerald-600 hover:bg-emerald-700`}
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <div
+                    className={`h-6 w-6 animate-spin rounded-full border-4 border-t-transparent ${paymentMethod === "momo" ? "border-[#a50064]" : "border-emerald-600"}`}
+                  />
+                  <p
+                    className={`text-sm font-bold animate-pulse ${paymentMethod === "momo" ? "text-[#a50064]" : "text-emerald-700"}`}
                   >
-                    Tôi đã chuyển khoản xong
-                  </button>
-                )}
+                    Hệ thống đang tự chờ bạn quét mã...
+                  </p>
+                </div>
               </div>
             </div>
           </div>,

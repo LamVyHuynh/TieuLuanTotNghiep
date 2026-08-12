@@ -10,19 +10,18 @@ const {
 const { encodeId, decodeId } = require("../utils/hashid.util");
 const axios = require("axios");
 const crypto = require("crypto");
-const { PayOS } = require("@payos/node"); // Import PayOS SDK
-// Khởi tạo payOS với Client ID và API Key từ biến môi trường
+const { PayOS } = require("@payos/node");
+
+// Vẫn khởi tạo PayOS để dùng hàm xác thực Webhook
 const payOSClient = new PayOS(
   process.env.PAYOS_CLIENT_ID,
   process.env.PAYOS_API_KEY,
   process.env.PAYOS_CHECKSUM_KEY,
 );
 
-console.log(" PayOS Client Initialized:", payOSClient);
-// Tạo đơn hàng mới (dùng cho trang Checkout)
 const createOrder = async (req, res) => {
   try {
-    const userId = req.user.id; // Lấy ID người dùng từ token đã xác thực
+    const userId = req.user.id;
     const {
       full_name,
       phone,
@@ -30,7 +29,7 @@ const createOrder = async (req, res) => {
       note,
       payment_method,
       total_amount,
-      scheduled_time, // Nhận từ Frontend (có thể dính chữ T và Z)
+      scheduled_time,
       items,
     } = req.body;
 
@@ -46,52 +45,29 @@ const createOrder = async (req, res) => {
         .json({ message: "Vui lòng nhập đầy đủ thông tin nhận hàng !!!" });
     }
 
-    // =====================================================================
-    // ÉP KIỂU LẠI THỜI GIAN NGAY TẠI ĐÂY TRƯỚC KHI ĐƯA VÀO DB
-    // =====================================================================
     let formattedScheduledTime = null;
     if (scheduled_time) {
-      // 1. Tạo Date object từ chuỗi Frontend gửi lên
       const dateObj = new Date(scheduled_time);
-
-      // 2. Rút trích từng phần theo giờ địa phương của Server
       const yyyy = dateObj.getFullYear();
       const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
       const dd = String(dateObj.getDate()).padStart(2, "0");
       const hh = String(dateObj.getHours()).padStart(2, "0");
       const mi = String(dateObj.getMinutes()).padStart(2, "0");
       const ss = String(dateObj.getSeconds()).padStart(2, "0");
-
-      // 3. Ráp lại chuẩn YYYY-MM-DD HH:mm:ss cho MySQL (SẠCH BÓNG CHỮ T VÀ Z)
       formattedScheduledTime = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
     }
 
-    // BỌC THÉP CHIỀU VÀO: Giải mã id_product từ mảng items mà React gửi lên
-    // BỌC THÉP CHIỀU VÀO: Phân biệt ID số và ID mã hóa
     const decodedItems = items.map((item) => {
       const productId = item.id_product;
-
-      if (!productId) {
+      if (!productId)
         throw new Error("Lỗi giỏ hàng: Không tìm thấy ID của sản phẩm!");
-      }
-
-      let realProductId;
-
-      // KIỂM TRA: Nếu là số thì lấy luôn, nếu là chữ thì mới decodeId
-      if (typeof productId === "number" || !isNaN(productId)) {
-        realProductId = Number(productId);
-      } else {
-        realProductId = decodeId(productId);
-      }
-
-      if (!realProductId) {
+      let realProductId =
+        typeof productId === "number" || !isNaN(productId)
+          ? Number(productId)
+          : decodeId(productId);
+      if (!realProductId)
         throw new Error("ID sản phẩm không hợp lệ: " + productId);
-      }
-
-      return {
-        ...item,
-        id_product: realProductId,
-      };
+      return { ...item, id_product: realProductId };
     });
 
     const orderData = {
@@ -101,16 +77,14 @@ const createOrder = async (req, res) => {
       note,
       payment_method,
       total_amount,
-      scheduled_time: formattedScheduledTime, // Ném cái giờ đã làm sạch xuống Service
+      scheduled_time: formattedScheduledTime,
     };
 
-    // Gọi Service chạy Transaction
     const newOrderId = await createOrderTransaction(
       userId,
       orderData,
       decodedItems,
     );
-    // BỌC THÉP CHIỀU RA: Mã hóa cái ID đơn hàng vừa tạo để React xài
     const safeOrderId = encodeId(newOrderId);
 
     res.status(201).json({
@@ -120,40 +94,37 @@ const createOrder = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi tạo đơn hàng:", error);
-    // Bắt cái lỗi "Không đủ số lượng" mà mình chủ động quăng ra từ Service
     if (error.message.includes("không đủ hàng trong kho")) {
       return res.status(400).json({ success: false, message: error.message });
     }
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server khi đặt hàng",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Lỗi server khi đặt hàng",
+        error: error.message,
+      });
   }
 };
-// Controller lấy đơn hàng theo user (dùng cho trang Lịch sử đơn hàng)
+
 const getOrdersHistory = async (req, res) => {
   try {
-    const userId = req.user.id; // Lấy ID người dùng từ token đã xác thực
+    const userId = req.user.id;
     const orders = await getOrdersByUserId(userId);
     res.status(200).json({
       success: true,
       orders: orders.map((order) => ({
         ...order,
-        id_order: encodeId(order.id_order), // Mã hóa ID đơn hàng trước khi gửi về client
+        id_order: encodeId(order.id_order),
       })),
     });
   } catch (error) {
-    console.error("Lỗi lấy lịch sử đơn hàng:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server khi lấy lịch sử đơn hàng",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server khi lấy lịch sử đơn hàng" });
   }
 };
 
-// lấy đơn hàng của admin
 const getAllOrdersAdmin = async (req, res) => {
   try {
     const orders = await getAllOrdersForAdmin();
@@ -161,31 +132,25 @@ const getAllOrdersAdmin = async (req, res) => {
       success: true,
       orders: orders.map((order) => ({
         ...order,
-        id_order: encodeId(order.id_order), // Mã hóa ID đơn hàng trước khi gửi về client
+        id_order: encodeId(order.id_order),
       })),
     });
   } catch (error) {
-    console.error("Lỗi lấy tất cả đơn hàng cho admin:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server khi lấy tất cả đơn hàng cho admin",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server khi lấy tất cả đơn hàng" });
   }
 };
 
-// Hàm cập nhật trạng thái đơn hàng (dùng cho admin)
 const updateOrderStatusAdmin = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-
     const realOrderId = decodeId(id);
-    if (!realOrderId) {
+    if (!realOrderId)
       return res
         .status(400)
         .json({ success: false, message: "Mã đơn hàng không hợp lệ!" });
-    }
 
     const validStatuses = [
       "pending",
@@ -194,60 +159,40 @@ const updateOrderStatusAdmin = async (req, res) => {
       "completed",
       "cancelled",
     ];
-    if (!validStatuses.includes(status)) {
+    if (!validStatuses.includes(status))
       return res
         .status(400)
-        .json({ success: false, message: "Trạng thái đơn hàng không hợp lệ!" });
-    }
+        .json({ success: false, message: "Trạng thái không hợp lệ!" });
 
-    // Gọi Service để cập nhật trạng thái đơn hàng
     await updateOrderStatus(realOrderId, status);
-
-    res.status(200).json({
-      success: true,
-      message: "Cập nhật trạng thái đơn hàng thành công!",
-    });
+    res
+      .status(200)
+      .json({ success: true, message: "Cập nhật trạng thái thành công!" });
   } catch (error) {
-    console.error("Lỗi cập nhật trạng thái đơn hàng:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server khi cập nhật trạng thái đơn hàng",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server khi cập nhật trạng thái" });
   }
 };
 
 const getDashboardReview = async (req, res) => {
   try {
     const stats = await getDashboardStats();
-
-    // Chuyển đổi dữ liệu để phù hợp với yêu cầu của frontend
     const secureRecentOrders = stats.recentOrders.map((order) => ({
       ...order,
-      id_order: encodeId(order.id_order), // Mã hóa ID đơn hàng trước khi gửi về client
+      id_order: encodeId(order.id_order),
     }));
     res.status(200).json({
       success: true,
-      data: {
-        totalOrders: stats.totalOrders,
-        totalRevenue: stats.totalRevenue,
-        totalUsers: stats.totalUsers,
-        bestSellingProducts: stats.bestSellingProducts,
-        recentOrders: secureRecentOrders,
-        monthlyRevenue: stats.monthlyRevenue,
-      },
+      data: { ...stats, recentOrders: secureRecentOrders },
     });
   } catch (error) {
-    console.error("Lỗi lấy thống kê dashboard:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server khi lấy thống kê dashboard",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server khi lấy thống kê" });
   }
 };
 
-// Nhớ import getDetailedReports từ service lên trên cùng nhé!
 const getReportsAdmin = async (req, res) => {
   try {
     const data = await getDetailReport();
@@ -259,21 +204,15 @@ const getReportsAdmin = async (req, res) => {
   }
 };
 
-// =================================================================
-// TẠO MÃ QR THANH TOÁN MOMO UAT (BẢN CHUẨN DEEPLINK NATIVE APP)
-// =================================================================
 const createMomoPayment = async (req, res) => {
   try {
     const { orderId, amount } = req.body;
-
-    // 1. GẮN CỨNG BỘ KEY
     const partnerCode = "MOMO5RGX20191128";
     const accessKey = "M8brj9K6E22vXoDB";
     const secretKey = "nqQiVSgDMy809JoPF6OzP5OdBUB550Y4";
     const redirectUrl = "https://momo.vn";
     const ipnUrl = "http://localhost:3000/order";
 
-    // 2. Chuẩn hoá dữ liệu
     const amountNum = Number(amount);
     const uniqueOrderId = `${orderId}_${new Date().getTime()}`;
     const requestId = partnerCode + new Date().getTime();
@@ -281,16 +220,12 @@ const createMomoPayment = async (req, res) => {
     const requestType = "captureWallet";
     const extraData = "";
 
-    // 3. Xếp chuỗi chữ ký đúng chuẩn
     const rawSignature = `accessKey=${accessKey}&amount=${amountNum}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${uniqueOrderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
-
-    // 4. Băm chữ ký
     const signature = crypto
       .createHmac("sha256", secretKey)
       .update(rawSignature)
       .digest("hex");
 
-    // 5. Gói hàng gửi lên MoMo
     const requestBody = {
       partnerCode,
       partnerName: "HealthyGO",
@@ -308,55 +243,42 @@ const createMomoPayment = async (req, res) => {
       signature,
     };
 
-    // 6. Gọi API MoMo
     const result = await axios.post(
       "https://test-payment.momo.vn/v2/gateway/api/create",
       requestBody,
     );
 
-    // 7.  XỬ LÝ ẢNH QR CHUẨN NATIVE
     if (result.data && result.data.resultCode === 0) {
-      // Ưu tiên 1: Lấy ảnh QR xịn do chính MoMo cấp (nếu có)
       let finalQrCodeUrl = result.data.qrCodeUrl;
-
-      // Ưu tiên 2: Tạo QR từ 'deeplink' (momo://...) để ép MoMo bật popup thanh toán gốc
       if (!finalQrCodeUrl && result.data.deeplink) {
         finalQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(result.data.deeplink)}`;
       }
-
-      res.status(200).json({
-        success: true,
-        qrCodeUrl: finalQrCodeUrl,
-        momoOrderId: uniqueOrderId,
-        message: "Tạo mã QR MoMo thành công",
-      });
+      res
+        .status(200)
+        .json({
+          success: true,
+          qrCodeUrl: finalQrCodeUrl,
+          momoOrderId: uniqueOrderId,
+          message: "Tạo mã QR MoMo thành công",
+        });
     } else {
       throw new Error(`MoMo từ chối: ${result.data.message}`);
     }
   } catch (error) {
-    console.error(
-      "LỖI KHI GỌI MOMO:",
-      error.response ? error.response.data : error.message,
-    );
     res
       .status(500)
       .json({ success: false, message: "Lỗi kết nối cổng thanh toán MoMo!" });
   }
 };
 
-// =================================================================
-// HÀM KIỂM TRA TRẠNG THÁI THANH TOÁN TỪ MOMO
-// =================================================================
 const checkMomoPaymentStatus = async (req, res) => {
   try {
     const { momoOrderId } = req.body;
-
     const partnerCode = "MOMO5RGX20191128";
     const accessKey = "M8brj9K6E22vXoDB";
     const secretKey = "nqQiVSgDMy809JoPF6OzP5OdBUB550Y4";
     const requestId = partnerCode + new Date().getTime();
 
-    // Chữ ký để Query trạng thái
     const rawSignature = `accessKey=${accessKey}&orderId=${momoOrderId}&partnerCode=${partnerCode}&requestId=${requestId}`;
     const signature = crypto
       .createHmac("sha256", secretKey)
@@ -370,27 +292,15 @@ const checkMomoPaymentStatus = async (req, res) => {
       signature,
       lang: "vi",
     };
-
     const result = await axios.post(
       "https://test-payment.momo.vn/v2/gateway/api/query",
       requestBody,
     );
 
-    //  NẾU MOMO BÁO THÀNH CÔNG (resultCode === 0)
     if (result.data && result.data.resultCode === 0) {
-      // 1. Tách lấy mã đơn hàng mã hoá (Vd: "W9zkxp4V_178..." -> "W9zkxp4V")
       const encodedOrderId = momoOrderId.split("_")[0];
-
-      // 2. Giải mã để lấy ID thật trong Database
       const realOrderId = decodeId(encodedOrderId);
-
-      if (realOrderId) {
-        // 3. LƯU VÀO DB: Đổi trạng thái từ 'pending' sang 'processing'
-        // Việc này cũng sẽ tự động kích hoạt tính năng Bắn Thông Báo cho người dùng!
-        await updateOrderStatus(realOrderId, "processing");
-      }
-
-      // 4. Báo về cho React biết để tắt QR và chuyển trang
+      if (realOrderId) await updateOrderStatus(realOrderId, "processing");
       return res
         .status(200)
         .json({ success: true, message: "Thanh toán thành công" });
@@ -400,7 +310,6 @@ const checkMomoPaymentStatus = async (req, res) => {
         .json({ success: false, message: "Đang chờ thanh toán" });
     }
   } catch (error) {
-    console.error("LỖI KIỂM TRA MOMO:", error.message);
     res
       .status(500)
       .json({ success: false, message: "Lỗi kiểm tra trạng thái MoMo" });
@@ -408,7 +317,7 @@ const checkMomoPaymentStatus = async (req, res) => {
 };
 
 // =================================================================
-// TẠO LINK THANH TOÁN PAYOS (CHUYỂN KHOẢN NGÂN HÀNG)
+// TẠO LINK THANH TOÁN PAYOS (GỌI AXIOS TRỰC TIẾP CHỐNG LỖI THƯ VIỆN)
 // =================================================================
 const createPayOSPayment = async (req, res) => {
   try {
@@ -429,67 +338,92 @@ const createPayOSPayment = async (req, res) => {
       returnUrl: "http://localhost:5173/order",
     };
 
-    // [ĐÃ SỬA] Dùng API mới của PayOS version 2
-    const paymentLink = await payOSClient.paymentRequests.create(requestData);
+    // Tự tạo chữ ký bảo mật (Signature) để gọi API thẳng
+    const rawSignature = `amount=${requestData.amount}&cancelUrl=${requestData.cancelUrl}&description=${requestData.description}&orderCode=${requestData.orderCode}&returnUrl=${requestData.returnUrl}`;
+    const signature = crypto
+      .createHmac("sha256", process.env.PAYOS_CHECKSUM_KEY)
+      .update(rawSignature)
+      .digest("hex");
+    requestData.signature = signature;
+
+    const response = await axios.post(
+      "https://api-merchant.payos.vn/v2/payment-requests",
+      requestData,
+      {
+        headers: {
+          "x-client-id": process.env.PAYOS_CLIENT_ID,
+          "x-api-key": process.env.PAYOS_API_KEY,
+        },
+      },
+    );
+
+    const paymentLink = response.data.data;
 
     return res.status(200).json({
       success: true,
-      checkoutUrl: paymentLink.checkoutUrl,
-      qrCode: paymentLink.qrCode,
+      bin: paymentLink.bin,
+      accountNumber: paymentLink.accountNumber,
+      amount: paymentLink.amount,
+      description: paymentLink.description,
     });
   } catch (error) {
-    console.error("LỖI KHI GỌI PAYOS:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi kết nối cổng thanh toán PayOS!",
-    });
+    console.error(
+      "LỖI KHI GỌI PAYOS:",
+      error.response ? error.response.data : error.message,
+    );
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi kết nối cổng thanh toán PayOS!" });
   }
 };
 
-// =================================================================
-// API NHẬN WEBHOOK TỪ PAYOS ĐỂ TỰ ĐỘNG CHỐT ĐƠN
-// =================================================================
 const receivePayOSWebhook = async (req, res) => {
   try {
-    // [ĐÃ SỬA] Dùng API mới của PayOS version 2
-    const webhookData = payOSClient.webhooks.verify(req.body);
-
-    if (webhookData.code === "00") {
+    if (req.body.code === "00") {
+      const webhookData = payOSClient.verifyPaymentWebhookData(req.body);
       const realOrderId = webhookData.orderCode;
       await updateOrderStatus(realOrderId, "processing");
-
       console.log(
         `[PayOS Webhook] Tiền đã về bản! Tự động chốt đơn #${realOrderId}`,
       );
-
       return res
         .status(200)
         .json({ success: true, message: "Đã xử lý Webhook thành công" });
     }
-
     return res
       .status(200)
       .json({ success: true, message: "Đã ghi nhận tín hiệu" });
   } catch (error) {
-    console.error("Lỗi khi xử lý Webhook PayOS:", error.message);
     return res
-      .status(400)
+      .status(200)
       .json({ success: false, message: "Dữ liệu Webhook không hợp lệ" });
   }
 };
 
-// =================================================================
-// HÀM KIỂM TRA TRẠNG THÁI THANH TOÁN TỪ PAYOS (DÙNG ĐỂ TỰ ĐỘNG CHUYỂN TRANG)
-// =================================================================
 const checkPayOSPaymentStatus = async (req, res) => {
   try {
     const { orderId } = req.body;
+    const realOrderId = decodeId(orderId);
 
-    //  Dùng API lấy thông tin trực tiếp của PayOS version 2
-    const response = await payOSClient.get(`/v2/payment-requests/${orderId}`);
-    const paymentInfo = response.data; // Dữ liệu PayOS trả về được bọc trong .data
+    if (!realOrderId)
+      return res
+        .status(400)
+        .json({ success: false, message: "Mã đơn hàng không hợp lệ!" });
 
+    // Gọi API PayOS trực tiếp
+    const response = await axios.get(
+      `https://api-merchant.payos.vn/v2/payment-requests/${realOrderId}`,
+      {
+        headers: {
+          "x-client-id": process.env.PAYOS_CLIENT_ID,
+          "x-api-key": process.env.PAYOS_API_KEY,
+        },
+      },
+    );
+
+    const paymentInfo = response.data.data;
     if (paymentInfo && paymentInfo.status === "PAID") {
+      await updateOrderStatus(realOrderId, "processing");
       return res
         .status(200)
         .json({ success: true, message: "Thanh toán thành công" });
@@ -499,12 +433,10 @@ const checkPayOSPaymentStatus = async (req, res) => {
         .json({ success: false, message: "Đang chờ thanh toán" });
     }
   } catch (error) {
-    console.error("LỖI KIỂM TRA PAYOS:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Lỗi kiểm tra trạng thái PayOS" });
+    res.status(200).json({ success: false, message: "Đang chờ thanh toán" });
   }
 };
+
 module.exports = {
   createOrder,
   getOrdersHistory,
