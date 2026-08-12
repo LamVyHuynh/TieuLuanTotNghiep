@@ -37,9 +37,22 @@ async function deleteCategory(id) {
   return result.affectedRows > 0; // Trả về true nếu có bản ghi nào bị ảnh hưởng, ngược lại trả về false
 }
 
+// Xoá nhiều danh mục cùng lúc
+async function deleteMultipleCategories(categoryIds) {
+  const placeholders = categoryIds.map(() => "?").join(", ");
+
+  const [result] = await pool.query(
+    `DELETE FROM categories WHERE id_category IN (${placeholders})`,
+    categoryIds,
+  );
+
+  return result.affectedRows; // Trả về số lượng bản ghi bị xoá
+}
+
 module.exports = {
   createCategory,
   getAllCategories,
   updateCategory,
   deleteCategory,
+  deleteMultipleCategories,
 };
