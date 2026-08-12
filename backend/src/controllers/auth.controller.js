@@ -709,11 +709,9 @@ const bulkDeleteUsers = async (req, res) => {
   try {
     const { userIds } = req.body;
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-      return res
-        .status(400)
-        .json({
-          message: "Vui lòng cung cấp danh sách ID người dùng cần xóa.",
-        });
+      return res.status(400).json({
+        message: "Vui lòng cung cấp danh sách ID người dùng cần xóa.",
+      });
     }
 
     // Giải mã tất cả ID người dùng trước khi gửi xuống Service
@@ -760,4 +758,5 @@ module.exports = {
   facebookLogin,
   forgotPassword,
   resetPassword,
+  bulkDeleteUsers,
 };

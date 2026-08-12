@@ -23,6 +23,7 @@ const {
   facebookLogin,
   forgotPassword,
   resetPassword,
+  bulkDeleteUsers,
 } = require("../controllers/auth.controller");
 
 const { loginRateLimiter } = require("../middlewares/rateLimit.middleware");
@@ -59,8 +60,8 @@ router.put("/users/:id/change-password", changePassword);
 router.get("/logs", fetchAllLogs);
 router.get("/list-users", fetchAllUsers);
 router.post("/users/:id/toggle-status", toggleUserLock);
+router.delete("/users/bulk-delete", bulkDeleteUsers);
 router.delete("/users/:id/delete-user", deleteUser);
-
 // Route cập nhật ảnh đại diện
 // upload.single("avatar_file") đứng ra làm "bảo vệ", hứng file ảnh rồi mới cho chạy vào updateAvatar
 // Nhận hàng với nhãn dán là "avatar_file" từ frontend, multer sẽ hứng file ảnh này và lưu tạm vào RAM (do cấu hình ở uploadConfig.js là memoryStorage)
