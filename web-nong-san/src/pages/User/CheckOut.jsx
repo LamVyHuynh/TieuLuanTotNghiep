@@ -371,6 +371,10 @@ function CheckOut() {
 
   const executeOrder = async () => {
     setIsSubmitting(true);
+    // Xoá sạch cái ảnh cũ trước khi gọi API, tránh việc nó hiện lại mã MB Bank cũ!
+    setMomoQRUrl(null);
+    setMomoOrderIdTracker(null);
+
     try {
       const orderPayload = {
         full_name: tempOrderName || currentUser?.full_name,
@@ -391,6 +395,7 @@ function CheckOut() {
       const res = await axiosClient.post("/orders/checkout", orderPayload);
       const newOrderId = res.data.order_id;
 
+      // ---- XỬ LÝ THANH TOÁN CHUYỂN KHOẢN NGÂN HÀNG (VIETQR - MB BANK) ----
       if (paymentMethod === "bank") {
         showToast("Đang tạo mã VietQR MB Bank...", "success");
         const payosRes = await axiosClient.post("/orders/payos-payment", {
@@ -401,7 +406,6 @@ function CheckOut() {
 
         if (payosRes.data && payosRes.data.success) {
           const { bin, accountNumber, amount, description } = payosRes.data;
-          // Vẽ mã VietQR xịn
           const qrImageUrl = `https://img.vietqr.io/image/${bin}-${accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(description)}&accountName=${encodeURIComponent("HUYNH LAM VY")}`;
 
           setMomoQRUrl(qrImageUrl);
@@ -412,6 +416,7 @@ function CheckOut() {
         }
       }
 
+      // ---- XỬ LÝ THANH TOÁN MOMO ----
       if (paymentMethod === "momo") {
         showToast("Đang kết nối cổng thanh toán MoMo...", "success");
         const momoRes = await axiosClient.post("/orders/momo-payment", {
@@ -420,7 +425,7 @@ function CheckOut() {
         });
 
         if (momoRes.data && momoRes.data.qrCodeUrl) {
-          setMomoQRUrl(momoRes.data.qrCodeUrl);
+          setMomoQRUrl(momoRes.data.qrCodeUrl); // Nhận mã QR xịn từ Backend
           setMomoOrderIdTracker(momoRes.data.momoOrderId);
           setShowQRModal(true);
           setIsSubmitting(false);
@@ -428,6 +433,7 @@ function CheckOut() {
         }
       }
 
+      // ---- NẾU LÀ SHIP COD (HOẶC API THANH TOÁN ONLINE LỖI) ----
       setShowQRModal(false);
       showToast("Đặt hàng thành công! Sang trang đơn hàng...", "success");
       setTimeout(() => {

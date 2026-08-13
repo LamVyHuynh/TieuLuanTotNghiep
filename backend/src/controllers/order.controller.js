@@ -97,13 +97,11 @@ const createOrder = async (req, res) => {
     if (error.message.includes("không đủ hàng trong kho")) {
       return res.status(400).json({ success: false, message: error.message });
     }
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Lỗi server khi đặt hàng",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi đặt hàng",
+      error: error.message,
+    });
   }
 };
 
@@ -249,18 +247,15 @@ const createMomoPayment = async (req, res) => {
     );
 
     if (result.data && result.data.resultCode === 0) {
-      let finalQrCodeUrl = result.data.qrCodeUrl;
-      if (!finalQrCodeUrl && result.data.deeplink) {
-        finalQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(result.data.deeplink)}`;
-      }
-      res
-        .status(200)
-        .json({
-          success: true,
-          qrCodeUrl: finalQrCodeUrl,
-          momoOrderId: uniqueOrderId,
-          message: "Tạo mã QR MoMo thành công",
-        });
+      //  Ép tạo mã QR từ payUrl. Ai dùng cam điện thoại quét nó cũng nhảy thẳng vào Web MoMo
+      const finalQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(result.data.payUrl)}`;
+
+      res.status(200).json({
+        success: true,
+        qrCodeUrl: finalQrCodeUrl,
+        momoOrderId: uniqueOrderId,
+        message: "Tạo mã QR MoMo thành công",
+      });
     } else {
       throw new Error(`MoMo từ chối: ${result.data.message}`);
     }
