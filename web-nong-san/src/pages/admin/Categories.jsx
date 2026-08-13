@@ -50,6 +50,7 @@ function CategoriesPage() {
     name: "",
     description: "",
     status: 1,
+    image_url: "",
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -236,7 +237,7 @@ function CategoriesPage() {
         setSelectedIds([]); // Dọn dẹp danh sách đã chọn
       } else {
         await axiosClient.delete(`categories/${deleteConfirm.categoryId}`);
-        showToast("success", "Danh mục đã bay màu! 🥰");
+        showToast("success", "Danh mục đã được xoá thành công! 🥰");
         setSelectedIds((prev) =>
           prev.filter((id) => id !== deleteConfirm.categoryId),
         );
