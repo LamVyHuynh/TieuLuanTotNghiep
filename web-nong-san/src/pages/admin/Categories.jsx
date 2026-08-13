@@ -226,18 +226,20 @@ function CategoriesPage() {
     setDeleteConfirm((prev) => ({ ...prev, isDeleting: true }));
     try {
       if (deleteConfirm.isBulk) {
-        // Gửi mảng ID xuống Backend API (Yêu cầu Backend phải hỗ trợ route này)
-        await axiosClient.delete("categories/bulk-delete", {
+        // Hứng response
+        const response = await axiosClient.delete("categories/bulk-delete", {
           data: { ids: selectedIds },
         });
-        showToast(
-          "success",
-          `Đã xoá thành công ${selectedIds.length} danh mục! 🥰`,
-        );
-        setSelectedIds([]); // Dọn dẹp danh sách đã chọn
+        // Lấy thông báo từ Backend
+        showToast("success", `${response.data.message} 🥰`);
+        setSelectedIds([]);
       } else {
-        await axiosClient.delete(`categories/${deleteConfirm.categoryId}`);
-        showToast("success", "Danh mục đã được xoá thành công! 🥰");
+        // Hứng response
+        const response = await axiosClient.delete(
+          `categories/${deleteConfirm.categoryId}`,
+        );
+        // Lấy thông báo từ Backend
+        showToast("success", `${response.data.message} 🥰`);
         setSelectedIds((prev) =>
           prev.filter((id) => id !== deleteConfirm.categoryId),
         );

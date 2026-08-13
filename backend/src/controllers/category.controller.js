@@ -123,11 +123,11 @@ const deleteCategoryController = async (req, res) => {
       return res.status(400).json({ message: "ID danh mục không hợp lệ!" });
     }
 
-    const deleteDataCategory = await deleteCategory(categoryId); // Xóa bằng Số
+    const deleteDataCategoryName = await deleteCategory(categoryId); // Xóa bằng Số
 
-    if (deleteDataCategory) {
+    if (deleteDataCategoryName) {
       res.status(200).json({
-        message: "Xoá danh mục thành công!",
+        message: `Đã xoá danh mục "${deleteDataCategoryName}" thành công!`,
         deletedCategoryId: req.params.id, // Trả về ID chữ để FE biết đường xóa UI
       });
     } else {
@@ -165,11 +165,21 @@ const bulkDeleteCategories = async (req, res) => {
     }
 
     // Gọi service để xoá nhiều danh mục cùng lúc
-    const deletedCount = await deleteMultipleCategories(realCategoryIds);
+    const { deletedCount, deletedNames } =
+      await deleteMultipleCategories(realCategoryIds);
 
+    // Xử lý chuỗi thông minh y hệt bên Users
+    let namesString = "";
+    if (deletedNames.length <= 3) {
+      namesString = deletedNames.join(", ");
+    } else {
+      namesString =
+        deletedNames.slice(0, 3).join(", ") +
+        `... và ${deletedNames.length - 3} mục khác`;
+    }
     res.status(200).json({
-      message: `Xoá thành công ${deletedCount} danh mục!`,
-      deletedCategoryIds: ids, // Trả về ID chữ để FE biết đường xóa UI
+      message: `Đã xóa thành công danh mục: ${namesString}`, // Câu thông báo có tên
+      deletedCategoryIds: ids,
     });
   } catch (error) {
     console.error("Lỗi xoá hàng loạt:", error);

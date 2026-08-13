@@ -30,23 +30,49 @@ async function updateCategory(id, data) {
 
 // Hàm xoá danh mục
 async function deleteCategory(id) {
+  // Lấy tên danh mục trước khi xoá để trả về
+  const [rows] = await pool.query(
+    "SELECT name FROM categories WHERE id_category = ?",
+    [id],
+  );
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const categoryName = rows[0].name; // Lấy tên danh mục trước khi xoá
+
+  // Tiến hành xoá
   const [result] = await pool.query(
     "DELETE FROM categories WHERE id_category = ?",
     [id],
   );
-  return result.affectedRows > 0; // Trả về true nếu có bản ghi nào bị ảnh hưởng, ngược lại trả về false
+
+  return result.affectedRows > 0 ? categoryName : null; // Trả về true nếu có bản ghi nào bị ảnh hưởng, ngược lại trả về false
 }
 
 // Xoá nhiều danh mục cùng lúc
 async function deleteMultipleCategories(categoryIds) {
   const placeholders = categoryIds.map(() => "?").join(", ");
 
+  // Lấy tên các danh mục trước khi xoá để trả về
+  const [categoriesToDelete] = await pool.query(
+    `
+    SELECT name FROM categories WHERE id_category IN (${placeholders})`,
+    categoryIds,
+  );
+
   const [result] = await pool.query(
     `DELETE FROM categories WHERE id_category IN (${placeholders})`,
     categoryIds,
   );
 
-  return result.affectedRows; // Trả về số lượng bản ghi bị xoá
+  // Rút trích mảng tên trả về
+  const deletedNames = categoriesToDelete.map((cat) => cat.name);
+  return {
+    deletedCount: result.affectedRows,
+    deletedNames: deletedNames,
+  };
 }
 
 module.exports = {
