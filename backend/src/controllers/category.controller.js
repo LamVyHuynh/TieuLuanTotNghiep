@@ -18,6 +18,8 @@ const createCategoryController = async (req, res) => {
     // Nếu có file ảnh được tải lên, gọi hàm uploadToSupabase để tải ảnh lên Supabase
     if (req.file) {
       imageUrl = await uploadToSupabase(req.file, "categories");
+      // Gắn link ảnh trả về từ Supabase vào dữ liệu danh mục
+      categoryData.image_url = imageUrl;
     }
 
     if (!categoryData.name || !categoryData.description || !imageUrl) {
@@ -32,6 +34,7 @@ const createCategoryController = async (req, res) => {
       categoryId: encodeId(newCategoryId), // BỌC THÉP CHIỀU RA
       categoryData: {
         id: encodeId(newCategoryId), // BỌC THÉP CHIỀU RA
+
         ...categoryData,
       },
     });

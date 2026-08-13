@@ -404,7 +404,7 @@ function CategoriesPage() {
               onClick={openBulkDeleteConfirm}
               className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-rose-500/30 transition-all cursor-pointer hover:-translate-y-0.5 active:scale-95"
             >
-              <Trash2 size={18} /> Xoá hàng loạt
+              <Trash2 size={18} /> Xoá danh mục
             </button>
           </div>
         </div>
