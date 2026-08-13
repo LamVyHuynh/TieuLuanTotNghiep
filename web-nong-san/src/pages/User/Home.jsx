@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   CheckCircle2,
   XCircle,
+  LayoutGrid, // 🚀 MỚI IMPORT THÊM ICON NÀY CHO NÚT "TẤT CẢ"
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -154,28 +155,51 @@ function Home() {
         }`}
       >
         <div className="pb-24 max-w-7xl mx-auto px-4 sm:px-6 min-h-screen relative">
-          <div className="flex gap-3 overflow-x-auto category-scroll pb-4 mb-6 pt-4">
+          {/*VỰC DANH MỤC ĐÃ ĐƯỢC LÀM MỚI VỚI HÌNH ẢNH */}
+          {/* ĐThêm -mx-4 px-4 để tạo lề cuộn mượt mà tràn viền, không bị cắt mép */}
+          <div className="flex gap-3 overflow-x-auto category-scroll pb-4 mb-6 pt-4 items-center -mx-4 px-4 sm:-mx-6 sm:px-6 scroll-smooth">
+            {/* Nút TẤT CẢ */}
             <button
               onClick={() => setActiveFilter("Tất Cả")}
-              className={`flex-shrink-0 px-5 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-2 cursor-pointer ${
+              className={`flex-shrink-0 pr-5 pl-2 py-2 rounded-full font-semibold text-sm transition-all flex items-center gap-3 cursor-pointer ${
                 activeFilter === "Tất Cả"
-                  ? "bg-zinc-900 text-white shadow-sm"
-                  : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900"
+                  ? "bg-zinc-900 text-white shadow-md scale-105"
+                  : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:shadow-sm"
               }`}
             >
+              <div
+                className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm ${
+                  activeFilter === "Tất Cả"
+                    ? "bg-white/20 text-white"
+                    : "bg-zinc-100 text-zinc-500"
+                }`}
+              >
+                <LayoutGrid size={18} />
+              </div>
               Tất Cả
             </button>
 
+            {/* CÁC NÚT DANH MỤC TỪ DATABASE */}
             {categories.map((cat) => (
               <button
                 key={cat.id_category}
                 onClick={() => setActiveFilter(cat.name)}
-                className={`flex-shrink-0 px-5 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-2 cursor-pointer ${
+                className={`flex-shrink-0 pr-5 pl-2 py-2 rounded-full font-semibold text-sm transition-all flex items-center gap-3 cursor-pointer ${
                   activeFilter === cat.name
-                    ? "bg-zinc-900 text-white shadow-sm"
-                    : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900"
+                    ? "bg-zinc-900 text-white shadow-md scale-105"
+                    : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:shadow-sm"
                 }`}
               >
+                <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm shrink-0 bg-zinc-100 border border-zinc-100/50">
+                  <img
+                    src={
+                      cat.image_url ||
+                      "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                    }
+                    alt={cat.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 {cat.name}
               </button>
             ))}
@@ -227,7 +251,6 @@ function Home() {
                         index,
                       )}`}
                     >
-                      {/* ĐÃ THAY ĐỔI LINK ẢNH VỀ BẢN NO IMAGE CHUẨN */}
                       <img
                         src={
                           item.image_url ||
@@ -263,7 +286,7 @@ function Home() {
                           {item.discount_price &&
                           Number(item.discount_price) > 0 ? (
                             <>
-                              {/* Có giảm giá: Hiện giá giảm to, giá gốc nhỏ + gạch chéo */}
+                              {/* Có giảm giá */}
                               <span className="text-zinc-900 font-black text-lg leading-none">
                                 {Number(item.discount_price).toLocaleString(
                                   "vi-VN",
@@ -275,7 +298,7 @@ function Home() {
                               </span>
                             </>
                           ) : (
-                            /* Không có giảm giá: Chỉ hiện giá gốc to */
+                            /* Không có giảm giá */
                             <span className="text-zinc-900 font-black text-lg leading-none">
                               {Number(item.price).toLocaleString("vi-VN")}đ
                             </span>
