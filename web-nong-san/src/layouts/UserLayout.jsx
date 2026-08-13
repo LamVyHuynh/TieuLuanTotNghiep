@@ -620,6 +620,12 @@ function UserLayout() {
                       src={currentUser.avatar_url}
                       alt="User"
                       className="w-7 h-7 rounded-full object-cover shadow-sm"
+                      referrerPolicy="no-referrer" // Thêm cái này để tránh lỗi CORS khi ảnh từ nguồn khác
+                      onError={(e) => {
+                        // Thêm cái này phòng hờ link Google bị chết hẳn thì hiện ảnh mặc định
+                        e.target.onerror = null;
+                        e.target.src = "https://via.placeholder.com/150?text=U";
+                      }}
                     />
                   ) : (
                     <div className="w-7 h-7 rounded-full bg-emerald-200 text-emerald-700 flex items-center justify-center text-xs font-black">

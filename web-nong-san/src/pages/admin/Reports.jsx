@@ -352,12 +352,18 @@ function ReportsPage() {
                     <tr key={i} className="hover:bg-slate-50 transition">
                       <td className="py-4">
                         <div className="flex items-center gap-3">
-                          {/* 🚀 ĐÃ CẬP NHẬT LOGIC KIỂM TRA AVATAR */}
+                          {/* ĐÃ CẬP NHẬT LOGIC KIỂM TRA AVATAR */}
                           {vip.avatar_url ? (
                             <img
                               src={vip.avatar_url}
                               alt={vip.full_name}
                               className="h-10 w-10 rounded-full object-cover shadow-sm border border-amber-200 shrink-0"
+                              referrerPolicy="no-referrer" // Thêm cái này để tránh lỗi CORS khi ảnh từ nguồn khác
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src =
+                                  "https://via.placeholder.com/150?text=VIP";
+                              }}
                             />
                           ) : (
                             <div className="h-10 w-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-black text-sm uppercase shadow-sm shrink-0">

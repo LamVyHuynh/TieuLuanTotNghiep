@@ -11,7 +11,6 @@ const { encodeId, decodeId } = require("../utils/hashid.util");
 const axios = require("axios");
 const crypto = require("crypto");
 const { PayOS } = require("@payos/node");
-
 // Vẫn khởi tạo PayOS để dùng hàm xác thực Webhook
 const payOSClient = new PayOS(
   process.env.PAYOS_CLIENT_ID,
@@ -32,19 +31,16 @@ const createOrder = async (req, res) => {
       scheduled_time,
       items,
     } = req.body;
-
     if (!items || items.length === 0) {
       return res
         .status(400)
         .json({ message: "Đơn hàng không có sản phẩm nào !!!" });
     }
-
     if (!full_name || !phone || !address) {
       return res
         .status(400)
         .json({ message: "Vui lòng nhập đầy đủ thông tin nhận hàng !!!" });
     }
-
     let formattedScheduledTime = null;
     if (scheduled_time) {
       const dateObj = new Date(scheduled_time);
@@ -56,7 +52,6 @@ const createOrder = async (req, res) => {
       const ss = String(dateObj.getSeconds()).padStart(2, "0");
       formattedScheduledTime = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
     }
-
     const decodedItems = items.map((item) => {
       const productId = item.id_product;
       if (!productId)
@@ -69,7 +64,6 @@ const createOrder = async (req, res) => {
         throw new Error("ID sản phẩm không hợp lệ: " + productId);
       return { ...item, id_product: realProductId };
     });
-
     const orderData = {
       full_name,
       phone,
@@ -79,14 +73,12 @@ const createOrder = async (req, res) => {
       total_amount,
       scheduled_time: formattedScheduledTime,
     };
-
     const newOrderId = await createOrderTransaction(
       userId,
       orderData,
       decodedItems,
     );
     const safeOrderId = encodeId(newOrderId);
-
     res.status(201).json({
       success: true,
       message: "Đặt hàng thành công!",
@@ -149,7 +141,6 @@ const updateOrderStatusAdmin = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Mã đơn hàng không hợp lệ!" });
-
     const validStatuses = [
       "pending",
       "processing",
@@ -161,7 +152,6 @@ const updateOrderStatusAdmin = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Trạng thái không hợp lệ!" });
-
     await updateOrderStatus(realOrderId, status);
     res
       .status(200)
@@ -210,20 +200,17 @@ const createMomoPayment = async (req, res) => {
     const secretKey = "nqQiVSgDMy809JoPF6OzP5OdBUB550Y4";
     const redirectUrl = "https://momo.vn";
     const ipnUrl = "http://localhost:3000/order";
-
     const amountNum = Number(amount);
     const uniqueOrderId = `${orderId}_${new Date().getTime()}`;
     const requestId = partnerCode + new Date().getTime();
     const orderInfo = `Thanh toan don hang ${uniqueOrderId}`;
     const requestType = "captureWallet";
     const extraData = "";
-
     const rawSignature = `accessKey=${accessKey}&amount=${amountNum}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${uniqueOrderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
     const signature = crypto
       .createHmac("sha256", secretKey)
       .update(rawSignature)
       .digest("hex");
-
     const requestBody = {
       partnerCode,
       partnerName: "HealthyGO",
@@ -240,16 +227,15 @@ const createMomoPayment = async (req, res) => {
       extraData,
       signature,
     };
-
     const result = await axios.post(
       "https://test-payment.momo.vn/v2/gateway/api/create",
       requestBody,
     );
-
     if (result.data && result.data.resultCode === 0) {
-      //  Ép tạo mã QR từ payUrl. Ai dùng cam điện thoại quét nó cũng nhảy thẳng vào Web MoMo
-      const finalQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(result.data.payUrl)}`;
-
+      let finalQrCodeUrl = result.data.qrCodeUrl;
+      if (!finalQrCodeUrl && result.data.deeplink) {
+        finalQrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(result.data.deeplink)}`;
+      }
       res.status(200).json({
         success: true,
         qrCodeUrl: finalQrCodeUrl,
@@ -273,13 +259,11 @@ const checkMomoPaymentStatus = async (req, res) => {
     const accessKey = "M8brj9K6E22vXoDB";
     const secretKey = "nqQiVSgDMy809JoPF6OzP5OdBUB550Y4";
     const requestId = partnerCode + new Date().getTime();
-
     const rawSignature = `accessKey=${accessKey}&orderId=${momoOrderId}&partnerCode=${partnerCode}&requestId=${requestId}`;
     const signature = crypto
       .createHmac("sha256", secretKey)
       .update(rawSignature)
       .digest("hex");
-
     const requestBody = {
       partnerCode,
       requestId,
@@ -291,7 +275,6 @@ const checkMomoPaymentStatus = async (req, res) => {
       "https://test-payment.momo.vn/v2/gateway/api/query",
       requestBody,
     );
-
     if (result.data && result.data.resultCode === 0) {
       const encodedOrderId = momoOrderId.split("_")[0];
       const realOrderId = decodeId(encodedOrderId);
@@ -318,13 +301,11 @@ const createPayOSPayment = async (req, res) => {
   try {
     const { orderId, amount, description } = req.body;
     const realOrderId = decodeId(orderId);
-
     if (!realOrderId) {
-      return res
+      return re
         .status(400)
         .json({ success: false, message: "Mã đơn hàng không hợp lệ!" });
     }
-
     const requestData = {
       orderCode: Number(realOrderId),
       amount: Number(amount),
@@ -332,7 +313,6 @@ const createPayOSPayment = async (req, res) => {
       cancelUrl: "http://localhost:5173/cart",
       returnUrl: "http://localhost:5173/order",
     };
-
     // Tự tạo chữ ký bảo mật (Signature) để gọi API thẳng
     const rawSignature = `amount=${requestData.amount}&cancelUrl=${requestData.cancelUrl}&description=${requestData.description}&orderCode=${requestData.orderCode}&returnUrl=${requestData.returnUrl}`;
     const signature = crypto
@@ -340,7 +320,6 @@ const createPayOSPayment = async (req, res) => {
       .update(rawSignature)
       .digest("hex");
     requestData.signature = signature;
-
     const response = await axios.post(
       "https://api-merchant.payos.vn/v2/payment-requests",
       requestData,
@@ -351,9 +330,7 @@ const createPayOSPayment = async (req, res) => {
         },
       },
     );
-
     const paymentLink = response.data.data;
-
     return res.status(200).json({
       success: true,
       bin: paymentLink.bin,
@@ -398,33 +375,45 @@ const receivePayOSWebhook = async (req, res) => {
 const checkPayOSPaymentStatus = async (req, res) => {
   try {
     const { orderId } = req.body;
+
     const realOrderId = decodeId(orderId);
 
     if (!realOrderId)
       return res
+
         .status(400)
+
         .json({ success: false, message: "Mã đơn hàng không hợp lệ!" });
 
     // Gọi API PayOS trực tiếp
+
     const response = await axios.get(
       `https://api-merchant.payos.vn/v2/payment-requests/${realOrderId}`,
+
       {
         headers: {
           "x-client-id": process.env.PAYOS_CLIENT_ID,
+
           "x-api-key": process.env.PAYOS_API_KEY,
         },
       },
     );
 
     const paymentInfo = response.data.data;
+
     if (paymentInfo && paymentInfo.status === "PAID") {
       await updateOrderStatus(realOrderId, "processing");
+
       return res
+
         .status(200)
+
         .json({ success: true, message: "Thanh toán thành công" });
     } else {
       return res
+
         .status(200)
+
         .json({ success: false, message: "Đang chờ thanh toán" });
     }
   } catch (error) {

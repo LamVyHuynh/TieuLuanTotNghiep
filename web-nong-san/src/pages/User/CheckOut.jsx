@@ -6,8 +6,11 @@ import React, {
   useRef,
   useCallback,
 } from "react";
+
 import { createPortal } from "react-dom";
+
 import { useNavigate, useLocation } from "react-router-dom";
+
 import {
   ArrowLeft,
   Banknote,
@@ -29,64 +32,94 @@ import {
   Save,
   PencilLine,
 } from "lucide-react";
+
 import { CheckoutContext } from "../../context/CheckoutContext";
+
 import { useAuth } from "../../context/AuthContext";
+
 import axiosClient from "../../api/axiosClient";
 
 const generateTimeSlots = () => {
   const groupedSlots = [];
+
   const now = new Date();
+
   now.setMinutes(now.getMinutes() + 45);
+
   const limitHour = now.getHours();
+
   const limitMinute = now.getMinutes();
 
   const sessions = [
     { name: "Khuya", start: 0, end: 6 },
+
     { name: "Sáng", start: 6, end: 11 },
+
     { name: "Trưa", start: 11, end: 13 },
+
     { name: "Chiều", start: 13, end: 18 },
+
     { name: "Tối", start: 18, end: 24 },
   ];
 
   sessions.forEach((session) => {
     const slotsInThisSession = [];
+
     for (let h = session.start; h < session.end; h++) {
       const mins = [0, 30];
+
       for (let m of mins) {
         const startTimeStr = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+
         let nextH = h;
+
         let nextM = m + 30;
+
         if (nextM >= 60) {
           nextM = 0;
+
           nextH += 1;
         }
+
         const displayNextH =
           nextH === 24 ? "00" : nextH.toString().padStart(2, "0");
+
         const endTimeStr = `${displayNextH}:${nextM.toString().padStart(2, "0")}`;
 
         let isDisabled = false;
+
         if (h < limitHour) isDisabled = true;
+
         if (h === limitHour && m < limitMinute) isDisabled = true;
 
         const realNow = new Date();
+
         const year = realNow.getFullYear();
+
         const month = String(realNow.getMonth() + 1).padStart(2, "0");
+
         const date = String(realNow.getDate()).padStart(2, "0");
+
         const hourStr = String(h).padStart(2, "0");
+
         const minStr = String(m).padStart(2, "0");
 
         const mysqlDateTime = `${year}-${month}-${date} ${hourStr}:${minStr}:00`;
 
         slotsInThisSession.push({
           value: mysqlDateTime,
+
           label: `${startTimeStr} - ${endTimeStr}`,
+
           isDisabled: isDisabled,
         });
       }
     }
+
     if (slotsInThisSession.length > 0) {
       groupedSlots.push({
         sessionName: session.name,
+
         slots: slotsInThisSession,
       });
     }
@@ -97,33 +130,43 @@ const generateTimeSlots = () => {
 
 const paymentMethods = [
   { id: "cod", label: "Thanh toán khi nhận hàng (COD)", icon: Banknote },
+
   { id: "bank", label: "Chuyển khoản ngân hàng", icon: Landmark },
+
   { id: "momo", label: "Ví điện tử MoMo", icon: Wallet },
 ];
 
 function CheckOut() {
   const navigate = useNavigate();
+
   const location = useLocation();
+
   const { checkoutList } = useContext(CheckoutContext);
+
   const { currentUser, refetchUser } = useAuth();
 
   const [isExiting, setIsExiting] = useState(true);
+
   const [slideDirection, setSlideDirection] = useState("-translate-x-12");
 
   const handleNavigate = useCallback(
     (path) => {
       if (location.pathname === path) return;
+
       if (path === -1 || path === "/cart" || path === "/") {
         setSlideDirection("translate-x-12");
       } else {
         setSlideDirection("-translate-x-12");
       }
+
       setIsExiting(true);
+
       setTimeout(() => {
         if (path === -1) navigate(-1);
         else navigate(path);
       }, 400);
     },
+
     [location.pathname, navigate],
   );
 
@@ -131,48 +174,66 @@ function CheckOut() {
     const resetAnimation = setTimeout(() => {
       setIsExiting(false);
     }, 10);
+
     return () => clearTimeout(resetAnimation);
   }, [location.pathname]);
 
   const [paymentMethod, setPaymentMethod] = useState("cod");
+
   const [note, setNote] = useState("");
 
   const [deliveryType, setDeliveryType] = useState("asap");
+
   const [scheduledTime, setScheduledTime] = useState("");
+
   const [timeSlots, setTimeSlots] = useState([]);
 
   const [addresses, setAddresses] = useState([]);
+
   const [selectedAddress, setSelectedAddress] = useState(null);
 
   const [isLoadingAddress, setIsLoadingAddress] = useState(true);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [momoQRUrl, setMomoQRUrl] = useState(null);
+
   const [momoOrderIdTracker, setMomoOrderIdTracker] = useState(null);
+
   const pollInterval = useRef(null);
 
   const [showQRModal, setShowQRModal] = useState(false);
+
   const [showAddressModal, setShowAddressModal] = useState(false);
+
   const [isAddingNewAddr, setIsAddingNewAddr] = useState(false);
+
   const [isSavingAddress, setIsSavingAddress] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const [addressToDelete, setAddressToDelete] = useState(null);
+
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [newAddressText, setNewAddressText] = useState("");
 
   const [showProfileModal, setShowProfileModal] = useState(false);
+
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
+
   const [tempOrderName, setTempOrderName] = useState("");
 
   useEffect(() => {
     if (currentUser) {
       setProfileForm({
         full_name: tempOrderName || currentUser.full_name || "",
+
         phone: currentUser.phone || "",
       });
+
       if (!tempOrderName) {
         setTempOrderName(currentUser.full_name || "");
       }
@@ -184,33 +245,43 @@ function CheckOut() {
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+
     if (!profileForm.full_name.trim() || !profileForm.phone.trim()) {
       showToast("Vui lòng điền đầy đủ tên và số điện thoại!", "error");
+
       return;
     }
 
     if (!/^\d{10,11}$/.test(profileForm.phone.trim())) {
       showToast("Số điện thoại phải từ 10-11 chữ số!", "error");
+
       return;
     }
 
     setIsUpdatingProfile(true);
+
     try {
       await axiosClient.put(`/auth/users/${currentUser.id}/update-user`, {
         full_name: profileForm.full_name,
+
         phone: profileForm.phone,
+
         email: currentUser.email,
+
         role_id: currentUser.role_id,
       });
 
       setTempOrderName(profileForm.full_name);
+
       showToast("Cập nhật thông tin giao hàng thành công! 🥰", "success");
+
       setShowProfileModal(false);
 
       if (refetchUser) await refetchUser();
     } catch (error) {
       showToast(
         error.response?.data?.message || "Lỗi cập nhật thông tin",
+
         "error",
       );
     } finally {
@@ -220,14 +291,19 @@ function CheckOut() {
 
   const [toast, setToast] = useState({
     show: false,
+
     message: "",
+
     type: "success",
   });
+
   const toastTimerRef = useRef(null);
 
   const showToast = (message, type = "success") => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+
     setToast({ show: true, message, type });
+
     toastTimerRef.current = setTimeout(() => {
       setToast({ show: false, message: "", type: "success" });
     }, 2500);
@@ -240,20 +316,26 @@ function CheckOut() {
   const fetchAddresses = useCallback(async (newIdToSelect = null) => {
     try {
       setIsLoadingAddress(true);
+
       const res = await axiosClient.get("/addresses");
+
       const list = res.data?.data || [];
+
       setAddresses(list);
 
       if (list.length > 0) {
         let chosen = null;
+
         if (newIdToSelect) {
           chosen = list.find((a) => a.id_address === newIdToSelect);
         }
+
         if (!chosen) {
           chosen =
             list.find((a) => a.is_default === 1 || a.is_default === true) ||
             list[0];
         }
+
         setSelectedAddress(chosen);
       } else {
         setSelectedAddress(null);
@@ -261,8 +343,10 @@ function CheckOut() {
     } catch (error) {
       showToast(
         error.response?.data?.message || "Lỗi khi tải danh sách địa chỉ!",
+
         "error",
       );
+
       setSelectedAddress(null);
     } finally {
       setIsLoadingAddress(false);
@@ -278,32 +362,44 @@ function CheckOut() {
   const handleSaveNewAddress = async () => {
     if (!newAddressText.trim()) {
       showToast("Vui lòng nhập địa chỉ cụ thể!", "error");
+
       return;
     }
 
     setIsSavingAddress(true);
+
     try {
       const addressPayload = {
         receiver_name: tempOrderName || currentUser?.full_name,
+
         phone: currentUser?.phone,
+
         address: newAddressText.trim(),
+
         is_default: 1,
       };
 
       const res = await axiosClient.post(
         "/addresses/add-address",
+
         addressPayload,
       );
+
       const newAddressId = res.data?.data?.id;
 
       showToast("Đã lưu địa chỉ thành công! 🥰", "success");
+
       setNewAddressText("");
+
       setIsAddingNewAddr(false);
+
       setShowAddressModal(false);
+
       await fetchAddresses(newAddressId);
     } catch (error) {
       showToast(
         error.response?.data?.message || "Lỗi khi lưu địa chỉ!",
+
         "error",
       );
     } finally {
@@ -313,15 +409,20 @@ function CheckOut() {
 
   const triggerDelete = (addressId, e) => {
     e.stopPropagation();
+
     setAddressToDelete(addressId);
+
     setShowDeleteModal(true);
   };
 
   const executeDeleteAddress = async () => {
     if (!addressToDelete) return;
+
     setIsDeleting(true);
+
     try {
       await axiosClient.delete(`/addresses/${addressToDelete}`);
+
       showToast("Đã xoá địa chỉ!", "success");
 
       if (selectedAddress?.id_address === addressToDelete) {
@@ -329,11 +430,14 @@ function CheckOut() {
       }
 
       await fetchAddresses();
+
       setShowDeleteModal(false);
+
       setAddressToDelete(null);
     } catch (error) {
       showToast(
         error.response?.data?.message || "Lỗi khi xoá địa chỉ!",
+
         "error",
       );
     } finally {
@@ -342,27 +446,36 @@ function CheckOut() {
   };
 
   const product = checkoutList.length > 0 ? checkoutList[0] : null;
+
   const subtotal = useMemo(
     () =>
       checkoutList.reduce((acc, item) => acc + item.price * item.quantity, 0),
+
     [checkoutList],
   );
 
   const discount = subtotal > 60000 ? 15000 : 0;
+
   const total = Math.max(subtotal - discount, 0);
 
   const handlePlaceOrder = () => {
     if (isPhoneMissing) {
       setShowProfileModal(true);
+
       showToast("Vui lòng bổ sung SĐT trước khi đặt hàng!", "error");
+
       return;
     }
+
     if (!selectedAddress) {
       showToast("Vui lòng thêm địa chỉ giao hàng!", "error");
+
       return;
     }
+
     if (deliveryType === "scheduled" && !scheduledTime) {
       showToast("Vui lòng chọn khung giờ bạn muốn nhận hàng!", "error");
+
       return;
     }
 
@@ -371,80 +484,106 @@ function CheckOut() {
 
   const executeOrder = async () => {
     setIsSubmitting(true);
-    // Xoá sạch cái ảnh cũ trước khi gọi API, tránh việc nó hiện lại mã MB Bank cũ!
-    setMomoQRUrl(null);
-    setMomoOrderIdTracker(null);
 
     try {
       const orderPayload = {
         full_name: tempOrderName || currentUser?.full_name,
+
         phone: currentUser?.phone,
+
         address: selectedAddress.address,
+
         note: note,
+
         payment_method: paymentMethod,
+
         total_amount: total,
+
         scheduled_time: deliveryType === "scheduled" ? scheduledTime : null,
+
         items: checkoutList.map((item) => ({
           id_product: item.id_product || item.id,
+
           name: item.name,
+
           quantity: item.quantity,
+
           price: item.price,
         })),
       };
 
       const res = await axiosClient.post("/orders/checkout", orderPayload);
+
       const newOrderId = res.data.order_id;
 
-      // ---- XỬ LÝ THANH TOÁN CHUYỂN KHOẢN NGÂN HÀNG (VIETQR - MB BANK) ----
       if (paymentMethod === "bank") {
         showToast("Đang tạo mã VietQR MB Bank...", "success");
+
         const payosRes = await axiosClient.post("/orders/payos-payment", {
           orderId: newOrderId,
+
           amount: total,
+
           description: `Thanh toan don ${newOrderId}`,
         });
 
         if (payosRes.data && payosRes.data.success) {
           const { bin, accountNumber, amount, description } = payosRes.data;
+
+          // Vẽ mã VietQR xịn
+
           const qrImageUrl = `https://img.vietqr.io/image/${bin}-${accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(description)}&accountName=${encodeURIComponent("HUYNH LAM VY")}`;
 
           setMomoQRUrl(qrImageUrl);
+
           setMomoOrderIdTracker(newOrderId);
+
           setShowQRModal(true);
+
           setIsSubmitting(false);
+
           return;
         }
       }
 
-      // ---- XỬ LÝ THANH TOÁN MOMO ----
       if (paymentMethod === "momo") {
         showToast("Đang kết nối cổng thanh toán MoMo...", "success");
+
         const momoRes = await axiosClient.post("/orders/momo-payment", {
           orderId: newOrderId,
+
           amount: total,
         });
 
         if (momoRes.data && momoRes.data.qrCodeUrl) {
-          setMomoQRUrl(momoRes.data.qrCodeUrl); // Nhận mã QR xịn từ Backend
+          setMomoQRUrl(momoRes.data.qrCodeUrl);
+
           setMomoOrderIdTracker(momoRes.data.momoOrderId);
+
           setShowQRModal(true);
+
           setIsSubmitting(false);
+
           return;
         }
       }
 
-      // ---- NẾU LÀ SHIP COD (HOẶC API THANH TOÁN ONLINE LỖI) ----
       setShowQRModal(false);
+
       showToast("Đặt hàng thành công! Sang trang đơn hàng...", "success");
+
       setTimeout(() => {
         handleNavigate("/order");
       }, 1500);
     } catch (error) {
       console.error("Lỗi đặt hàng:", error);
+
       showToast(
         error.response?.data?.message || "Lỗi khi đặt hàng, vui lòng thử lại!",
+
         "error",
       );
+
       setIsSubmitting(false);
     }
   };
@@ -458,26 +597,33 @@ function CheckOut() {
           if (paymentMethod === "momo") {
             const checkRes = await axiosClient.post(
               "/orders/momo-check-status",
+
               {
                 momoOrderId: momoOrderIdTracker,
               },
             );
+
             if (checkRes.data && checkRes.data.success) isSuccess = true;
           } else if (paymentMethod === "bank") {
             const checkRes = await axiosClient.post(
               "/orders/payos-check-status",
+
               {
                 orderId: momoOrderIdTracker,
               },
             );
+
             if (checkRes.data && checkRes.data.success) isSuccess = true;
           }
 
           if (isSuccess) {
             clearInterval(pollInterval.current);
+
             setShowQRModal(false);
+
             showToast(
               "Thanh toán thành công! Tiền đã vào tài khoản. 🥰",
+
               "success",
             );
 
@@ -487,6 +633,7 @@ function CheckOut() {
           }
         } catch (err) {
           console.log("Đang chờ khách thanh toán...");
+
           console.error("Lỗi khi kiểm tra trạng thái thanh toán:", err);
         }
       }, 3000);
@@ -509,12 +656,15 @@ function CheckOut() {
         <div className="mx-auto mb-5 flex h-[84px] w-[84px] items-center justify-center rounded-full border-4 border-slate-200 text-4xl text-slate-400">
           :(
         </div>
+
         <h2 className="text-3xl font-black tracking-[-0.03em] text-slate-900">
           Đơn hàng chưa sẵn sàng!
         </h2>
+
         <p className="mt-3 text-base leading-7 text-slate-500">
           Bạn chưa chọn sản phẩm nào để thanh toán cả.
         </p>
+
         <button
           className="mt-7 cursor-pointer rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-emerald-700"
           onClick={() => handleNavigate("/")}
@@ -543,11 +693,14 @@ function CheckOut() {
               >
                 <ArrowLeft size={16} /> Quay lại
               </button>
+
               <span className="hidden h-4 w-px bg-slate-300 sm:block" />
+
               <span className="hidden text-sm font-semibold text-slate-500 sm:block">
                 Thanh toán an toàn
               </span>
             </div>
+
             <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
               <Lock size={16} /> Bảo mật 100%
             </div>
@@ -563,10 +716,12 @@ function CheckOut() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">
                       1
                     </div>
+
                     <h2 className="text-xl font-black tracking-[-0.03em] text-slate-900">
                       Thông tin giao nhận
                     </h2>
                   </div>
+
                   <button
                     onClick={() => setShowProfileModal(true)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition cursor-pointer"
@@ -578,6 +733,7 @@ function CheckOut() {
                 {isLoadingAddress ? (
                   <div className="animate-pulse space-y-4">
                     <div className="h-16 w-full bg-slate-100 rounded-xl"></div>
+
                     <div className="h-24 w-full bg-slate-100 rounded-xl"></div>
                   </div>
                 ) : (
@@ -586,10 +742,12 @@ function CheckOut() {
                       <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
                         <div className="flex items-center gap-2 mb-1">
                           <User size={14} className="text-slate-400" />
+
                           <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
                             Người nhận
                           </p>
                         </div>
+
                         <p className="font-bold text-slate-900 truncate">
                           {tempOrderName || currentUser?.full_name}
                         </p>
@@ -607,6 +765,7 @@ function CheckOut() {
                                 : "text-slate-400"
                             }
                           />
+
                           <p
                             className={`text-[11px] font-bold uppercase tracking-widest ${isPhoneMissing ? "text-rose-500" : "text-slate-500"}`}
                           >
@@ -633,31 +792,37 @@ function CheckOut() {
                       <label className="ml-1 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                         Nơi nhận hàng
                       </label>
+
                       {selectedAddress ? (
                         <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-100 bg-emerald-50/30 p-5 transition hover:border-emerald-200">
                           <div className="flex items-start gap-4 pr-16">
                             <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                               <MapPin size={18} />
                             </div>
+
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-bold text-slate-900">
                                   Địa chỉ giao hàng
                                 </h3>
+
                                 {selectedAddress.is_default ? (
                                   <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                                     MẶC ĐỊNH
                                   </span>
                                 ) : null}
                               </div>
+
                               <p className="text-sm text-slate-600 leading-relaxed">
                                 {selectedAddress.address}
                               </p>
                             </div>
                           </div>
+
                           <button
                             onClick={() => {
                               setShowAddressModal(true);
+
                               setIsAddingNewAddr(false);
                             }}
                             className="absolute right-4 top-4 text-sm font-bold text-emerald-600 hover:text-emerald-800 cursor-pointer bg-white px-3 py-1.5 rounded-lg shadow-sm border border-emerald-100"
@@ -670,9 +835,11 @@ function CheckOut() {
                           <p className="mb-4 text-slate-500 font-medium">
                             Bạn chưa có địa chỉ giao hàng nào.
                           </p>
+
                           <button
                             onClick={() => {
                               setShowAddressModal(true);
+
                               setIsAddingNewAddr(true);
                             }}
                             className="inline-flex items-center gap-2 rounded-xl bg-emerald-100 px-5 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-200 cursor-pointer transition"
@@ -689,11 +856,13 @@ function CheckOut() {
                           <Clock size={14} /> Thời gian nhận hàng
                         </span>
                       </label>
+
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <button
                           type="button"
                           onClick={() => {
                             setDeliveryType("asap");
+
                             setScheduledTime("");
                           }}
                           className={`py-3.5 px-4 rounded-xl border-2 font-bold text-sm transition cursor-pointer ${
@@ -704,6 +873,7 @@ function CheckOut() {
                         >
                           Giao ngay cho nóng
                         </button>
+
                         <button
                           type="button"
                           onClick={() => setDeliveryType("scheduled")}
@@ -722,6 +892,7 @@ function CheckOut() {
                           <label className="block text-xs font-medium text-slate-500 mb-2">
                             Chọn khung giờ (Dự kiến):
                           </label>
+
                           <div className="relative">
                             <select
                               value={scheduledTime}
@@ -731,6 +902,7 @@ function CheckOut() {
                               <option value="" disabled>
                                 -- Chọn khung giờ nhận hàng --
                               </option>
+
                               {timeSlots.map((group, idx) => (
                                 <optgroup
                                   key={idx}
@@ -754,11 +926,13 @@ function CheckOut() {
                                 </optgroup>
                               ))}
                             </select>
+
                             <ChevronDown
                               size={18}
                               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
                             />
                           </div>
+
                           <p className="mt-3 text-[11px] text-amber-600 font-medium">
                             * Khung giờ đã qua sẽ không thể chọn. Cửa hàng cần
                             thêm 45 phút chuẩn bị món.
@@ -771,6 +945,7 @@ function CheckOut() {
                       <label className="ml-1 mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                         Ghi chú đơn hàng (Tùy chọn)
                       </label>
+
                       <input
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
@@ -787,6 +962,7 @@ function CheckOut() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">
                     2
                   </div>
+
                   <h2 className="text-xl font-black tracking-[-0.03em] text-slate-900">
                     Phương thức thanh toán
                   </h2>
@@ -795,6 +971,7 @@ function CheckOut() {
                 <div className="space-y-3">
                   {paymentMethods.map((method) => {
                     const Icon = method.icon;
+
                     const active = paymentMethod === method.id;
 
                     return (
@@ -813,8 +990,10 @@ function CheckOut() {
                           readOnly
                           className="h-5 w-5 accent-emerald-600 cursor-pointer"
                         />
+
                         <div className="ml-4 flex items-center gap-3">
                           <Icon size={18} className="text-slate-500" />
+
                           <span className="font-medium text-slate-800">
                             {method.label}
                           </span>
@@ -850,14 +1029,17 @@ function CheckOut() {
                           alt={item.name}
                           className="h-full w-full object-cover"
                         />
+
                         <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white shadow-sm border-2 border-white">
                           {item.quantity}
                         </span>
                       </div>
+
                       <div className="flex-1">
                         <h4 className="text-sm font-semibold leading-tight text-slate-900 line-clamp-1">
                           {item.name}
                         </h4>
+
                         <div className="mt-1 flex items-center justify-between gap-4">
                           <p className="text-sm font-bold text-emerald-700">
                             {(item.price * item.quantity).toLocaleString(
@@ -874,18 +1056,23 @@ function CheckOut() {
                 <div className="space-y-3 bg-slate-50/80 p-6 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Tạm tính</span>
+
                     <span className="font-medium text-slate-900">
                       {subtotal.toLocaleString("vi-VN")}đ
                     </span>
                   </div>
+
                   <div className="flex justify-between text-amber-700">
                     <span>Giảm giá</span>
+
                     <span className="font-medium">
                       -{discount.toLocaleString("vi-VN")}đ
                     </span>
                   </div>
+
                   <div className="mt-4 flex items-baseline justify-between border-t border-slate-200 pt-4">
                     <span className="font-bold text-slate-900">Tổng cộng</span>
+
                     <span className="text-2xl font-black tracking-[-0.04em] text-emerald-700">
                       {total.toLocaleString("vi-VN")}đ
                     </span>
@@ -916,6 +1103,7 @@ function CheckOut() {
       {/* ================= CÁC MODAL HIỂN THỊ ================= */}
 
       {/* MODAL MÃ QR THANH TOÁN */}
+
       {showQRModal &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
@@ -929,6 +1117,7 @@ function CheckOut() {
                 >
                   <X size={20} />
                 </button>
+
                 <h3 className="text-xl font-black tracking-wide">
                   Quét mã {paymentMethod === "momo" ? "MoMo" : "ngân hàng"}
                 </h3>
@@ -953,6 +1142,7 @@ function CheckOut() {
                   <div
                     className={`h-6 w-6 animate-spin rounded-full border-4 border-t-transparent ${paymentMethod === "momo" ? "border-[#a50064]" : "border-emerald-600"}`}
                   />
+
                   <p
                     className={`text-sm font-bold animate-pulse ${paymentMethod === "momo" ? "text-[#a50064]" : "text-emerald-700"}`}
                   >
@@ -962,10 +1152,12 @@ function CheckOut() {
               </div>
             </div>
           </div>,
+
           document.body,
         )}
 
       {/* ================= MODAL BỔ SUNG THÔNG TIN ================= */}
+
       {showProfileModal &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
@@ -975,10 +1167,12 @@ function CheckOut() {
                   <div className="bg-emerald-100 p-2 rounded-full text-emerald-600">
                     <PencilLine size={24} />
                   </div>
+
                   <h3 className="text-lg font-black text-emerald-900">
                     Thông tin giao nhận
                   </h3>
                 </div>
+
                 <button
                   onClick={() => setShowProfileModal(false)}
                   className="rounded-full p-2 text-emerald-400 hover:bg-emerald-200 transition cursor-pointer"
@@ -999,17 +1193,20 @@ function CheckOut() {
                     <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       Tên người nhận (Dùng cho đơn này)
                     </label>
+
                     <div className="relative">
                       <User
                         size={18}
                         className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                       />
+
                       <input
                         type="text"
                         value={profileForm.full_name}
                         onChange={(e) =>
                           setProfileForm({
                             ...profileForm,
+
                             full_name: e.target.value,
                           })
                         }
@@ -1023,17 +1220,20 @@ function CheckOut() {
                     <label className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       Số điện thoại <span className="text-rose-500">*</span>
                     </label>
+
                     <div className="relative">
                       <Phone
                         size={18}
                         className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                       />
+
                       <input
                         type="text"
                         value={profileForm.phone}
                         onChange={(e) =>
                           setProfileForm({
                             ...profileForm,
+
                             phone: e.target.value,
                           })
                         }
@@ -1060,10 +1260,12 @@ function CheckOut() {
               </div>
             </div>
           </div>,
+
           document.body,
         )}
 
       {/* ================= MODAL SỔ ĐỊA CHỈ ================= */}
+
       {showAddressModal &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
@@ -1072,9 +1274,11 @@ function CheckOut() {
                 <h3 className="text-xl font-black text-slate-900">
                   {isAddingNewAddr ? "Thêm địa chỉ mới" : "Sổ địa chỉ của bạn"}
                 </h3>
+
                 <button
                   onClick={() => {
                     setShowAddressModal(false);
+
                     setIsAddingNewAddr(false);
                   }}
                   className="rounded-full p-2 text-slate-400 hover:bg-slate-100 transition cursor-pointer"
@@ -1090,6 +1294,7 @@ function CheckOut() {
                       <label className="ml-1 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                         Nhập địa chỉ cụ thể
                       </label>
+
                       <textarea
                         value={newAddressText}
                         onChange={(e) => setNewAddressText(e.target.value)}
@@ -1098,6 +1303,7 @@ function CheckOut() {
                         className="w-full resize-none rounded-xl border-none bg-slate-100 p-4 text-sm text-slate-700 outline-none transition focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.10)]"
                       />
                     </div>
+
                     <div className="pt-4 flex gap-3">
                       {addresses.length > 0 && (
                         <button
@@ -1107,6 +1313,7 @@ function CheckOut() {
                           Trở lại
                         </button>
                       )}
+
                       <button
                         onClick={handleSaveNewAddress}
                         disabled={isSavingAddress}
@@ -1135,6 +1342,7 @@ function CheckOut() {
                           className="flex-1 cursor-pointer"
                           onClick={() => {
                             setSelectedAddress(addr);
+
                             setShowAddressModal(false);
                           }}
                         >
@@ -1149,11 +1357,13 @@ function CheckOut() {
                                     : "text-slate-400"
                                 }
                               />
+
                               <h4 className="font-bold text-slate-900">
                                 Địa chỉ giao hàng
                               </h4>
                             </div>
                           </div>
+
                           <p className="text-sm text-slate-600 mt-2 ml-6 leading-relaxed pr-4">
                             {addr.address}
                           </p>
@@ -1176,6 +1386,7 @@ function CheckOut() {
                       <span className="flex items-center gap-2 ml-1">
                         <Plus size={18} /> Thêm địa chỉ mới
                       </span>
+
                       <ChevronRight size={18} />
                     </button>
                   </div>
@@ -1183,10 +1394,12 @@ function CheckOut() {
               </div>
             </div>
           </div>,
+
           document.body,
         )}
 
       {/* ================= MODAL XÁC NHẬN XOÁ ĐỊA CHỈ ================= */}
+
       {showDeleteModal &&
         createPortal(
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
@@ -1194,12 +1407,15 @@ function CheckOut() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-rose-600">
                 <Trash2 size={32} />
               </div>
+
               <h3 className="text-xl font-black text-slate-900 mb-2">
                 Xoá địa chỉ này?
               </h3>
+
               <p className="text-sm text-slate-500 mb-6 px-2">
                 Bạn sẽ không thể khôi phục lại địa chỉ này sau khi xoá.
               </p>
+
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteModal(false)}
@@ -1208,6 +1424,7 @@ function CheckOut() {
                 >
                   Huỷ bỏ
                 </button>
+
                 <button
                   onClick={executeDeleteAddress}
                   className="flex-1 py-3.5 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition flex items-center justify-center cursor-pointer"
@@ -1222,10 +1439,12 @@ function CheckOut() {
               </div>
             </div>
           </div>,
+
           document.body,
         )}
 
       {/* ================= TOAST THÔNG BÁO CHUNG ================= */}
+
       {toast.show &&
         createPortal(
           <div
@@ -1236,8 +1455,10 @@ function CheckOut() {
             ) : (
               <XCircle size={20} />
             )}
+
             {toast.message}
           </div>,
+
           document.body,
         )}
     </>
