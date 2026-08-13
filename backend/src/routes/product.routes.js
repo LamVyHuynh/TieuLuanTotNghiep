@@ -29,12 +29,6 @@ router.post(
   addProduct,
 );
 
-// Route để xoá nhiều sản phẩm cùng lúc
-router.delete("/bulk-delete", authenticateToken, bulkDeleteProducts);
-
-// Route để xoá sản phẩm (nếu cần thiết)
-router.delete("/:id", authenticateToken, deleteSanPham);
-
 // Route để cập nhật thông tin sản phẩm
 router.put(
   "/:id",
@@ -42,6 +36,12 @@ router.put(
   upload.single("image"),
   updateInfoProduct,
 );
+
+// Route để xoá nhiều sản phẩm cùng lúc
+router.delete("/bulk-delete", authenticateToken, bulkDeleteProducts);
+
+// Route để xoá sản phẩm (nếu cần thiết)
+router.delete("/:id", authenticateToken, deleteSanPham);
 
 // Route để import sản phẩm từ file Excel
 router.post(

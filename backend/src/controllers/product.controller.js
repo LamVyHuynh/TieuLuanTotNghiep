@@ -129,7 +129,7 @@ const updateInfoProduct = async (req, res) => {
 
     const productData = req.body;
 
-    // LƯU Ý: Decode id_category nếu client gửi lên chữ
+    // Decode id_category nếu client gửi lên chữ
     const safeUpdateData = { ...productData };
     if (typeof safeUpdateData.id_category === "string") {
       safeUpdateData.id_category =

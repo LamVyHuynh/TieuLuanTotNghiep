@@ -69,6 +69,7 @@ function ProductsPage() {
     protein: "",
     carbs: "",
     fat: "",
+    ỉmage_url: "",
   });
 
   const showToast = (type, message) => {
@@ -181,6 +182,7 @@ function ProductsPage() {
       protein: product.protein,
       carbs: product.carbs,
       fat: product.fat,
+      ỉmage_url: product.image_url || "",
     });
     setImageFile(null);
     setImagePreview(product.image_url || "");
@@ -202,6 +204,7 @@ function ProductsPage() {
       protein: "",
       carbs: "",
       fat: "",
+      ỉmage_url: "",
     });
     setImageFile(null);
     setImagePreview("");
@@ -846,7 +849,7 @@ function ProductsPage() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-8">
-              {/* 🚀 KHU VỰC CHỌN HÌNH ẢNH SẢN PHẨM */}
+              {/* KHU VỰC CHỌN HÌNH ẢNH SẢN PHẨM */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-slate-400 uppercase flex items-center gap-1">
                   <ImageIcon size={14} /> Ảnh đại diện món ăn
@@ -921,7 +924,7 @@ function ProductsPage() {
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          id_category: parseInt(e.target.value),
+                          id_category: e.target.value,
                         }))
                       }
                       className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner cursor-pointer"
