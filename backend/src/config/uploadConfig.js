@@ -51,6 +51,15 @@ const upload = multer({
   // (Bảo mật ) giới hạn kích thước file upload tối đâ là 5MB (5 * 1024 * 1024 bytes)
   limits: { fileSize: 5 * 1024 * 1024 },
   // (Bảo mật) chỉ cho phép upload các định dạng file ảnh phổ biến
+
+  // tải ảnh định dạng image/jpeg, image/png, image/gif, image/webp, image/svg+xml
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Chỉ được phép tải lên định dạng hình ảnh!"), false);
+    }
+  },
 });
 
 // Xuất cỗ máy upload đẻ các file khác có thể sử dụng để upload ảnh

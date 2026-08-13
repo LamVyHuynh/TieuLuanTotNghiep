@@ -133,6 +133,19 @@ function CategoriesPage() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const MAX_SIZE_MB = 5;
+      if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        showToast(
+          "error",
+          `File quá lớn! Vui lòng chọn file nhỏ hơn ${MAX_SIZE_MB}MB.`,
+        );
+
+        // reset lại ô input file để người dùng có thể chọn lại
+        e.target.value = null;
+        return;
+      }
+
+      // Nếu file hợp lệ, lưu vào state và tạo preview
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
