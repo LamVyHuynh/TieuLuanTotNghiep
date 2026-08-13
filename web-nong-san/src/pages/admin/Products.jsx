@@ -163,7 +163,22 @@ function ProductsPage() {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+
     if (file) {
+      const MAX_SIZE_MB = 5 * 1024 * 1024; // 5MB
+      if (file.size > MAX_SIZE_MB) {
+        // Bật thông báo lỗi
+        showToast(
+          "error",
+          "Ảnh quá nặng! Vui lòng chọn ảnh có dung lượng dưới 5MB 😥",
+        );
+
+        // Reset lại input file để người dùng có thể chọn lại
+        e.target.value = null;
+        return;
+      }
+
+      // Nếu file hợp lệ, lưu vào state và tạo preview
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }

@@ -137,7 +137,7 @@ function CategoriesPage() {
       if (file.size > MAX_SIZE_MB * 1024 * 1024) {
         showToast(
           "error",
-          `File quá lớn! Vui lòng chọn file nhỏ hơn ${MAX_SIZE_MB}MB.`,
+          "Ảnh quá nặng! Vui lòng chọn ảnh có dung lượng dưới 5MB 😥",
         );
 
         // reset lại ô input file để người dùng có thể chọn lại
