@@ -69,7 +69,7 @@ function ProductsPage() {
     protein: "",
     carbs: "",
     fat: "",
-    ỉmage_url: "",
+    image_url: "",
   });
 
   const showToast = (type, message) => {
@@ -182,7 +182,7 @@ function ProductsPage() {
       protein: product.protein,
       carbs: product.carbs,
       fat: product.fat,
-      ỉmage_url: product.image_url || "",
+      image_url: product.image_url || "",
     });
     setImageFile(null);
     setImagePreview(product.image_url || "");
@@ -204,7 +204,7 @@ function ProductsPage() {
       protein: "",
       carbs: "",
       fat: "",
-      ỉmage_url: "",
+      image_url: "",
     });
     setImageFile(null);
     setImagePreview("");

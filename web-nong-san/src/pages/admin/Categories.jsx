@@ -150,6 +150,7 @@ function CategoriesPage() {
       name: category.name,
       description: category.description || "",
       status: category.status,
+      image_url: category.image_url || "",
     });
     setImageFile(null);
     setImagePreview(category.image_url || "");
@@ -168,6 +169,7 @@ function CategoriesPage() {
       submitData.append("name", formData.name);
       submitData.append("description", formData.description);
       submitData.append("status", formData.status);
+      submitData.append("image_url", formData.image_url);
 
       if (imageFile) {
         submitData.append("image", imageFile);
