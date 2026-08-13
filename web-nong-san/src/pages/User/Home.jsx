@@ -7,7 +7,9 @@ import {
   ShoppingBag,
   CheckCircle2,
   XCircle,
-  LayoutGrid, // 🚀 MỚI IMPORT THÊM ICON NÀY CHO NÚT "TẤT CẢ"
+  LayoutGrid,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import axiosClient from "../../api/axiosClient";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -31,6 +33,43 @@ function Home() {
   const totalItemsCart = cartItems
     ? cartItems.reduce((total, item) => total + item.quantity, 0)
     : 0;
+
+  // =================================================================
+  // 🚀 LOGIC XỬ LÝ MŨI TÊN CHỈ BÁO THANH CUỘN DANH MỤC
+  // =================================================================
+  const categoryContainerRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Hàm kiểm tra vị trí cuộn để bật/tắt mũi tên
+  const checkScroll = () => {
+    if (categoryContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } =
+        categoryContainerRef.current;
+      // Có thể cuộn trái nếu vị trí cuộn > 0
+      setCanScrollLeft(scrollLeft > 0);
+      // Có thể cuộn phải nếu (vị trí hiện tại + độ rộng nhìn thấy) < tổng độ rộng
+      setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth);
+    }
+  };
+
+  // Chạy kiểm tra lần đầu khi tải xong danh mục và khi thay đổi kích thước màn hình
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener("resize", checkScroll);
+    return () => window.removeEventListener("resize", checkScroll);
+  }, [categories]);
+
+  // Hàm xử lý khi bấm vào mũi tên thì tự động cuộn
+  const scrollByAmount = (direction) => {
+    if (categoryContainerRef.current) {
+      const scrollAmount = 250; // Khoảng cách trượt mỗi lần bấm
+      categoryContainerRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
 
   // =================================================================
   // STATE TẠO HIỆU ỨNG TRƯỢT CHUYỂN TRANG THÔNG MINH
@@ -155,54 +194,83 @@ function Home() {
         }`}
       >
         <div className="pb-24 max-w-7xl mx-auto px-4 sm:px-6 min-h-screen relative">
-          {/*VỰC DANH MỤC ĐÃ ĐƯỢC LÀM MỚI VỚI HÌNH ẢNH */}
-          {/* ĐThêm -mx-4 px-4 để tạo lề cuộn mượt mà tràn viền, không bị cắt mép */}
-          <div className="flex gap-3 overflow-x-auto category-scroll pb-4 mb-6 pt-4 items-center -mx-4 px-4 sm:-mx-6 sm:px-6 scroll-smooth">
-            {/* Nút TẤT CẢ */}
-            <button
-              onClick={() => setActiveFilter("Tất Cả")}
-              className={`flex-shrink-0 pr-5 pl-2 py-2 rounded-full font-semibold text-sm transition-all flex items-center gap-3 cursor-pointer ${
-                activeFilter === "Tất Cả"
-                  ? "bg-zinc-900 text-white shadow-md scale-105"
-                  : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:shadow-sm"
-              }`}
-            >
-              <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm ${
-                  activeFilter === "Tất Cả"
-                    ? "bg-white/20 text-white"
-                    : "bg-zinc-100 text-zinc-500"
-                }`}
-              >
-                <LayoutGrid size={18} />
+          {/* 🚀 BỌC KHU VỰC DANH MỤC TRONG DIV RELATIVE ĐỂ ĐẶT MŨI TÊN */}
+          <div className="relative mb-6">
+            {/* HIỂN THỊ MŨI TÊN BÊN TRÁI NẾU CÓ THỂ CUỘN LÙI */}
+            {canScrollLeft && (
+              <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-slate-50 via-slate-50/90 to-transparent z-10 flex items-center justify-start pointer-events-none -ml-4 sm:-ml-6 px-1 sm:px-2 transition-opacity duration-300">
+                <button
+                  onClick={() => scrollByAmount("left")}
+                  className="pointer-events-auto bg-white rounded-full p-2 shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-zinc-200 text-zinc-800 transition-transform cursor-pointer active:scale-90 flex items-center justify-center"
+                >
+                  <ChevronLeft size={22} strokeWidth={2.5} />
+                </button>
               </div>
-              Tất Cả
-            </button>
+            )}
 
-            {/* CÁC NÚT DANH MỤC TỪ DATABASE */}
-            {categories.map((cat) => (
+            <div
+              ref={categoryContainerRef}
+              onScroll={checkScroll}
+              className="flex gap-3 overflow-x-auto category-scroll pb-4 pt-4 items-center -mx-4 px-4 sm:-mx-6 sm:px-6 scroll-smooth"
+            >
+              {/* Nút TẤT CẢ */}
               <button
-                key={cat.id_category}
-                onClick={() => setActiveFilter(cat.name)}
+                onClick={() => setActiveFilter("Tất Cả")}
                 className={`flex-shrink-0 pr-5 pl-2 py-2 rounded-full font-semibold text-sm transition-all flex items-center gap-3 cursor-pointer ${
-                  activeFilter === cat.name
+                  activeFilter === "Tất Cả"
                     ? "bg-zinc-900 text-white shadow-md scale-105"
                     : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:shadow-sm"
                 }`}
               >
-                <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm shrink-0 bg-zinc-100 border border-zinc-100/50">
-                  <img
-                    src={
-                      cat.image_url ||
-                      "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
-                    }
-                    alt={cat.name}
-                    className="w-full h-full object-cover"
-                  />
+                <div
+                  className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm ${
+                    activeFilter === "Tất Cả"
+                      ? "bg-white/20 text-white"
+                      : "bg-zinc-100 text-zinc-500"
+                  }`}
+                >
+                  <LayoutGrid size={18} />
                 </div>
-                {cat.name}
+                Tất Cả
               </button>
-            ))}
+
+              {/* CÁC NÚT DANH MỤC TỪ DATABASE */}
+              {categories.map((cat) => (
+                <button
+                  key={cat.id_category}
+                  onClick={() => setActiveFilter(cat.name)}
+                  className={`flex-shrink-0 pr-5 pl-2 py-2 rounded-full font-semibold text-sm transition-all flex items-center gap-3 cursor-pointer ${
+                    activeFilter === cat.name
+                      ? "bg-zinc-900 text-white shadow-md scale-105"
+                      : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:shadow-sm"
+                  }`}
+                >
+                  <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm shrink-0 bg-zinc-100 border border-zinc-100/50">
+                    <img
+                      src={
+                        cat.image_url ||
+                        "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                      }
+                      alt={cat.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+
+            {/* HIỂN THỊ MŨI TÊN BÊN PHẢI NẾU CHƯA CUỘN HẾT */}
+            {canScrollRight && (
+              <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-slate-50 via-slate-50/90 to-transparent z-10 flex items-center justify-end pointer-events-none -mr-4 sm:-mr-6 px-1 sm:px-2 transition-opacity duration-300">
+                <button
+                  onClick={() => scrollByAmount("right")}
+                  className="pointer-events-auto bg-white rounded-full p-2 shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-zinc-200 text-zinc-800 transition-transform cursor-pointer active:scale-90 flex items-center justify-center"
+                >
+                  <ChevronRight size={22} strokeWidth={2.5} />
+                </button>
+              </div>
+            )}
           </div>
 
           {isLoading ? (
