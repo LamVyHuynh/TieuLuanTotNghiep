@@ -375,45 +375,31 @@ const receivePayOSWebhook = async (req, res) => {
 const checkPayOSPaymentStatus = async (req, res) => {
   try {
     const { orderId } = req.body;
-
     const realOrderId = decodeId(orderId);
-
     if (!realOrderId)
       return res
-
         .status(400)
-
         .json({ success: false, message: "Mã đơn hàng không hợp lệ!" });
-
     // Gọi API PayOS trực tiếp
-
     const response = await axios.get(
       `https://api-merchant.payos.vn/v2/payment-requests/${realOrderId}`,
-
       {
         headers: {
           "x-client-id": process.env.PAYOS_CLIENT_ID,
-
           "x-api-key": process.env.PAYOS_API_KEY,
         },
       },
     );
 
     const paymentInfo = response.data.data;
-
     if (paymentInfo && paymentInfo.status === "PAID") {
       await updateOrderStatus(realOrderId, "processing");
-
       return res
-
         .status(200)
-
         .json({ success: true, message: "Thanh toán thành công" });
     } else {
       return res
-
         .status(200)
-
         .json({ success: false, message: "Đang chờ thanh toán" });
     }
   } catch (error) {

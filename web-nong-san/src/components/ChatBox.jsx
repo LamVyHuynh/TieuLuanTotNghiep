@@ -12,7 +12,7 @@ import {
   ArrowLeft,
   Plus,
   AlertTriangle,
-  Square, // 🚀 BƯỚC 1: Import thêm icon Square làm nút Dừng
+  Square, //  BƯỚC 1: Import thêm icon Square làm nút Dừng
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -36,7 +36,7 @@ function ChatBox() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // 🚀 BƯỚC 2: Thêm Ref để giữ cái AbortController
+  //  BƯỚC 2: Thêm Ref để giữ cái AbortController
   const abortControllerRef = useRef(null);
 
   const [sessions, setSessions] = useState(() => {
@@ -117,7 +117,7 @@ function ChatBox() {
     );
   };
 
-  // 🚀 BƯỚC 3: Hàm Hủy kết nối (Dừng tạo)
+  //  BƯỚC 3: Hàm Hủy kết nối (Dừng tạo)
   const handleStopGeneration = (e) => {
     if (e) e.preventDefault();
     if (abortControllerRef.current) {
@@ -156,7 +156,7 @@ function ChatBox() {
       textareaRef.current.style.height = "auto";
     }
 
-    // 🚀 BƯỚC 4: Tạo AbortController mới trước khi gọi API
+    //  BƯỚC 4: Tạo AbortController mới trước khi gọi API
     abortControllerRef.current = new AbortController();
 
     try {
