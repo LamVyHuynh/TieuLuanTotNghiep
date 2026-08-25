@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import axiosClient from "../api/axiosClient";
+import axios from "axios";
 import {
   MessageCircle,
   X,
@@ -12,7 +13,7 @@ import {
   ArrowLeft,
   Plus,
   AlertTriangle,
-  Square, //  BƯỚC 1: Import thêm icon Square làm nút Dừng
+  Square,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -36,7 +37,6 @@ function ChatBox() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  //  BƯỚC 2: Thêm Ref để giữ cái AbortController
   const abortControllerRef = useRef(null);
 
   const [sessions, setSessions] = useState(() => {
@@ -117,22 +117,20 @@ function ChatBox() {
     );
   };
 
-  //  BƯỚC 3: Hàm Hủy kết nối (Dừng tạo)
   const handleStopGeneration = (e) => {
     if (e) e.preventDefault();
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort(); // Bắn tín hiệu hủy
+      abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
     setIsLoading(false);
 
-    // Ép cuộn xuống dưới cùng để thấy rõ giao diện ngưng
     setTimeout(() => scrollToBottom(), 100);
   };
 
   const handleSend = async (e) => {
     if (e) e.preventDefault();
-    if (!input.trim() || isLoading) return; // Đang load thì không cho gửi thêm
+    if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
     const isFirstUserMessage = currentMessages.length === 1;
@@ -156,14 +154,13 @@ function ChatBox() {
       textareaRef.current.style.height = "auto";
     }
 
-    //  BƯỚC 4: Tạo AbortController mới trước khi gọi API
     abortControllerRef.current = new AbortController();
 
     try {
       const res = await axiosClient.post(
         "/chatbox/chat",
         { message: userMessage },
-        { signal: abortControllerRef.current.signal }, // Gắn signal vào để axios biết đường hủy
+        { signal: abortControllerRef.current.signal },
       );
 
       updateActiveSession([
@@ -175,8 +172,8 @@ function ChatBox() {
         },
       ]);
     } catch (error) {
-      // Nếu lỗi là do người dùng chủ động bấm Hủy thì không in thông báo lỗi rác
-      if (axiosClient.isCancel(error) || error.message === "canceled") {
+      // LỖI ĐÃ SỬA: Sử dụng axios.isCancel thay vì axiosClient.isCancel
+      if (axios.isCancel(error) || error.message === "canceled") {
         updateActiveSession([
           ...newMessages,
           {
@@ -446,7 +443,6 @@ function ChatBox() {
                     className="flex-1 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-slate-400 text-slate-700 resize-none overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 min-h-[36px]"
                   />
 
-                  {/* 🚀 BƯỚC 5: Đổi nút hiển thị tùy theo trạng thái isLoading */}
                   {isLoading ? (
                     <button
                       type="button"

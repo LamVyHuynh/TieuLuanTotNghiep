@@ -1,106 +1,67 @@
-// Import thư viện
-// import framwork express: tạo server,tạo API,xử lý request/response
+// 1. ĐỌC BIẾN MÔI TRƯỜNG ĐẦU TIÊN
+// Bắt buộc nằm ở dòng trên cùng để các file require bên dưới có thể nhận được cấu hình .env
+require("dotenv").config();
+
+// 2. CẤU HÌNH MẠNG TOÀN CỤC (SỬA LỖI FETCH API)
+// Ép Node.js ưu tiên dùng IPv4 cho mọi kết nối ra bên ngoài
+const dns = require("node:dns");
+dns.setDefaultResultOrder("ipv4first");
+
+// 3. IMPORT THƯ VIỆN & ROUTES
 const express = require("express");
-const path = require("path"); // Thêm dòng này nếu chưa có
-
-// import thư viện cors: giải quyết lỗi CORS khi frontend và backend khác domain
+const path = require("path");
 const cors = require("cors");
-
-// Đọc file env để lấy biến môi trường PORT, DB_HOST, DB_USER… từ file .env.
-const dotenv = require("dotenv");
-dotenv.config();
+const cookieParser = require("cookie-parser");
 
 // Pool kết nối database
 const pool = require("./config/db");
 
-// Impor authroutes
+// Import routes
 const authRoutes = require("./routes/auth.routes");
-
-// Import product routes
 const productRoutes = require("./routes/product.routes");
-
-// Import danh mục router
 const categoryRoutes = require("./routes/category.routes");
-
-// Import  vỏ hàng router
 const cartRoutes = require("./routes/cart.routes");
-
-// Import router địa chỉ
 const addressRoutes = require("./routes/address.routes");
-
-// import router đơn hàng
 const orderRoutes = require("./routes/order.routes");
-
-// imoport router thông báo
 const notificationRoutes = require("./routes/notification.routes");
-
-// Import router đánh giá
 const reviewRoutes = require("./routes/review.routes");
-
-// import router chabox
 const chatBoxRoutes = require("./routes/chat.routes");
 
-// Import cookie-parser để đọc cookie từ request header
-const cookieParser = require("cookie-parser");
-
-// Tạo ứng dụng express
-// Hiểu đơn giản app = server
-// Sau này có thể dùng: app.get, app.post, app.listen,... để tạo API, xử lý request/response
+// 4. KHỞI TẠO ỨNG DỤNG EXPRESS
 const app = express();
 
-// Middleware (phần mềm trung gian) để xử lý request trước khi đến route handler
-// Cho phép react gọi backend bằng cách giải quyết lỗi CORS
+// 5. CẤU HÌNH MIDDLEWARE
+// Cấu hình CORS để giải quyết lỗi khi frontend và backend khác domain
 const corsOptions = {
-  origin: "http://localhost:5173", // Đích danh cổng Frontend của mạy
+  origin: "http://localhost:5173", // Đích danh cổng Frontend của bạn
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  allowedHeaders: ["Content-Type", "Authorization"], // BẮT BUỘC phải có cái này
+  allowedHeaders: ["Content-Type", "Authorization"], // BẮT BUỘC phải có
   credentials: true,
 };
-
-// Sử dụng middleware CORS với các tùy chọn đã định nghĩa
 app.use(cors(corsOptions));
 
 // Sử dụng cookie-parser để đọc cookie từ request header
 app.use(cookieParser());
 
 // Cho phép server đọc JSON từ request body
-// Đọc những gì mà client gửi lên (dữ liệu đăng ký, đăng nhập,...) và chuyển nó thành object JavaScript để server có thể xử lý
 app.use(express.json());
 
-// Mount routes (gắn route)
-// Gắn route vào server
-app.use("/auth", authRoutes);
-
-// Gắn route sản phẩm
-app.use("/products", productRoutes);
-
-// gắn router cho danh mục sản phẩm
-app.use("/categories", categoryRoutes);
-
-// gắn router cho giỏ hàng
-app.use("/cart", cartRoutes);
-// gắn router login
-// app.use("/login", authRoutes);
-
-// gắn router địa chỉ
-app.use("/addresses", addressRoutes);
-
-// gắn router đơn hàng
-app.use("/orders", orderRoutes);
-
-// gắn router thông báo
-app.use("/notifications", notificationRoutes);
-
-// gắn router đánh giá
-app.use("/reviews", reviewRoutes);
-
-// MỞ CỬA CHO FRONTEND LẤY ẢNH:
+// MỞ CỬA CHO FRONTEND LẤY ẢNH (Static folder)
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
-// gắn router chatbox
+// 6. GẮN ROUTES VÀO SERVER (MOUNT ROUTES)
+app.use("/auth", authRoutes);
+app.use("/products", productRoutes);
+app.use("/categories", categoryRoutes);
+app.use("/cart", cartRoutes);
+app.use("/addresses", addressRoutes);
+app.use("/orders", orderRoutes);
+app.use("/notifications", notificationRoutes);
+app.use("/reviews", reviewRoutes);
 app.use("/chatbox", chatBoxRoutes);
 
-// Kiểm tra route
+// 7. KIỂM TRA MÁY CHỦ VÀ CƠ SỞ DỮ LIỆU
+// Kiểm tra route gốc
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
@@ -121,11 +82,10 @@ app.get("/test-db", async (req, res) => {
   }
 });
 
-// Lấy port từ file .env hoặc dùng port 5000 nếu không có biến môi trường PORT
+// 8. KHỞI ĐỘNG SERVER
+// Lấy port từ file .env hoặc dùng port 5000
 const PORT = process.env.PORT || 5000;
 
-// Khởi động server(máy chủ)
-// server mở cổng (port) và chờ request(yêu cầu gửi đến)
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
