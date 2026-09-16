@@ -1,5 +1,11 @@
 const pool = require("../config/db");
 
+// import supabase client
+const { createClient } = require("@supabase/supabase-js");
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 // Chức năng tạo thông báo mới
 async function createNotification(userId, title, message) {
   try {
@@ -52,9 +58,38 @@ async function DeleteNotification(notificationId, userId) {
   }
 }
 
+//  Chức năng thông báo mua hàng thành công thời gian thực cho admin
+async function createAdminNotificationSupabase(
+  orderId,
+  userId,
+  title,
+  messsage,
+) {
+  try {
+    const { data, error } = await supabase.from("admin_notifications").insert([
+      {
+        order_id: orderId,
+        user_id: userId,
+        title: title,
+        message: messsage,
+        is_read: false,
+      },
+    ]);
+    if (error) {
+      console.log("Lỗi khi tạo thông báo cho admin: ", error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.log("Lỗi khi tạo thông báo cho admin: ", error);
+    return false;
+  }
+}
+
 module.exports = {
   createNotification,
   getUserNotifications,
   markNotificationAsRead,
   DeleteNotification,
+  createAdminNotificationSupabase,
 };
