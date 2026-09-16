@@ -92,7 +92,7 @@ BẠN LÀ MỘT API HỆ THỐNG. CHỈ ĐƯỢC TRẢ VỀ ĐÚNG ĐỊNH DẠN
       systemInstruction: systemInstructionText,
       generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: responseSchema, // 🚀 Bật khuôn mẫu cấu trúc
+        responseSchema: responseSchema, //  Bật khuôn mẫu cấu trúc
       },
     });
 
