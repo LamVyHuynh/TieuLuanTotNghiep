@@ -7,6 +7,10 @@ const {
   getDashboardStats,
   getDetailReport,
 } = require("../services/order.service");
+const {
+  createNotification,
+  createAdminNotificationSupabase,
+} = require("../services/notification.service");
 const { encodeId, decodeId } = require("../utils/hashid.util");
 const axios = require("axios");
 const crypto = require("crypto");
@@ -79,6 +83,11 @@ const createOrder = async (req, res) => {
       decodedItems,
     );
     const safeOrderId = encodeId(newOrderId);
+    await createAdminNotificationSupabase(
+      newOrderId,
+      "Đơn hàng mới! 🛒",
+      `Khách hàng ${full_name} vừa đặt đơn hàng trị giá ${total_amount.toLocaleString("vi-VN")}đ.`,
+    );
     res.status(201).json({
       success: true,
       message: "Đặt hàng thành công!",
@@ -279,6 +288,11 @@ const checkMomoPaymentStatus = async (req, res) => {
       const encodedOrderId = momoOrderId.split("_")[0];
       const realOrderId = decodeId(encodedOrderId);
       if (realOrderId) await updateOrderStatus(realOrderId, "processing");
+      await createAdminNotificationSupabase(
+        realOrderId,
+        "Thanh toán MoMo thành công! 💸",
+        `Đơn hàng #${encodedOrderId} vừa được thanh toán thành công qua ví MoMo.`,
+      );
       return res
         .status(200)
         .json({ success: true, message: "Thanh toán thành công" });
@@ -358,6 +372,12 @@ const receivePayOSWebhook = async (req, res) => {
       console.log(
         `[PayOS Webhook] Tiền đã về bản! Tự động chốt đơn #${realOrderId}`,
       );
+
+      await createAdminNotificationSupabase(
+        realOrderId,
+        "Tiền vào tài khoản! 🏦",
+        `Đơn hàng #${encodeId(realOrderId)} đã chuyển khoản thành công qua PayOS.`,
+      );
       return res
         .status(200)
         .json({ success: true, message: "Đã xử lý Webhook thành công" });
@@ -394,6 +414,11 @@ const checkPayOSPaymentStatus = async (req, res) => {
     const paymentInfo = response.data.data;
     if (paymentInfo && paymentInfo.status === "PAID") {
       await updateOrderStatus(realOrderId, "processing");
+      await createAdminNotificationSupabase(
+        realOrderId,
+        "Thanh toán hoàn tất! 🏦",
+        `Đơn hàng #${orderId} đã được xác nhận thanh toán chuyển khoản.`,
+      );
       return res
         .status(200)
         .json({ success: true, message: "Thanh toán thành công" });
