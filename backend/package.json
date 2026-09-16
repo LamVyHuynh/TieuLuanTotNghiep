@@ -15,7 +15,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@payos/node": "^2.0.5",
-    "@supabase/supabase-js": "^2.110.9",
+    "@supabase/supabase-js": "^2.116.0",
     "axios": "^1.19.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Bell,
   ChevronRight,
@@ -6,7 +7,6 @@ import {
   CircleDollarSign,
   Leaf,
   ChevronDown,
-  MoreVertical,
   Search,
   ShoppingBag,
   TrendingUp,
@@ -14,10 +14,19 @@ import {
   Users,
   LogOut,
   RefreshCcw,
+  CheckCircle2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import axiosClient from "../../api/axiosClient";
+
+// 🚀 BƯỚC 1: IMPORT SUPABASE VÀO FRONTEND
+import { createClient } from "@supabase/supabase-js";
+
+// Thay bằng URL và KEY public của bạn (Lấy trên web Supabase -> Project Settings -> API)
+const supabaseUrl = "https://dsffajxnipweigvscnet.supabase.co";
+const supabaseAnonKey = "sb_publishable_rkZQs9ZfS7tdxZ1nFzb8RQ_119BJdU8";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const getStatusConfig = (status) => {
   switch (status) {
@@ -48,9 +57,87 @@ function Dashboard() {
     totalUsers: 0,
     recentOrders: [],
     bestSellingProducts: [],
-    monthlyRevenue: Array(12).fill({ revenue: 0, orders: 0 }), // Mảng object
+    monthlyRevenue: Array(12).fill({ revenue: 0, orders: 0 }),
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  // =================================================================
+  // 🚀 STATE & LOGIC CHO THÔNG BÁO REAL-TIME
+  // =================================================================
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const notifMenuRef = useRef(null);
+  const [toast, setToast] = useState({ show: false, title: "", message: "" });
+
+  // Đếm số thông báo chưa đọc
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  useEffect(() => {
+    // Lấy 10 thông báo mới nhất khi vừa vào trang
+    const fetchNotifications = async () => {
+      const { data, error } = await supabase
+        .from("admin_notifications")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (!error && data) {
+        setNotifications(data);
+      }
+    };
+    fetchNotifications();
+
+    // 🚀 BẬT KÊNH LẮNG NGHE REAL-TIME TỪ SUPABASE
+    const channel = supabase
+      .channel("admin-notifs")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "admin_notifications",
+        },
+        (payload) => {
+          const newNotif = payload.new;
+          // Thêm thông báo mới vào đầu danh sách
+          setNotifications((prev) => [newNotif, ...prev]);
+
+          // Bật Toast Pop-up lên màn hình
+          setToast({
+            show: true,
+            title: newNotif.title,
+            message: newNotif.message,
+          });
+
+          // Tự động tắt Toast sau 4 giây
+          setTimeout(() => {
+            setToast({ show: false, title: "", message: "" });
+          }, 4000);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Đánh dấu đã đọc khi mở menu
+  const handleOpenNotifications = () => {
+    setShowNotifMenu(!showNotifMenu);
+    if (!showNotifMenu && unreadCount > 0) {
+      // Đánh dấu tất cả là đã đọc (Giao diện)
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      // Đánh dấu đã đọc trên Supabase (Database)
+      supabase
+        .from("admin_notifications")
+        .update({ is_read: true })
+        .eq("is_read", false)
+        .then();
+    }
+  };
+
+  // =================================================================
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -59,6 +146,12 @@ function Dashboard() {
         !adminMenuRef.current.contains(event.target)
       ) {
         setShowAdminMenu(false);
+      }
+      if (
+        notifMenuRef.current &&
+        !notifMenuRef.current.contains(event.target)
+      ) {
+        setShowNotifMenu(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -94,7 +187,6 @@ function Dashboard() {
       </p>
     );
 
-  // 🚀 TÍNH TOÁN ĐỈNH CỘT: Trích xuất mảng tiền ra để tìm Max
   const monthlyDataArray =
     stats.monthlyRevenue || Array(12).fill({ revenue: 0, orders: 0 });
   const maxMonthlyRevenue = Math.max(...monthlyDataArray.map((m) => m.revenue));
@@ -141,10 +233,62 @@ function Dashboard() {
         </div>
 
         <div className="flex items-center justify-between gap-4 lg:justify-end lg:gap-6">
-          <button className="relative cursor-pointer rounded-full p-2 text-slate-600 transition hover:bg-slate-100">
-            <Bell size={20} />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
-          </button>
+          {/* 🚀 KHU VỰC CHUÔNG THÔNG BÁO */}
+          <div className="relative" ref={notifMenuRef}>
+            <button
+              onClick={handleOpenNotifications}
+              className="relative cursor-pointer rounded-full p-2 text-slate-600 transition hover:bg-slate-100"
+            >
+              <Bell size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white ring-2 ring-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Dropdown Thông Báo */}
+            <div
+              className={`absolute right-0 top-[calc(100%+10px)] z-50 w-80 origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all duration-200 ${
+                showNotifMenu
+                  ? "pointer-events-auto translate-y-0 opacity-100"
+                  : "pointer-events-none -translate-y-2 opacity-0"
+              }`}
+            >
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-100">
+                <h4 className="font-bold text-slate-800">Thông báo mới</h4>
+              </div>
+              <div className="max-h-80 overflow-y-auto">
+                {notifications.length > 0 ? (
+                  notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className={`p-4 border-b border-slate-50 transition hover:bg-slate-50 ${!notif.is_read ? "bg-emerald-50/30" : ""}`}
+                    >
+                      <p className="text-sm font-bold text-slate-800">
+                        {notif.title}
+                      </p>
+                      <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+                        {notif.message}
+                      </p>
+                      <p className="text-[10px] text-slate-400 mt-2 font-medium">
+                        {new Date(notif.created_at).toLocaleString("vi-VN")}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="p-6 text-center text-sm text-slate-500">
+                    Chưa có thông báo nào.
+                  </p>
+                )}
+              </div>
+              <div className="bg-slate-50 p-2 text-center border-t border-slate-100">
+                <button className="text-xs font-bold text-emerald-600 hover:text-emerald-700">
+                  Xem tất cả
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div
             className="relative flex items-center gap-3 border-l border-slate-200 pl-4"
@@ -505,6 +649,23 @@ function Dashboard() {
           </section>
         </div>
       )}
+
+      {/* 🚀 TOAST POPUP REAL-TIME KHI CÓ ĐƠN HÀNG MỚI */}
+      {toast.show &&
+        createPortal(
+          <div className="fixed bottom-8 right-8 z-[9999] flex max-w-sm animate-in slide-in-from-bottom-5 items-start gap-4 rounded-2xl border border-emerald-100 bg-white p-4 shadow-[0_10px_40px_rgba(16,185,129,0.15)]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <CheckCircle2 size={20} />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-800">{toast.title}</h4>
+              <p className="mt-1 text-sm text-slate-500 line-clamp-2">
+                {toast.message}
+              </p>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
